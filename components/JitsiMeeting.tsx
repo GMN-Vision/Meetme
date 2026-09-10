@@ -52,6 +52,22 @@ function isMobileBrowser() {
   return /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
 }
 
+function isCameraPermissionDenied(error: unknown) {
+  const name = String((error as { name?: string } | null)?.name || '');
+  if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+    return true;
+  }
+
+  let text = '';
+  try {
+    text = JSON.stringify(error || {}).toLowerCase();
+  } catch {
+    text = String(error || '').toLowerCase();
+  }
+
+  return /notallowederror|permissiondeniederror|gum\.permission|(?:camera|microphone) permission|permission.*(?:denied|blocked)|(?:denied|blocked).*permission/.test(text);
+}
+
 declare global {
   interface Window {
     JitsiMeetExternalAPI: any;
@@ -133,6 +149,9 @@ export function JitsiMeeting({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [scriptLoading, setScriptLoading] = useState(true);
+  const [cameraPermissionChecked, setCameraPermissionChecked] = useState(false);
+  const [cameraPermissionBlocked, setCameraPermissionBlocked] = useState(false);
+  const [cameraPermissionRetry, setCameraPermissionRetry] = useState(0);
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
   const [apiGeneration, setApiGeneration] = useState(0);
   const scriptTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -320,6 +339,8 @@ export function JitsiMeeting({
     setLoading(true);
     setError(null);
     setRecoveryMessage(null);
+    setCameraPermissionChecked(false);
+    setCameraPermissionBlocked(false);
     joinedOnceRef.current = false;
     intentionalHangupRef.current = false;
     closeNotifiedRef.current = false;
@@ -328,6 +349,42 @@ export function JitsiMeeting({
     recoveryAttemptRef.current = 0;
     clearRecoveryTimer();
   }, [cleanDomain, roomName]);
+
+  // iOS can persist a previous “Don't Allow” choice and reject future media
+  // requests without displaying the browser prompt. Check before creating the
+  // Jitsi iframe so that we can show clear recovery instructions instead of
+  // Jitsi's generic camera-permission error.
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkCameraPermission = async () => {
+      if (!isMobileBrowser() || !navigator.mediaDevices?.getUserMedia) {
+        if (!cancelled) setCameraPermissionChecked(true);
+        return;
+      }
+
+      if (!cancelled) {
+        setCameraPermissionChecked(false);
+        setCameraPermissionBlocked(false);
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        stream.getTracks().forEach((track) => track.stop());
+      } catch (permissionError) {
+        if (!cancelled && isCameraPermissionDenied(permissionError)) {
+          setCameraPermissionBlocked(true);
+        }
+      } finally {
+        if (!cancelled) setCameraPermissionChecked(true);
+      }
+    };
+
+    void checkCameraPermission();
+    return () => {
+      cancelled = true;
+    };
+  }, [cleanDomain, roomName, cameraPermissionRetry]);
 
   // Load Jitsi external API script
   useEffect(() => {
@@ -389,8 +446,8 @@ export function JitsiMeeting({
 
   // Initialize Jitsi meeting
   useEffect(() => {
-    if (scriptLoading || !containerRef.current || error) {
-      console.log('JitsiMeeting: Waiting or error state', { scriptLoading, containerRef: !!containerRef.current, error });
+    if (scriptLoading || !cameraPermissionChecked || cameraPermissionBlocked || !containerRef.current || error) {
+      console.log('JitsiMeeting: Waiting or error state', { scriptLoading, cameraPermissionChecked, cameraPermissionBlocked, containerRef: !!containerRef.current, error });
       return;
     }
 
@@ -669,6 +726,11 @@ jitsiRef.current.dispose = () => {
 
       jitsiRef.current.addEventListener('errorOccurred', (event: any) => {
         console.warn('JitsiMeeting: Jitsi error event', event);
+        if (isCameraPermissionDenied(event)) {
+          setCameraPermissionBlocked(true);
+          setLoading(false);
+          return;
+        }
         if (isRecoverableJitsiError(event)) {
           applyLowBandwidthFallback('recoverable Jitsi error');
           scheduleHardRejoin('recoverable Jitsi error');
@@ -677,6 +739,11 @@ jitsiRef.current.dispose = () => {
 
       jitsiRef.current.addEventListener('videoConferenceFailed', (event: any) => {
         console.warn('JitsiMeeting: Video conference failed', event);
+        if (isCameraPermissionDenied(event)) {
+          setCameraPermissionBlocked(true);
+          setLoading(false);
+          return;
+        }
         if (isRecoverableJitsiError(event)) {
           applyLowBandwidthFallback('video conference failed');
           scheduleHardRejoin('video conference failed');
@@ -707,6 +774,10 @@ jitsiRef.current.dispose = () => {
       jitsiRef.current.addEventListener('conferenceError', (error: any) => {
         console.error('Conference error:', error);
         setLoading(false);
+        if (isCameraPermissionDenied(error)) {
+          setCameraPermissionBlocked(true);
+          return;
+        }
         if (isRecoverableJitsiError(error)) {
           applyLowBandwidthFallback('conference error');
           scheduleHardRejoin('conference error');
@@ -737,6 +808,8 @@ jitsiRef.current.dispose = () => {
     };
   }, [
     scriptLoading,
+    cameraPermissionChecked,
+    cameraPermissionBlocked,
     roomName,
     cleanDomain,
     startWithAudioMuted,
@@ -769,6 +842,33 @@ jitsiRef.current.dispose = () => {
     );
   }
 
+  if (cameraPermissionBlocked) {
+    return (
+      <div
+        className={`w-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 ${className}`}
+        style={{ height }}
+      >
+        <div className="max-w-md px-6 text-center">
+          <div className="mb-3 text-3xl" aria-hidden="true">📷</div>
+          <h3 className="mb-2 text-lg font-semibold text-white">Camera access is blocked</h3>
+          <p className="mb-4 text-sm text-gray-300">
+            Camera or microphone access was previously denied for Melanam.
+          </p>
+          <p className="mb-5 text-sm text-gray-400">
+            Open your browser menu or Website Settings, set Camera to Allow, then reload the meeting.
+          </p>
+          <button
+            type="button"
+            onClick={() => setCameraPermissionRetry((attempt) => attempt + 1)}
+            className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`relative ${className}`} style={{ height, width: '100%' }}>
       <div
@@ -783,7 +883,7 @@ jitsiRef.current.dispose = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
             </div>
             <p className="text-gray-300">
-              {scriptLoading ? 'Loading video service...' : recoveryMessage || 'Joining meeting...'}
+              {scriptLoading ? 'Loading video service...' : !cameraPermissionChecked ? 'Checking camera access...' : recoveryMessage || 'Joining meeting...'}
             </p>
           </div>
         </div>
