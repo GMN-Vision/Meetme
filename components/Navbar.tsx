@@ -233,7 +233,7 @@ export function Navbar() {
   const currentPlanRank = membership?.active ? PLAN_RANK[membership.plan] : -1;
   const canUseCaptions = currentPlanRank >= PLAN_RANK.pro;
   const canUseRecording = currentPlanRank >= PLAN_RANK.pro;
-  const canUseFiles = currentPlanRank >= PLAN_RANK.pro;
+  const canUseFiles = Boolean(membership?.active);
   const canUseLivestream = currentPlanRank >= PLAN_RANK.business;
 
   const productLinks = [
@@ -410,7 +410,7 @@ export function Navbar() {
                     onClick={() => {
                       if (isFilesOpen) {
                         setIsFilesOpen(false);
-                      } else if (requestPaidFeature('File sharing', 'pro')) {
+                      } else if (canUseFiles) {
                         setIsFilesOpen(true);
                       }
                     }}
@@ -420,7 +420,7 @@ export function Navbar() {
                         : uploadMediaHoverClass
                     }`}
                     aria-label={isFilesOpen ? 'Close upload media' : 'Open upload media'}
-                    title={isFilesOpen ? 'Close upload media' : canUseFiles ? 'Open upload media' : 'File sharing requires Pro'}
+                    title={isFilesOpen ? 'Close upload media' : canUseFiles ? 'Open upload media' : 'Select an active plan to share files'}
                   >
                     {canUseFiles ? <Upload className="h-4 w-4" /> : <LockKeyhole className="h-4 w-4" />}
                     <span className="hidden lg:inline">Files</span>
