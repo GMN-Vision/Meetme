@@ -22,19 +22,11 @@ const DEFAULT_TOOLBAR_BUTTONS = [
   'security',
 ];
 
-const LOW_CONNECTION_QUALITY_THRESHOLD = 35;
-const DEFAULT_VIDEO_QUALITY = 1080;
-const IDEAL_CAPTURE_HEIGHT = 1080;
-const IDEAL_CAPTURE_WIDTH = 1920;
-const VIDEO_QUALITY_LEVELS = [
-  1080,
-  720,
-  540,
-  360,
-  180,
-];
-const REJOIN_BASE_DELAY_MS = 1500;
-const REJOIN_MAX_DELAY_MS = 12000;
+// Bound camera load for sustained group calls. Screen capture has independent
+// frame-rate settings and can still use the display's full resolution.
+const DEFAULT_VIDEO_QUALITY = 720;
+const IDEAL_CAPTURE_HEIGHT = 720;
+const IDEAL_CAPTURE_WIDTH = 1280;
 const MOBILE_VIDEO_QUALITY = 720;
 const MOBILE_CAPTURE_WIDTH = 1280;
 const MOBILE_CAPTURE_HEIGHT = 720;
@@ -152,18 +144,11 @@ export function JitsiMeeting({
   const [cameraPermissionChecked, setCameraPermissionChecked] = useState(false);
   const [cameraPermissionBlocked, setCameraPermissionBlocked] = useState(false);
   const [cameraPermissionRetry, setCameraPermissionRetry] = useState(0);
-  const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
-  const [apiGeneration, setApiGeneration] = useState(0);
   const scriptTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const joinTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const recoveryTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const recoveryAttemptRef = useRef(0);
   const joinedOnceRef = useRef(false);
-  const intentionalHangupRef = useRef(false);
   const closeNotifiedRef = useRef(false);
-  const disposingForRecoveryRef = useRef(false);
-  const lowBandwidthModeRef = useRef(false);
-  const videoQualityLevelRef = useRef(0);
+  const disposingRef = useRef(false);
   const onReadyRef = useRef(onReady);
   const onReadyToCloseRef = useRef(onReadyToClose);
   const onApiReadyRef = useRef(onApiReady);
@@ -179,95 +164,6 @@ export function JitsiMeeting({
     }
   };
 
-  const clearRecoveryTimer = () => {
-    if (recoveryTimerRef.current) {
-      clearTimeout(recoveryTimerRef.current);
-      recoveryTimerRef.current = null;
-    }
-  };
-
-  const setMeetingVideoQuality = (height: number) => {
-    jitsiRef.current?.executeCommand?.('setVideoQuality', height);
-    jitsiRef.current?.executeCommand?.('setReceiverVideoConstraint', height);
-  };
-
-  const improveVideoQuality = (reason: string) => {
-    if (videoQualityLevelRef.current <= 0) {
-      lowBandwidthModeRef.current = false;
-      return;
-    }
-
-    videoQualityLevelRef.current -= 1;
-    const nextQuality = VIDEO_QUALITY_LEVELS[videoQualityLevelRef.current];
-    lowBandwidthModeRef.current = videoQualityLevelRef.current > 0;
-    console.info(`[Jitsi] Raising video quality to ${nextQuality}p: ${reason}`);
-
-    try {
-      setMeetingVideoQuality(nextQuality);
-    } catch (err) {
-      console.warn('[Jitsi] Unable to raise video quality', err);
-    }
-  };
-
-  const applyLowBandwidthFallback = (reason: string) => {
-    if (videoQualityLevelRef.current >= VIDEO_QUALITY_LEVELS.length - 1) {
-      return;
-    }
-
-    lowBandwidthModeRef.current = true;
-    videoQualityLevelRef.current += 1;
-    const nextQuality = VIDEO_QUALITY_LEVELS[videoQualityLevelRef.current];
-    console.warn(`[Jitsi] Lowering video quality to ${nextQuality}p: ${reason}`);
-
-    try {
-      setMeetingVideoQuality(nextQuality);
-    } catch (err) {
-      console.warn('[Jitsi] Unable to lower video quality', err);
-    }
-  };
-
-  const isRecoverableJitsiError = (event: unknown) => {
-    let text = '';
-
-    try {
-      text = JSON.stringify(event || {}).toLowerCase();
-    } catch {
-      text = String(event || '').toLowerCase();
-    }
-
-    if (/gum|permission|notallowed|notfound|device|capture/.test(text)) {
-      return false;
-    }
-
-    return /connection|disconnect|reconnect|ice|network|jvb|bridge|xmpp|timeout|transport|websocket/.test(text);
-  };
-
-  const scheduleHardRejoin = (reason: string) => {
-    if (
-      closeNotifiedRef.current ||
-      intentionalHangupRef.current ||
-      !joinedOnceRef.current ||
-      recoveryTimerRef.current
-    ) {
-      return;
-    }
-
-    const nextAttempt = recoveryAttemptRef.current + 1;
-    recoveryAttemptRef.current = nextAttempt;
-    const delay = Math.min(REJOIN_MAX_DELAY_MS, REJOIN_BASE_DELAY_MS * nextAttempt);
-
-    console.warn(`[Jitsi] Scheduling meeting recovery in ${delay}ms: ${reason}`);
-    clearJoinTimeout();
-    setRecoveryMessage('Reconnecting to the meeting...');
-    setLoading(true);
-
-    recoveryTimerRef.current = setTimeout(() => {
-      recoveryTimerRef.current = null;
-      disposingForRecoveryRef.current = true;
-      setApiGeneration((current) => current + 1);
-    }, delay);
-  };
-
   const finishMeetingLeave = (reason: string) => {
     if (closeNotifiedRef.current) {
       return;
@@ -275,17 +171,13 @@ export function JitsiMeeting({
 
     console.log(`JitsiMeeting: leaving meeting (${reason})`);
     closeNotifiedRef.current = true;
-    intentionalHangupRef.current = true;
     clearJoinTimeout();
-    clearRecoveryTimer();
-    setRecoveryMessage(null);
     onReadyToCloseRef.current?.();
   };
 
   useEffect(() => {
     return () => {
       clearJoinTimeout();
-      clearRecoveryTimer();
     };
   }, []);
 
@@ -338,16 +230,11 @@ export function JitsiMeeting({
   useEffect(() => {
     setLoading(true);
     setError(null);
-    setRecoveryMessage(null);
     setCameraPermissionChecked(false);
     setCameraPermissionBlocked(false);
     joinedOnceRef.current = false;
-    intentionalHangupRef.current = false;
     closeNotifiedRef.current = false;
-    disposingForRecoveryRef.current = false;
-    lowBandwidthModeRef.current = false;
-    recoveryAttemptRef.current = 0;
-    clearRecoveryTimer();
+    disposingRef.current = false;
   }, [cleanDomain, roomName]);
 
   // iOS can persist a previous “Don't Allow” choice and reject future media
@@ -457,16 +344,6 @@ export function JitsiMeeting({
       return;
     }
 
-    const handleBrowserOffline = () => {
-      applyLowBandwidthFallback('browser offline event');
-    };
-
-    const handleBrowserOnline = () => {
-      if (joinedOnceRef.current && !intentionalHangupRef.current) {
-        scheduleHardRejoin('browser came back online');
-      }
-    };
-
     try {
       console.log('JitsiMeeting: Initializing with config', { 
         roomName, 
@@ -477,7 +354,7 @@ export function JitsiMeeting({
       });
       setLoading(true);
 
-      // Do not make phones encode a desktop 1080p stream. Keep VP8 first for
+      // Use 720p cameras for sustained group calls. Keep VP8 first for
       // every participant: it is the most consistently interoperable Jitsi
       // WebRTC codec across Chrome, Firefox, and Safari.
       const mobileBrowser = isMobileBrowser();
@@ -507,7 +384,7 @@ export function JitsiMeeting({
           startWithAudioMuted: startWithAudioMutedOnJoin,
           startWithVideoMuted: startWithVideoMutedOnJoin,
           disableDeepLinking: true,
-          disableSimulcast: mobileBrowser,
+          disableSimulcast: false,
           resolution: preferredResolution,
           startBitrate: mobileBrowser ? 800 : 1500,
           constraints: {
@@ -531,7 +408,14 @@ export function JitsiMeeting({
               },
             },
           },
-          channelLastN: -1,
+          // Bound decoding work on phones while retaining all 25 participants
+          // on desktops. Jitsi prioritizes the selected speaker/screenshare.
+          channelLastN: mobileBrowser ? 9 : 25,
+          desktopSharingFrameRate: { min: 5, max: 30 },
+          screenShareSettings: {
+            desktopSystemAudio: 'include',
+            desktopSurfaceSwitching: 'include',
+          },
           flags: {
             sourceNameSignaling: true,
             sendMultipleVideoStreams: !mobileBrowser,
@@ -557,8 +441,6 @@ export function JitsiMeeting({
           prejoinConfig: { enabled: effectivePrejoinPageEnabled },
           chromeExtensionBanner: null,
           disableAudioLevels: false,
-          disableSuspendVideo: true,
-          enableLayerSuspension: false,
           enableIceRestart: true,
           enableForcedReload: false,
           enableFeaturesBasedOnToken: Boolean(jwt),
@@ -591,41 +473,7 @@ export function JitsiMeeting({
 
       jitsiRef.current = new window.JitsiMeetExternalAPI(cleanDomain, options);
 
-// =====================================================
-// Remove Jitsi watermark (all devices)
-// =====================================================
-
-const removeJitsiWatermark = () => {
-  document
-    .querySelectorAll(
-      "a.watermark.leftwatermark, div.watermark.leftwatermark"
-    )
-    .forEach((el) => {
-      el.remove();
-    });
-};
-
-// Remove if already present
-removeJitsiWatermark();
-
-// Watch the DOM continuously
-const watermarkObserver = new MutationObserver(() => {
-  removeJitsiWatermark();
-});
-
-watermarkObserver.observe(document.body, {
-  childList: true,
-  subtree: true,
-});
-
-const originalDispose = jitsiRef.current.dispose.bind(jitsiRef.current);
-
-jitsiRef.current.dispose = () => {
-  watermarkObserver.disconnect();
-  originalDispose();
-};
-
-      disposingForRecoveryRef.current = false;
+      disposingRef.current = false;
       onApiReadyRef.current?.(jitsiRef.current);
 
       console.log('JitsiMeeting: API instance created successfully');
@@ -635,12 +483,6 @@ jitsiRef.current.dispose = () => {
 
       joinTimeoutRef.current = setTimeout(() => {
         console.warn('JitsiMeeting: join timeout exceeded');
-        if (joinedOnceRef.current && !intentionalHangupRef.current) {
-          applyLowBandwidthFallback('join timeout during recovery');
-          scheduleHardRejoin('join timeout during recovery');
-          return;
-        }
-
         setLoading(false);
       }, 30000);
 
@@ -668,15 +510,6 @@ jitsiRef.current.dispose = () => {
       jitsiRef.current.addEventListener('videoConferenceJoined', (event: any) => {
         console.log('JitsiMeeting: Video conference joined');
         joinedOnceRef.current = true;
-        intentionalHangupRef.current = false;
-        recoveryAttemptRef.current = 0;
-        setRecoveryMessage(null);
-        clearRecoveryTimer();
-        if (lowBandwidthModeRef.current) {
-          improveVideoQuality('recovered meeting rejoined');
-        } else {
-          setMeetingVideoQuality(DEFAULT_VIDEO_QUALITY);
-        }
         const localParticipantId =
           event?.id ||
           event?.participantId ||
@@ -690,64 +523,16 @@ jitsiRef.current.dispose = () => {
         onReadyRef.current?.();
       });
 
+      // Preserve the iframe and screen-capture track through transient errors.
+      // Jitsi owns ICE recovery and presents its own reconnect UI when needed.
       jitsiRef.current.addEventListener('readyToClose', () => {
-        console.log('Meeting ended');
-        clearJoinTimeout();
-        if (disposingForRecoveryRef.current) {
-          return;
-        }
-
-        if (intentionalHangupRef.current || !joinedOnceRef.current) {
-          finishMeetingLeave('readyToClose');
-          return;
-        }
-
-        scheduleHardRejoin('Jitsi closed unexpectedly');
-      });
-
-      jitsiRef.current.addEventListener('toolbarButtonClicked', (event: any) => {
-        const button = String(event?.key || event?.button || event?.id || event || '').toLowerCase();
-        if (button === 'hangup') {
-          intentionalHangupRef.current = true;
-        }
-      });
-
-      jitsiRef.current.addEventListener('videoConferenceLeft', (event: any) => {
-        console.log('JitsiMeeting: Video conference left', event);
-        finishMeetingLeave('videoConferenceLeft');
-      });
-
-      jitsiRef.current.addEventListener('connectionQualityChanged', (event: any) => {
-        const quality = Number(event?.connectionQuality ?? event?.quality);
-        if (Number.isFinite(quality) && quality <= LOW_CONNECTION_QUALITY_THRESHOLD) {
-          applyLowBandwidthFallback(`connection quality ${quality}`);
-        }
+        if (!disposingRef.current) finishMeetingLeave('readyToClose');
       });
 
       jitsiRef.current.addEventListener('errorOccurred', (event: any) => {
         console.warn('JitsiMeeting: Jitsi error event', event);
-        if (isCameraPermissionDenied(event)) {
-          setCameraPermissionBlocked(true);
-          setLoading(false);
-          return;
-        }
-        if (isRecoverableJitsiError(event)) {
-          applyLowBandwidthFallback('recoverable Jitsi error');
-          scheduleHardRejoin('recoverable Jitsi error');
-        }
-      });
-
-      jitsiRef.current.addEventListener('videoConferenceFailed', (event: any) => {
-        console.warn('JitsiMeeting: Video conference failed', event);
-        if (isCameraPermissionDenied(event)) {
-          setCameraPermissionBlocked(true);
-          setLoading(false);
-          return;
-        }
-        if (isRecoverableJitsiError(event)) {
-          applyLowBandwidthFallback('video conference failed');
-          scheduleHardRejoin('video conference failed');
-        }
+        // The embedded UI handles device permissions without removing a call.
+        setLoading(false);
       });
 
       jitsiRef.current.addEventListener('participantJoined', (participant: any) => {
@@ -771,21 +556,6 @@ jitsiRef.current.dispose = () => {
         }
       });
 
-      jitsiRef.current.addEventListener('conferenceError', (error: any) => {
-        console.error('Conference error:', error);
-        setLoading(false);
-        if (isCameraPermissionDenied(error)) {
-          setCameraPermissionBlocked(true);
-          return;
-        }
-        if (isRecoverableJitsiError(error)) {
-          applyLowBandwidthFallback('conference error');
-          scheduleHardRejoin('conference error');
-        }
-      });
-
-      window.addEventListener('offline', handleBrowserOffline);
-      window.addEventListener('online', handleBrowserOnline);
     } catch (err) {
       console.error('Error initializing Jitsi Meeting:', err);
       setError('Failed to initialize video conference');
@@ -793,12 +563,10 @@ jitsiRef.current.dispose = () => {
     }
 
     return () => {
-      window.removeEventListener('offline', handleBrowserOffline);
-      window.removeEventListener('online', handleBrowserOnline);
       clearJoinTimeout();
       if (jitsiRef.current) {
         try {
-          disposingForRecoveryRef.current = true;
+          disposingRef.current = true;
           jitsiRef.current.dispose();
         } catch (err) {
           console.error('Error disposing Jitsi:', err);
@@ -818,7 +586,6 @@ jitsiRef.current.dispose = () => {
     showLogo,
     activeProtocol,
     jwt,
-    apiGeneration,
   ]);
 
   if (error) {
@@ -883,7 +650,7 @@ jitsiRef.current.dispose = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
             </div>
             <p className="text-gray-300">
-              {scriptLoading ? 'Loading video service...' : !cameraPermissionChecked ? 'Checking camera access...' : recoveryMessage || 'Joining meeting...'}
+              {scriptLoading ? 'Loading video service...' : !cameraPermissionChecked ? 'Checking camera access...' : 'Joining meeting...'}
             </p>
           </div>
         </div>
@@ -891,4 +658,3 @@ jitsiRef.current.dispose = () => {
     </div>
   );
 }
-

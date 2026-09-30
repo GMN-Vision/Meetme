@@ -24,7 +24,7 @@ const nextConfig = {
             // explicitly so browsers that enforce Permissions Policy do not
             // reject its camera/microphone request before the user can respond.
             key: 'Permissions-Policy',
-            value: `camera=(self "https://${jitsiDomain}"), microphone=(self "https://${jitsiDomain}")`,
+            value: `camera=(self "https://${jitsiDomain}"), microphone=(self "https://${jitsiDomain}"), display-capture=(self "https://${jitsiDomain}")`,
           },
         ],
       },

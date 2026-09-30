@@ -10,6 +10,7 @@ import { Loader } from '../../../components/Loader';
 import { JitsiMeeting } from '../../../components/JitsiMeeting';
 import { useSession } from 'next-auth/react';
 import { normalizeJitsiRoomName } from '../../../lib/jitsi-room';
+import { startMeetingAccessHeartbeat } from '../../../lib/meeting-access-client';
 
 interface MeetingDetails {
   _id: string;
@@ -46,6 +47,7 @@ export default function RoomPage() {
   const { data: session, status } = useSession();
   const [guestName, setGuestName] = useState('');
   const [nameReady, setNameReady] = useState(false);
+  const [participantKey, setParticipantKey] = useState('');
   const [meetingError, setMeetingError] = useState('');
   const [meeting, setMeeting] = useState<MeetingDetails | null>(null);
   const [jwt, setJwt] = useState<string | null>(null);
@@ -70,8 +72,13 @@ export default function RoomPage() {
   const displayRoomName = meeting?.title?.trim() || meetingId;
   const userDisplayName = session?.user?.email || guestName || 'Guest';
   const userEmail = session?.user?.email || undefined;
-  const participantKey = userEmail ? `user:${userEmail}` : `guest:${guestName || 'guest'}`;
   const fallbackRoute = session?.user?.email ? '/lms' : '/';
+
+  useEffect(() => {
+    // Each tab owns its presence. Shared display names/accounts must not let
+    // one participant's leave request remove another participant's heartbeat.
+    setParticipantKey(`participant:${crypto.randomUUID()}`);
+  }, [meetingId]);
 
   useEffect(() => {
     if (status === 'loading') {
@@ -108,7 +115,7 @@ export default function RoomPage() {
 
   // Verify meeting exists on component mount
   useEffect(() => {
-    if (!nameReady) {
+    if (!nameReady || !participantKey) {
       return;
     }
 
@@ -202,10 +209,9 @@ export default function RoomPage() {
         }
       } catch (err: any) {
         console.error('Error verifying meeting:', err);
-        if (err?.name !== 'AbortError') {
-          setMeetingError('Failed to verify meeting');
-          setTimeout(() => router.push(fallbackRoute), 2000);
-        }
+        setMeetingError(err?.name === 'AbortError'
+          ? 'The meeting service took too long to respond. Please try joining again.'
+          : 'Failed to verify meeting');
       } finally {
         setTokenResolved(true);
       }
@@ -219,33 +225,35 @@ export default function RoomPage() {
       return;
     }
 
-    const heartbeat = () => {
-      void fetch('/api/meeting-access', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ meetingId, participantKey, action: 'heartbeat' }),
-        keepalive: true,
-      }).then(async (response) => {
-        if (response.ok) return;
-        const body = await response.json().catch(() => ({}));
-        setDurationNotice(body.error || 'Your access to this meeting has ended.');
+    const monitor = startMeetingAccessHeartbeat({
+      meetingId,
+      participantKey,
+      onSession: setSessionEndsAt,
+      onDenied: (message) => {
+        setDurationNotice(message);
         apiRef.current?.executeCommand?.('hangup');
-      }).catch(() => undefined);
+      },
+    });
+    const checkAccess = () => { void monitor.check(); };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') checkAccess();
     };
-
-    const intervalId = window.setInterval(heartbeat, 30_000);
     const leave = () => {
       void fetch('/api/meeting-access', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ meetingId, participantKey, action: 'leave' }),
         keepalive: true,
-      });
+      }).catch(() => undefined);
     };
 
+    window.addEventListener('online', checkAccess);
+    document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('pagehide', leave);
     return () => {
-      window.clearInterval(intervalId);
+      monitor.stop();
+      window.removeEventListener('online', checkAccess);
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('pagehide', leave);
       leave();
     };
@@ -254,12 +262,13 @@ export default function RoomPage() {
   useEffect(() => {
     if (!sessionEndsAt) return;
     const waitMs = new Date(sessionEndsAt).getTime() - Date.now();
-    if (!Number.isFinite(waitMs) || waitMs <= 0) return;
+    if (!Number.isFinite(waitMs)) return;
 
+    // Warn ahead of the cutoff; only the server heartbeat may enforce expiry.
+    // An incorrect local clock must never disconnect a valid meeting.
     const timer = window.setTimeout(() => {
-      setDurationNotice('This meeting has reached the maximum duration for its plan.');
-      apiRef.current?.executeCommand?.('hangup');
-    }, waitMs + 250);
+      setDurationNotice('This room is approaching its plan time limit.');
+    }, Math.max(0, waitMs - 10 * 60_000));
 
     return () => window.clearTimeout(timer);
   }, [sessionEndsAt]);
@@ -564,6 +573,7 @@ export default function RoomPage() {
       ...(meeting?.chatEnabled !== false ? ['chat'] : []),
       ...(meeting?.recordingEnabled !== false ? ['recording'] : []),
       'settings',
+      'videoquality',
       'raisehand',
       'tileview',
       'participants-pane',
@@ -581,7 +591,7 @@ export default function RoomPage() {
     (!meeting.isPrivate || jwt)
   );
 
-  if (status === 'loading' || !nameReady) {
+  if ((status === 'loading' && !meeting) || !nameReady) {
     return <Loader />;
   }
 

@@ -6,7 +6,8 @@ import { getWorkspaceQuota } from '@/lib/workspace-usage';
 
 export const dynamic = 'force-dynamic';
 
-const PARTICIPANT_TTL_MS = 90_000;
+// Background tabs can throttle their timers for minutes during screen sharing.
+const PARTICIPANT_TTL_MS = 5 * 60_000;
 
 function participantLimitMessage(limit: number) {
   return `This room has reached its plan limit of ${limit} active participants.`;
@@ -22,6 +23,9 @@ export async function POST(request: NextRequest) {
     if (!meetingId || !participantKey) {
       return NextResponse.json({ error: 'meetingId and participantKey are required' }, { status: 400 });
     }
+    if (!['join', 'heartbeat', 'leave'].includes(action)) {
+      return NextResponse.json({ error: 'Invalid access action' }, { status: 400 });
+    }
 
     await dbConnect();
     const meeting = await Meeting.findOne({ meetingId });
@@ -36,6 +40,9 @@ export async function POST(request: NextRequest) {
 
     const now = new Date();
     const staleBefore = new Date(now.getTime() - PARTICIPANT_TTL_MS);
+    // Refresh known participants before pruning so a delayed heartbeat cannot
+    // turn an established participant into a new admission at room capacity.
+    await MeetingParticipant.updateOne({ meetingId, participantKey }, { $set: { lastSeenAt: now } });
     await MeetingParticipant.deleteMany({ meetingId, lastSeenAt: { $lt: staleBefore } });
 
     const activeParticipants = await MeetingParticipant.countDocuments({ meetingId });
@@ -43,13 +50,13 @@ export async function POST(request: NextRequest) {
 
     // A finished room can start a new session once everyone has left. An
     // active room never receives a new duration allowance by refreshing.
-    if (!meeting.activeSessionEndsAt || (meeting.activeSessionEndsAt < now && activeParticipants === 0)) {
+    if (!meeting.activeSessionStartedAt || (meeting.activeSessionEndsAt && meeting.activeSessionEndsAt < now && activeParticipants === 0)) {
       const quota = await getWorkspaceQuota(meeting.hostEmail);
       // Apply the host's current workspace plan when a room starts. This makes
       // upgraded plan allowances available to existing rooms and prevents an
       // old room snapshot from retaining limits after a downgrade.
-      const maxMeetingMinutes = quota?.planDefinition.maxMeetingMinutes ?? meeting.maxMeetingMinutes ?? null;
-      const maxParticipants = quota?.planDefinition.maxParticipants ?? meeting.maxParticipants ?? null;
+      const maxMeetingMinutes = quota ? quota.planDefinition.maxMeetingMinutes : meeting.maxMeetingMinutes ?? null;
+      const maxParticipants = quota ? quota.planDefinition.maxParticipants : meeting.maxParticipants ?? null;
       meeting.activeSessionStartedAt = now;
       meeting.activeSessionEndsAt = maxMeetingMinutes == null
         ? null

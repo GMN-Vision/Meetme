@@ -46,6 +46,16 @@ export async function GET(req: NextRequest) {
     const resolvedName = userEmail || guestName;
     const resolvedId = userEmail || `guest:${resolvedName}`;
     const roomName = normalizeJitsiRoomName(meetingId);
+    const remainingSeconds = meeting.activeSessionEndsAt
+      ? Math.ceil((meeting.activeSessionEndsAt.getTime() - Date.now()) / 1000)
+      : (meeting.maxMeetingMinutes ?? 240) * 60;
+
+    if (remainingSeconds <= 0) {
+      return NextResponse.json(
+        { error: 'This meeting has reached its time limit.', code: 'MEETING_DURATION_REACHED' },
+        { status: 403 }
+      );
+    }
 
     const token = createJitsiJwt({
       roomName,
@@ -57,6 +67,9 @@ export async function GET(req: NextRequest) {
       },
       secret,
       issuer,
+      // Cover the room's allowance plus a short grace period for native
+      // transport recovery. Access heartbeats still enforce the plan limit.
+      ttlSeconds: remainingSeconds + 5 * 60,
       moderator: Boolean(userEmail) && (userEmail === meeting.hostEmail || userEmail === meeting.hostId),
     });
 
@@ -66,7 +79,7 @@ export async function GET(req: NextRequest) {
         isPrivate: true,
         token,
       },
-      { status: 200 }
+      { status: 200, headers: { 'Cache-Control': 'no-store' } }
     );
   } catch (error: any) {
     console.error('Error creating Jitsi token:', error);

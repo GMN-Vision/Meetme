@@ -30,7 +30,7 @@ export function createJitsiJwt(params: {
     user,
     secret,
     issuer = 'melanam',
-    ttlSeconds = 60 * 60,
+    ttlSeconds = 4 * 60 * 60,
     moderator = true,
   } = params;
 
