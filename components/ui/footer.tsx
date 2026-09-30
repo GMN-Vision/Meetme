@@ -37,18 +37,18 @@ export function Footer() {
         <div>
           <p className="font-display text-base font-semibold text-[#f4f7fa]">Melanam</p>
           <p className="mt-3 max-w-sm text-sm leading-6 text-[#8f9aa8]">Secure video rooms, learning workspaces and AI meeting context in one place.</p>
-          <Link href="/sign-in" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#ef233c] hover:text-[#ff4056]">
+          <Link href="/sign-in" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#ff6b7d] hover:text-[#ff4056]">
             Get started
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
         {footerSections.map((section) => (
           <div key={section.title}>
-            <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7d8897]">{section.title}</h3>
+            <h3 className="text-sm font-bold uppercase tracking-[0.12em] text-[#aeb4bf]">{section.title}</h3>
             <ul className="mt-4 space-y-2.5 text-sm">
               {section.links.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-[#c7d0d9] hover:text-[#ef233c]">{link.label}</Link>
+                  <Link href={link.href} className="text-[#c7d0d9] hover:text-[#ff6b7d]">{link.label}</Link>
                 </li>
               ))}
             </ul>
@@ -56,7 +56,7 @@ export function Footer() {
         ))}
       </div>
       <div className="border-t border-[#2a3039]">
-        <div className="mx-auto flex max-w-[80rem] flex-col gap-2 px-4 py-5 text-xs text-[#7d8897] sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="mx-auto flex max-w-[80rem] flex-col gap-2 px-4 py-5 text-xs text-[#aeb4bf] sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <span>Copyright 2036 Global Development Networks Ltd.</span>
           <span>Private by design</span>
         </div>

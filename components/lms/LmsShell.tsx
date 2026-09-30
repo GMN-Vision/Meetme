@@ -64,7 +64,7 @@ export function LmsShell({
       <aside className="lms-sidebar hidden lg:flex">
         <div className="lms-sidebar__brand">
           <span className="font-display text-sm font-semibold text-[#f4f7fa]">Melanam</span>
-          <span className="mt-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-[#7d8897]">{workspaceLabel}</span>
+          <span className="mt-1 block text-sm font-bold uppercase tracking-[0.12em] text-[#aeb4bf]">{workspaceLabel}</span>
         </div>
         <nav className="lms-sidebar__nav" aria-label="Workspace navigation">
           {navigation.map(({ href, label, icon: Icon }) => (
@@ -94,7 +94,7 @@ export function LmsShell({
           <div aria-hidden="true" className="lms-shell-header__grid" />
           <div aria-hidden="true" className="lms-shell-header__glow" />
           <div className="min-w-0">
-            <div className="lms-shell-eyebrow inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#37d7ff]">
+            <div className="lms-shell-eyebrow inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-[#37d7ff]">
               <span className="lms-shell-eyebrow__signal" />
               <Sparkles className="h-3.5 w-3.5" />
               {kicker}
@@ -109,9 +109,9 @@ export function LmsShell({
               <div className="lms-shell-stats mt-6 grid gap-px overflow-hidden rounded-lg border border-[#2a3039] bg-[#2a3039] sm:grid-cols-2 xl:grid-cols-4">
                 {stats.map((stat) => (
                   <div key={stat.label} className="lms-shell-stat bg-[#12151a] px-4 py-3.5">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#7d8897]">{stat.label}</p>
+                    <p className="text-sm font-bold uppercase tracking-[0.1em] text-[#aeb4bf]">{stat.label}</p>
                     <p className="mt-1 text-[24px] font-semibold leading-none text-[#f4f7fa]">{stat.value}</p>
-                    {stat.helper ? <p className="mt-2 text-[11px] leading-4 text-[#8f9aa8]">{stat.helper}</p> : null}
+                    {stat.helper ? <p className="mt-2 text-sm leading-4 text-[#8f9aa8]">{stat.helper}</p> : null}
                   </div>
                 ))}
               </div>

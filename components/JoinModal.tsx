@@ -89,7 +89,7 @@ export function JoinModal({ isOpen, onClose }: JoinModalProps) {
         <div className="mb-6">
           <div className="flex items-center justify-between gap-3">
             <p className="section-kicker mb-2">Join room</p>
-            <span className="rounded-full bg-amber-500/10 px-3 py-1 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-500/15">
+            <span className="rounded-full bg-amber-500/10 px-3 py-1 text-sm font-semibold text-amber-700 ring-1 ring-amber-500/15">
               Quick join
             </span>
           </div>

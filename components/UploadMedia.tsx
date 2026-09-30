@@ -198,11 +198,11 @@ export default function UploadMedia({
     >
       <div className="mb-4 flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.26em] text-cyan-600">Upload Media</p>
+          <p className="text-sm uppercase tracking-[0.26em] text-cyan-600">Upload Media</p>
           <h3 className="mt-1 font-display text-xl font-semibold text-slate-950">Share files with everyone</h3>
           <p className="mt-1 text-sm text-slate-500">Drop a file or browse from your device. Everyone in the room will see it.</p>
         </div>
-        <span className="rounded-full bg-cyan-50 px-3 py-1 text-[11px] font-semibold text-cyan-700 ring-1 ring-cyan-200">
+        <span className="rounded-full bg-cyan-50 px-3 py-1 text-sm font-semibold text-cyan-700 ring-1 ring-cyan-200">
           {files.length} shared
         </span>
       </div>

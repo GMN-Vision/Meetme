@@ -871,7 +871,7 @@ export default function AdminDashboard() {
                   onChange={(e) => setNewOrgDomain(e.target.value)}
                   className="input-modern mt-1.5 w-full"
                 />
-                <span className="text-[10px] text-slate-400 mt-1 block">
+                <span className="text-sm text-slate-400 mt-1 block">
                   New sign-ups matching this domain automatically link to this organization.
                 </span>
               </div>

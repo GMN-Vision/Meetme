@@ -207,7 +207,7 @@ export default function AdminSubscriptionTable() {
                       {[subscription.userName || 'No name', subscription.userRole || 'user', subscription.userStatus || 'active'].join(' - ')}
                     </div>
                     {!subscription.selected ? (
-                      <span className="mt-2 inline-flex rounded-lg bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-500/20">
+                      <span className="mt-2 inline-flex rounded-lg bg-amber-50 px-2 py-1 text-sm font-semibold text-amber-700 ring-1 ring-amber-500/20">
                         No plan selected
                       </span>
                     ) : null}

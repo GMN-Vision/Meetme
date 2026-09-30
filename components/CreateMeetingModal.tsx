@@ -46,7 +46,7 @@ export function CreateMeetingModal({ isOpen, onClose, onCreate }: CreateMeetingM
         <div className="mb-6">
           <div className="flex items-center justify-between gap-3">
             <p className="section-kicker mb-2">Create room</p>
-            <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold text-cyan-700 ring-1 ring-cyan-500/15">
+            <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-sm font-semibold text-cyan-700 ring-1 ring-cyan-500/15">
               Premium
             </span>
           </div>
