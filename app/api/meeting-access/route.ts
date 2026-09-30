@@ -45,8 +45,11 @@ export async function POST(request: NextRequest) {
     // active room never receives a new duration allowance by refreshing.
     if (!meeting.activeSessionEndsAt || (meeting.activeSessionEndsAt < now && activeParticipants === 0)) {
       const quota = await getWorkspaceQuota(meeting.hostEmail);
-      const maxMeetingMinutes = meeting.maxMeetingMinutes ?? quota?.planDefinition.maxMeetingMinutes ?? null;
-      const maxParticipants = meeting.maxParticipants ?? quota?.planDefinition.maxParticipants ?? null;
+      // Apply the host's current workspace plan when a room starts. This makes
+      // upgraded plan allowances available to existing rooms and prevents an
+      // old room snapshot from retaining limits after a downgrade.
+      const maxMeetingMinutes = quota?.planDefinition.maxMeetingMinutes ?? meeting.maxMeetingMinutes ?? null;
+      const maxParticipants = quota?.planDefinition.maxParticipants ?? meeting.maxParticipants ?? null;
       meeting.activeSessionStartedAt = now;
       meeting.activeSessionEndsAt = maxMeetingMinutes == null
         ? null

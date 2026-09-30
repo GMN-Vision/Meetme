@@ -4,7 +4,6 @@ import Script from 'next/script';
 import { useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import {
   ArrowRight,
   BarChart3,
@@ -55,13 +54,26 @@ const comparisonRows = [
   ['Meeting rooms', 'Unlimited', 'Unlimited', 'Unlimited'],
   ['People who can join', '25', '150', '500'],
   ['Workspace seats', '1', '25', '100'],
-  ['Max room length', '45 min', '12 hours', '24 hours'],
-  ['Live captions', 'No', 'Yes', 'Team credits'],
-  ['AI summaries', 'No', 'Yes', 'Advanced'],
-  ['File uploads', 'No', '1 GB/upload', '5 GB/upload'],
-  ['Recording', 'No', 'Local', 'Workspace'],
-  ['Livestream', 'No', 'No', 'Yes'],
-  ['Admin controls', 'No', 'Basic', 'Full'],
+  ['Maximum meeting length', '3 hours', '24 hours', '48 hours'],
+  ['AI live captions', 'Not included', 'Included credits', 'Team credits'],
+  ['AI meeting summaries', 'Not included', 'Included', 'Advanced notes and tasks'],
+  ['Recording and replay', 'Not included', 'Local recording', 'Recording workspace'],
+  ['File, media, and document sharing', '100 MB / upload', '1 GB / upload', '5 GB / upload'],
+  ['Workspace storage', '1 GB', '50 GB', '250 GB'],
+  ['Excalidraw whiteboard', '1 board / meeting', 'Unlimited boards', 'Boards and templates'],
+  ['YouTube livestreaming', 'Not included', 'Not included', 'Included'],
+  ['LMS workspace', 'Student and instructor basics', 'Full LMS', 'LMS and organization controls'],
+  ['Admin controls', 'Not included', 'Basic member controls', 'Full plan and policy controls'],
+];
+
+const competitorRows = [
+  ['Free group meeting length', '3 hours', '40 minutes', '60 minutes'],
+  ['Free-plan participants', '25', '100', '100'],
+  ['Collaboration canvas', 'Excalidraw whiteboard', 'Zoom Whiteboard', 'Workspace tools'],
+  ['Live captions', 'Pro and Business', 'Plan dependent', 'Account or edition dependent'],
+  ['YouTube livestreaming', 'Business included', 'Plan or add-on dependent', 'Eligible Workspace editions'],
+  ['File, media, and document sharing', 'Built into workspace', 'In-meeting and app ecosystem', 'Google Drive ecosystem'],
+  ['AI meeting recap', 'Pro and Business included', 'Product or add-on dependent', 'Workspace edition dependent'],
 ];
 
 function PlanPrice({ planKey, cycle }: { planKey: PlanKey; cycle: BillingCycle }) {
@@ -249,7 +261,7 @@ export default function PricingPage() {
             <p className="pricing-kicker"><Sparkles /> Melanam pricing</p>
             <h1>Simple plans.<br /><span>Serious capability.</span></h1>
             <p className="pricing-hero__description">
-              Start free, upgrade when AI notes and recordings become daily work, and add credits whenever your team has a busy month.
+              Start with full 3-hour meetings at no cost. Upgrade when live captions, recordings, AI notes, YouTube livestreaming, and larger team workflows become daily work.
             </p>
 
             <div className="pricing-cycle" aria-label="Billing cycle">
@@ -266,6 +278,7 @@ export default function PricingPage() {
               ))}
             </div>
             <div className="pricing-trust-line">
+              <span><Check /> 3-hour free meetings</span>
               <span><Check /> Unlimited rooms</span>
               <span><Check /> Save up to 2 months yearly</span>
               <span><Check /> Secure INR checkout</span>
@@ -365,7 +378,7 @@ export default function PricingPage() {
                   </dl>
 
                   <ul className="pricing-plan-card__features">
-                    {plan.highlights.slice(0, 3).map((highlight) => (
+                    {plan.highlights.map((highlight) => (
                       <li key={highlight}><Check /> <span>{highlight}</span></li>
                     ))}
                   </ul>
@@ -392,9 +405,9 @@ export default function PricingPage() {
           <div className="pricing-section-heading">
             <div>
               <p className="pricing-kicker">System matrix</p>
-              <h2 id="pricing-comparison-title">Compare the essentials.</h2>
+              <h2 id="pricing-comparison-title">Everything included, at a glance.</h2>
             </div>
-            <Link href="/sign-in">Create account <ArrowRight /></Link>
+            <p>Compare meeting limits, collaboration, sharing, AI, and admin tools.</p>
           </div>
           <div className="pricing-comparison__scroll">
             <div className="pricing-comparison__table">
@@ -408,6 +421,31 @@ export default function PricingPage() {
               ))}
             </div>
           </div>
+        </section>
+
+        <section className="pricing-benchmark" aria-labelledby="pricing-benchmark-title">
+          <div className="pricing-section-heading">
+            <div>
+              <p className="pricing-kicker">How we compare</p>
+              <h2 id="pricing-benchmark-title">More time to meet. More ways to work together.</h2>
+            </div>
+            <p>Melanam combines video meetings with a collaborative workspace, rather than making teams stitch together separate tools.</p>
+          </div>
+          <div className="pricing-benchmark__scroll">
+            <div className="pricing-benchmark__table">
+              <div className="pricing-benchmark__head">
+                <span>Capability</span><span>Melanam</span><span>Zoom</span><span>Google Meet</span>
+              </div>
+              {competitorRows.map(([feature, melanam, zoom, meet]) => (
+                <div key={feature} className="pricing-benchmark__row">
+                  <strong>{feature}</strong><span>{melanam}</span><span>{zoom}</span><span>{meet}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="pricing-benchmark__note">
+            Provider allowances and availability vary by account, edition, region, and configuration. Free meeting-time and participant figures are based on published <a href="https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067966" target="_blank" rel="noreferrer">Zoom</a> and <a href="https://support.google.com/meet/answer/13396001" target="_blank" rel="noreferrer">Google Meet</a> documentation.
+          </p>
         </section>
 
         <section className="pricing-credits" aria-labelledby="pricing-credits-title">
