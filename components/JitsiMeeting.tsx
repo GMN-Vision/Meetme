@@ -10,7 +10,6 @@ const DEFAULT_TOOLBAR_BUTTONS = [
   'fullscreen',
   'hangup',
   'chat',
-  'recording',
   'settings',
   'raisehand',
   'participants-pane',
@@ -380,7 +379,7 @@ export function JitsiMeeting({
           ...(userEmail && { email: userEmail }),
         },
         configOverwrite: {
-          toolbarButtons: toolbarButtonsRef.current,
+          toolbarButtons: toolbarButtonsRef.current.filter(button => button !== 'recording'),
           startWithAudioMuted: startWithAudioMutedOnJoin,
           startWithVideoMuted: startWithVideoMutedOnJoin,
           disableDeepLinking: true,
@@ -445,13 +444,13 @@ export function JitsiMeeting({
           enableForcedReload: false,
           enableFeaturesBasedOnToken: Boolean(jwt),
           localRecording: {
-            enabled: true,
-            notifyAllParticipants: false,
-            disable: false,
+            enabled: false,
+            notifyAllParticipants: true,
+            disable: true,
           },
           recordingService: {
-            enabled: true,
-            sharingEnabled: true,
+            enabled: false,
+            sharingEnabled: false,
           },
           // Self-hosted Jitsi configuration
           enableWelcomePage: false,

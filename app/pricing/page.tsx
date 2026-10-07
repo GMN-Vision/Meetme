@@ -46,7 +46,7 @@ type Membership = {
 
 const valueStats = [
   { label: 'Razorpay-ready', value: 'INR', icon: Landmark },
-  { label: 'Paid gateway reserve', value: '2.36%', icon: BarChart3 },
+  { label: 'Free server recording', value: '5 hrs/mo', icon: BarChart3 },
   { label: 'Credits start from', value: 'Rs. 0.69/min', icon: Gauge },
 ];
 
@@ -57,9 +57,10 @@ const comparisonRows = [
   ['Maximum meeting length', '3 hours', '24 hours', '48 hours'],
   ['AI live captions', 'Not included', 'Included credits', 'Team credits'],
   ['AI meeting summaries', 'Not included', 'Included', 'Advanced notes and tasks'],
-  ['Recording and replay', 'Not included', 'Local recording', 'Recording workspace'],
+  ['Server recording', ...BILLING_PLANS.filter(plan => plan.key !== 'enterprise').map(plan => plan.limits.recordings)],
   ['File, media, and document sharing', '100 MB / upload', '1 GB / upload', '5 GB / upload'],
-  ['Workspace storage', '1 GB', '50 GB', '250 GB'],
+  ['Workspace file storage (separate from recordings)', '1 GB', '50 GB', '250 GB'],
+  ['Concurrent server recordings per workspace', '1', '1', '1'],
   ['Excalidraw whiteboard', '1 board / meeting', 'Unlimited boards', 'Boards and templates'],
   ['YouTube livestreaming', 'Not included', 'Not included', 'Included'],
   ['LMS workspace', 'Student and instructor basics', 'Full LMS', 'LMS and organization controls'],
@@ -69,6 +70,7 @@ const comparisonRows = [
 const competitorRows = [
   ['Free group meeting length', '3 hours', '40 minutes', '60 minutes'],
   ['Free-plan participants', '25', '100', '100'],
+  ['Free server recording', '5 hours/month, 7-day retention', 'Not included', 'Not included'],
   ['Collaboration canvas', 'Excalidraw whiteboard', 'Zoom Whiteboard', 'Workspace tools'],
   ['Live captions', 'Pro and Business', 'Plan dependent', 'Account or edition dependent'],
   ['YouTube livestreaming', 'Business included', 'Plan or add-on dependent', 'Eligible Workspace editions'],
@@ -261,7 +263,7 @@ export default function PricingPage() {
             <p className="pricing-kicker"><Sparkles /> Melanam pricing</p>
             <h1>Simple plans.<br /><span>Serious capability.</span></h1>
             <p className="pricing-hero__description">
-              Start with full 3-hour meetings at no cost. Upgrade when live captions, recordings, AI notes, YouTube livestreaming, and larger team workflows become daily work.
+              Start with full 3-hour meetings at no cost. Record on every plan. Upgrade for more recording hours, live captions, AI notes, YouTube livestreaming, and larger team workflows become daily work.
             </p>
 
             <div className="pricing-cycle" aria-label="Billing cycle">
@@ -280,7 +282,7 @@ export default function PricingPage() {
             <div className="pricing-trust-line">
               <span><Check /> 3-hour free meetings</span>
               <span><Check /> Unlimited rooms</span>
-              <span><Check /> Save up to 2 months yearly</span>
+              <span><Check /> Save 10% or more yearly</span>
               <span><Check /> Secure INR checkout</span>
             </div>
           </div>
@@ -407,7 +409,7 @@ export default function PricingPage() {
               <p className="pricing-kicker">System matrix</p>
               <h2 id="pricing-comparison-title">Everything included, at a glance.</h2>
             </div>
-            <p>Compare meeting limits, collaboration, sharing, AI, and admin tools.</p>
+            <p>Recording allowances reset each calendar month in UTC, including annual plans. One recording at a time per workspace. Recording storage is separate from file storage; recordings expire after the listed retention period.</p>
           </div>
           <div className="pricing-comparison__scroll">
             <div className="pricing-comparison__table">
@@ -444,7 +446,7 @@ export default function PricingPage() {
             </div>
           </div>
           <p className="pricing-benchmark__note">
-            Provider allowances and availability vary by account, edition, region, and configuration. Free meeting-time and participant figures are based on published <a href="https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067966" target="_blank" rel="noreferrer">Zoom</a> and <a href="https://support.google.com/meet/answer/13396001" target="_blank" rel="noreferrer">Google Meet</a> documentation.
+            Provider allowances and availability vary by account, edition, region, and configuration. Comparison checked 7 October 2026. Free meeting-time and participant figures are based on published <a href="https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067966" target="_blank" rel="noreferrer">Zoom</a> and <a href="https://support.google.com/meet/answer/13396001" target="_blank" rel="noreferrer">Google Meet</a> documentation. Recording availability is based on <a href="https://zoom.us/pricing/" target="_blank" rel="noreferrer">Zoom pricing</a> and <a href="https://workspace.google.com/pricing" target="_blank" rel="noreferrer">Google Workspace pricing</a>.
           </p>
         </section>
 
@@ -453,7 +455,7 @@ export default function PricingPage() {
             <span><WalletCards /></span>
             <p className="pricing-kicker">On-demand power</p>
             <h2 id="pricing-credits-title">Extra credits, only when needed.</h2>
-            <p>Top up AI summaries, captions, and recording workflows without changing your plan.</p>
+            <p>Top up AI summaries and captions without changing your plan. Server recording uses a separate monthly allowance.</p>
           </div>
           <div className="pricing-credit-grid">
             {CREDIT_PACKS.map((pack) => (

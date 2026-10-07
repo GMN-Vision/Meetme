@@ -58,6 +58,8 @@ export function Navbar() {
   // Initialize recording and livestream hooks
   const {
     isRecording,
+    canRecord: canUseRecording,
+    status: recordingStatus,
     startRecording,
     stopRecording,
     loading: recordingLoading,
@@ -232,7 +234,7 @@ export function Navbar() {
 
   const currentPlanRank = membership?.active ? PLAN_RANK[membership.plan] : -1;
   const canUseCaptions = currentPlanRank >= PLAN_RANK.pro;
-  const canUseRecording = currentPlanRank >= PLAN_RANK.pro;
+
   const canUseFiles = Boolean(membership?.active);
   const canUseLivestream = currentPlanRank >= PLAN_RANK.business;
 
@@ -337,31 +339,31 @@ export function Navbar() {
                   onClick={() => {
                     if (isRecording) {
                       void stopRecording(roomMeetingId);
-                    } else if (requestPaidFeature('Recording', 'pro')) {
+                    } else if (canUseRecording) {
                       void startRecording(roomMeetingId);
                     }
                   }}
-                  disabled={recordingLoading}
+                  disabled={recordingLoading || !canUseRecording}
                   className={`${navActionButtonClass} ${
                     isRecording
                       ? 'border-red-200 bg-red-50/85 text-red-950 shadow-[0_10px_24px_rgba(239,68,68,0.12)]'
                       : `border-slate-200 bg-slate-100/80 text-slate-950 ${recordingHoverClass}`
                   } disabled:opacity-50`}
-                  aria-label={isRecording ? 'Stop local recording' : 'Start local recording'}
-                  title={isRecording ? 'Stop local recording' : canUseRecording ? 'Start local recording' : 'Recording requires Pro'}
+                  aria-label={isRecording ? 'Stop server recording' : 'Start server recording'}
+                  title={isRecording ? 'Stop server recording' : canUseRecording ? 'Start server recording' : 'Only the host can record'}
                 >
                   {isRecording ? <Square className="h-4 w-4 fill-current" /> : canUseRecording ? <Radio className="h-4 w-4" /> : <LockKeyhole className="h-4 w-4" />}
                   <span className="hidden lg:inline">
-                    {recordingLoading ? 'Preparing...' : isRecording ? 'Stop Recording' : 'Start Recording'}
+                    {recordingLoading ? (recordingStatus === 'processing' ? 'Processing...' : 'Starting...') : isRecording ? 'Stop Recording' : 'Record'}
                   </span>
                 </button>
-                {isRecording && (
+                {(isRecording || recordingStatus === 'starting') && (
                   <div
-                    className="hidden h-9 items-center gap-2 rounded-xl border border-red-200 bg-red-50/90 px-3 text-xs font-bold text-red-700 shadow-[0_10px_24px_rgba(239,68,68,0.12)] lg:inline-flex"
+                    className="inline-flex h-9 items-center gap-2 rounded-xl border border-red-200 bg-red-50/90 px-3 text-xs font-bold text-red-700 shadow-[0_10px_24px_rgba(239,68,68,0.12)] lg:inline-flex"
                     aria-live="polite"
                   >
                     <span className="h-2.5 w-2.5 rounded-full bg-red-600 animate-pulse" />
-                    <span>Recording</span>
+                    <span className="hidden sm:inline">{isRecording ? 'Recording' : 'Starting recording'}</span>
                     <span className="font-mono text-red-900">{recordingElapsedTime}</span>
                   </div>
                 )}

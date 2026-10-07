@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const { meetingId, type, details, userName, userEmail } = body;
+    if (type === 'recording-started' || type === 'recording-stopped') return NextResponse.json({ error: 'Recording state is managed by the server.' }, { status: 403 });
 
     if (!meetingId || !type) {
       return NextResponse.json({ error: 'Meeting ID and type are required' }, { status: 400 });

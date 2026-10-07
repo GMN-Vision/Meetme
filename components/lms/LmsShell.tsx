@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { MeetingRecordings } from './MeetingRecordings';
 import {
   BookOpen,
   CalendarDays,
@@ -118,7 +119,7 @@ export function LmsShell({
             ) : null}
           </div>
         </header> : null}
-        <main className={`lms-shell-body grid min-w-0 gap-5 ${showHeader ? 'pt-6' : ''}`}>{children}</main>
+        <main className={`lms-shell-body grid min-w-0 gap-5 ${showHeader ? 'pt-6' : ''}`}><MeetingRecordings />{children}</main>
       </div>
     </div>
   );

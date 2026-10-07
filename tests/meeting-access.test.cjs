@@ -5,6 +5,8 @@ const load = require('./load-typescript.cjs');
 function accessRoute(plan = { maxMeetingMinutes: 180, maxParticipants: 25 }) {
   const participants = new Map();
   let quotaReads = 0;
+  let email = 'host@example.com';
+  const members = new Set();
   const meeting = {
     meetingId: 'room', hostEmail: 'host@example.com',
     activeSessionStartedAt: null, activeSessionEndsAt: null,
@@ -13,6 +15,9 @@ function accessRoute(plan = { maxMeetingMinutes: 180, maxParticipants: 25 }) {
   };
   const route = load('app/api/meeting-access/route.ts', {
     '@/lib/db': async () => {},
+    '@/lib/auth': { auth: async () => email ? { user: { email } } : null },
+    '@/lib/recording-policy': load('lib/recording-policy.ts'),
+    '@/models/MeetingMember': { updateOne: async (query) => members.add(query.userEmail) },
     '@/models/Meeting': { findOne: async () => meeting },
     '@/models/MeetingParticipant': {
       deleteOne: async ({ participantKey }) => participants.delete(participantKey),
@@ -33,7 +38,7 @@ function accessRoute(plan = { maxMeetingMinutes: 180, maxParticipants: 25 }) {
     } },
   });
   return {
-    meeting, participants, quotaReads: () => quotaReads,
+    meeting, participants, members, setEmail: (value) => { email = value; }, quotaReads: () => quotaReads,
     request: (participantKey, action = 'heartbeat') => route.POST({
       json: async () => ({ meetingId: 'room', participantKey, action }),
     }),
@@ -87,4 +92,21 @@ test('leaving releases only that tab and invalid actions cannot change presence'
   await room.request('tab-1', 'leave');
   assert.equal(room.participants.has('tab-2'), true);
   assert.equal(room.participants.size, 1);
+});
+
+test('only the host starts the room, and ended rooms cannot reopen', async () => {
+  const room = accessRoute();
+  room.setEmail('member@example.com');
+  assert.equal((await room.request('member', 'join')).status, 403);
+  assert.equal(room.members.size, 0);
+  room.setEmail('HOST@example.com');
+  assert.equal((await room.request('host', 'join')).status, 200);
+  room.setEmail('member@example.com');
+  assert.equal((await room.request('member', 'join')).status, 200);
+  assert.ok(room.members.has('member@example.com'));
+  room.meeting.endedAt = new Date();
+  const denied = await room.request('member');
+  assert.equal((await denied.json()).code, 'MEETING_ENDED');
+  room.setEmail('host@example.com');
+  assert.equal((await room.request('host')).status, 403);
 });

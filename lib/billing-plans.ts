@@ -27,6 +27,7 @@ export type BillingPlan = {
   seats: number | null;
   maxParticipants: number | null;
   storageGb: number | null;
+  recording: { monthlyMinutes: number; maxSessionMinutes: number; storageGb: number; retentionDays: number };
   recommended?: boolean;
   features: Record<PlanFeatureKey, boolean>;
   highlights: string[];
@@ -86,7 +87,8 @@ function calculateProfit(monthlyPrice: number | null, includedCredits: number | 
     };
   }
 
-  const variableCost = Math.round(includedCredits * VARIABLE_COST_PER_CREDIT_INR);
+  const recordingReserve = planKey ? ({ free: 35, pro: 200, business: 650 }[planKey]) : 0;
+  const variableCost = Math.round(includedCredits * VARIABLE_COST_PER_CREDIT_INR) + recordingReserve;
   const gatewayFee = Math.round(monthlyPrice * RAZORPAY_EFFECTIVE_FEE_RATE);
   const reserve = planKey ? MONTHLY_SUPPORT_RESERVE_INR[planKey] : 0;
   const netBeforeFixedCosts = monthlyPrice - variableCost - gatewayFee - reserve;
@@ -131,18 +133,19 @@ export const BILLING_PLANS: BillingPlan[] = [
     seats: 1,
     maxParticipants: 25,
     storageGb: 1,
+    recording: { monthlyMinutes: 300, maxSessionMinutes: 180, storageGb: 5, retentionDays: 7 },
     features: {
       rooms: true,
       captions: false,
       aiNotes: false,
-      recording: false,
+      recording: true,
       files: true,
       livestream: false,
       whiteboard: true,
       lms: true,
       adminControls: false,
     },
-    highlights: ['3-hour meetings at no cost', '25 people can join each meeting', 'Excalidraw whiteboard included', 'File, media, and document sharing'],
+    highlights: ['3-hour meetings at no cost', '25 people can join each meeting', '5 hours of server recording each month', 'File, media, and document sharing'],
     limits: {
       meetingMinutes: '3 hours per room',
       monthlyRooms: 'Unlimited rooms',
@@ -151,7 +154,7 @@ export const BILLING_PLANS: BillingPlan[] = [
       credits: 'No paid credits included',
       captions: 'Upgrade for captions',
       summaries: 'Not included',
-      recordings: 'Not included',
+      recordings: '5 hours/month / 3 hours per recording / 5 GB / 7-day retention',
       storage: '1 GB workspace storage',
       fileSharing: '100 MB per file, media, or document upload',
       livestreams: 'Not included',
@@ -167,14 +170,15 @@ export const BILLING_PLANS: BillingPlan[] = [
     badge: 'Most teams',
     description: 'The core paid plan for serious meetings, AI notes, recordings, and follow-up work.',
     audience: 'For creators, instructors, coaches, and small teams.',
-    monthlyInr: 999,
-    annualInr: 9990,
+    monthlyInr: 799,
+    annualInr: 8590,
     includedCredits: proCredits,
     monthlyRooms: null,
     maxMeetingMinutes: 1440,
     seats: 25,
     maxParticipants: 150,
     storageGb: 50,
+    recording: { monthlyMinutes: 1800, maxSessionMinutes: 360, storageGb: 50, retentionDays: 30 },
     recommended: true,
     features: {
       rooms: true,
@@ -187,7 +191,7 @@ export const BILLING_PLANS: BillingPlan[] = [
       lms: true,
       adminControls: false,
     },
-    highlights: ['24-hour meetings', 'AI summaries and action items', 'Live captions and recording', '1 GB file, media, and document uploads'],
+    highlights: ['24-hour meetings', 'AI summaries and action items', '30 hours of server recording each month', '1 GB file, media, and document uploads'],
     limits: {
       meetingMinutes: '24 hours per room',
       monthlyRooms: 'Unlimited rooms',
@@ -196,7 +200,7 @@ export const BILLING_PLANS: BillingPlan[] = [
       credits: `${proCredits} credits per month`,
       captions: 'Live captions and transcript credits',
       summaries: 'AI meeting notes included',
-      recordings: 'Local recording and replay workflow',
+      recordings: '30 hours/month / 6 hours per recording / 50 GB / 30-day retention',
       storage: '50 GB workspace storage',
       fileSharing: '1 GB per file, media, or document upload',
       livestreams: 'Upgrade to Business',
@@ -204,7 +208,7 @@ export const BILLING_PLANS: BillingPlan[] = [
       lms: 'Full student and instructor LMS',
       adminControls: 'Basic member controls',
     },
-    profit: calculateProfit(999, proCredits, 'pro'),
+    profit: calculateProfit(799, proCredits, 'pro'),
   },
   {
     key: 'business',
@@ -212,14 +216,15 @@ export const BILLING_PLANS: BillingPlan[] = [
     badge: 'Scale',
     description: 'Higher limits plus admin controls for organizations that run classes and client meetings every day.',
     audience: 'For institutes, agencies, and operating teams.',
-    monthlyInr: 2999,
-    annualInr: 29990,
+    monthlyInr: 2499,
+    annualInr: 26990,
     includedCredits: businessCredits,
     monthlyRooms: null,
     maxMeetingMinutes: 2880,
     seats: 100,
     maxParticipants: 500,
     storageGb: 250,
+    recording: { monthlyMinutes: 6000, maxSessionMinutes: 720, storageGb: 250, retentionDays: 90 },
     features: {
       rooms: true,
       captions: true,
@@ -231,7 +236,7 @@ export const BILLING_PLANS: BillingPlan[] = [
       lms: true,
       adminControls: true,
     },
-    highlights: ['48-hour meetings', 'YouTube livestreaming', 'Advanced AI notes and admin controls', '5 GB file, media, and document uploads'],
+    highlights: ['48-hour meetings', 'YouTube livestreaming', '100 hours of server recording each month', '5 GB file, media, and document uploads'],
     limits: {
       meetingMinutes: '48 hours per room',
       monthlyRooms: 'Unlimited rooms',
@@ -240,7 +245,7 @@ export const BILLING_PLANS: BillingPlan[] = [
       credits: `${businessCredits} credits per month`,
       captions: 'Team caption credits',
       summaries: 'Advanced AI notes and tasks',
-      recordings: 'Recording workspace and replay workflow',
+      recordings: '100 hours/month / 12 hours per recording / 250 GB / 90-day retention',
       storage: '250 GB workspace storage',
       fileSharing: '5 GB per file, media, or document upload',
       livestreams: 'YouTube livestreaming included',
@@ -248,7 +253,7 @@ export const BILLING_PLANS: BillingPlan[] = [
       lms: 'Full LMS plus organization controls',
       adminControls: 'Plan, member, and policy controls',
     },
-    profit: calculateProfit(2999, businessCredits, 'business'),
+    profit: calculateProfit(2499, businessCredits, 'business'),
   },
   {
     key: 'enterprise',
@@ -264,6 +269,7 @@ export const BILLING_PLANS: BillingPlan[] = [
     seats: null,
     maxParticipants: null,
     storageGb: null,
+    recording: { monthlyMinutes: 18000, maxSessionMinutes: 1440, storageGb: 1000, retentionDays: 365 },
     features: {
       rooms: true,
       captions: true,
@@ -284,7 +290,7 @@ export const BILLING_PLANS: BillingPlan[] = [
       credits: 'Custom',
       captions: 'Custom',
       summaries: 'Custom',
-      recordings: 'Custom',
+      recordings: '300 hours/month / 24 hours per recording / 1 TB / 365-day retention',
       storage: 'Custom',
       fileSharing: 'Custom',
       livestreams: 'Custom',
@@ -302,7 +308,7 @@ export const CREDIT_PACKS: CreditPack[] = [
     title: 'Starter credits',
     credits: 300,
     amountInr: 299,
-    description: 'For a few extra AI summaries, recordings, or caption sessions.',
+    description: 'For a few extra AI summaries or caption sessions. Recording has its own allowance.',
     profit: calculatedTopUpProfit(299, 300),
   },
   {

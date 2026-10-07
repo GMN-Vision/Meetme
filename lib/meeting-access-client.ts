@@ -1,7 +1,7 @@
 /** Only explicit policy decisions may end an established media session. */
 export function isMeetingAccessDenied(status: number, body: { code?: string }) {
   return status === 403 && (
-    body.code === 'MEETING_DURATION_REACHED' || body.code === 'PARTICIPANT_LIMIT_REACHED'
+    body.code === 'MEETING_DURATION_REACHED' || body.code === 'PARTICIPANT_LIMIT_REACHED' || body.code === 'MEETING_ENDED'
   );
 }
 

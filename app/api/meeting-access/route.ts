@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Meeting from '@/models/Meeting';
 import MeetingParticipant from '@/models/MeetingParticipant';
+import MeetingMember from '@/models/MeetingMember';
+import { auth } from '@/lib/auth';
+import { isMeetingHost } from '@/lib/recording-policy';
 import { getWorkspaceQuota } from '@/lib/workspace-usage';
 
 export const dynamic = 'force-dynamic';
@@ -38,6 +41,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    if (meeting.endedAt) return NextResponse.json({ error: 'The host has ended this meeting.', code: 'MEETING_ENDED' }, { status: 403 });
+    const email = (await auth())?.user?.email?.toLowerCase() || '';
     const now = new Date();
     const staleBefore = new Date(now.getTime() - PARTICIPANT_TTL_MS);
     // Refresh known participants before pruning so a delayed heartbeat cannot
@@ -48,9 +53,10 @@ export async function POST(request: NextRequest) {
     const activeParticipants = await MeetingParticipant.countDocuments({ meetingId });
     const existingParticipant = await MeetingParticipant.findOne({ meetingId, participantKey }).lean();
 
-    // A finished room can start a new session once everyone has left. An
-    // active room never receives a new duration allowance by refreshing.
-    if (!meeting.activeSessionStartedAt || (meeting.activeSessionEndsAt && meeting.activeSessionEndsAt < now && activeParticipants === 0)) {
+    // Only the creator starts a room; ended sessions use a new room so their
+    // recording recipients cannot change when someone reuses an old invite.
+    if (!meeting.activeSessionStartedAt) {
+      if (!isMeetingHost(meeting, email)) return NextResponse.json({ error: 'Wait for the host to start this meeting.', code: 'HOST_REQUIRED' }, { status: 403 });
       const quota = await getWorkspaceQuota(meeting.hostEmail);
       // Apply the host's current workspace plan when a room starts. This makes
       // upgraded plan allowances available to existing rooms and prevents an
@@ -87,6 +93,8 @@ export async function POST(request: NextRequest) {
       { $set: { lastSeenAt: now } },
       { upsert: true }
     );
+
+    if (email) await MeetingMember.updateOne({ meetingId, userEmail: email }, { $setOnInsert: { meetingId, userEmail: email } }, { upsert: true });
 
     return NextResponse.json({
       success: true,

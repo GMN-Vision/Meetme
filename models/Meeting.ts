@@ -34,6 +34,7 @@ interface IMeeting extends Document {
   isPrivate: boolean;
   chatEnabled: boolean;
   recordingEnabled: boolean;
+  endedAt?: Date | null;
   joinCount: number;
   activeSessionStartedAt?: Date | null;
   activeSessionEndsAt?: Date | null;
@@ -103,6 +104,7 @@ const MeetingSchema = new Schema<IMeeting>(
       type: Number,
       default: 0,
     },
+    endedAt: { type: Date, default: null },
     activeSessionStartedAt: {
       type: Date,
       default: null,

@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    const userEmail = session?.user?.email || '';
+    const userEmail = session?.user?.email?.toLowerCase() || '';
 
     const searchParams = req.nextUrl.searchParams;
     const meetingId = searchParams.get('meetingId');
@@ -29,7 +29,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
     }
 
-    if (!meeting.isPrivate) {
+    if (meeting.endedAt) return NextResponse.json({ error: 'The host has ended this meeting.', code: 'MEETING_ENDED' }, { status: 403 });
+    if (!meeting.activeSessionStartedAt) return NextResponse.json({ error: 'Wait for the host to start this meeting.', code: 'HOST_REQUIRED' }, { status: 403 });
+
+    if (!meeting.isPrivate && !process.env.JITSI_JWT_SECRET) {
       return NextResponse.json({ token: null, isPrivate: false }, { status: 200 });
     }
 

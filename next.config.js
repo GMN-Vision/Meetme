@@ -4,6 +4,8 @@ const jitsiDomain = (process.env.NEXT_PUBLIC_JITSI_DOMAIN || 'meet.melanam.com')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Keep verification builds separate from a running development server.
+  distDir: process.env.NEXT_BUILD_DIR || '.next',
   reactStrictMode: true,
   swcMinify: true,
   images: {

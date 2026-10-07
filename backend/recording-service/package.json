@@ -1,0 +1,7 @@
+{
+  "name": "melanam-recording-service",
+  "private": true,
+  "version": "1.0.0",
+  "engines": { "node": ">=20" },
+  "scripts": { "start": "node --env-file=.env server.cjs", "test": "node --test *.test.cjs" }
+}
