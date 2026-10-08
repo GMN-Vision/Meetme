@@ -7,12 +7,13 @@ import { normalizeJitsiRoomName } from '@/lib/jitsi-room';
 import { ACTIVE_RECORDING_STATES, isMeetingHost, recordingAllowance } from '@/lib/recording-policy';
 import Meeting from '@/models/Meeting';
 import Recording from '@/models/Recording';
+import { getRecordingAvailability } from '@/lib/recording-config';
 
 export class RecordingError extends Error {
-  constructor(message: string, public status = 400) { super(message); }
+  constructor(message: string, public status = 400, public code?: string) { super(message); }
 }
 export function recordingErrorResponse(error: unknown) {
-  if (error instanceof RecordingError) return NextResponse.json({ error: error.message }, { status: error.status });
+  if (error instanceof RecordingError) return NextResponse.json({ error: error.message, ...(error.code ? { code: error.code } : {}) }, { status: error.status });
   console.error('[server-recording]', error);
   return NextResponse.json({ error: 'Unable to update recording. Please retry.' }, { status: 500 });
 }
@@ -96,7 +97,8 @@ export async function startServerRecording(meeting: any, email: string) {
   if (meeting.endedAt) throw new RecordingError('This meeting has ended.', 409);
   if (!meeting.activeSessionStartedAt) throw new RecordingError('Join the meeting before recording.', 409);
   if (meeting.recordingEnabled === false) throw new RecordingError('Recording is disabled for this meeting.', 403);
-  if (!process.env.JITSI_JWT_SECRET) throw new RecordingError('Authenticated Jitsi must be configured before enabling server recording.', 503);
+  const availability = getRecordingAvailability();
+  if (!availability.available) throw new RecordingError(availability.message!, 503, availability.code!);
   await Recording.init();
   const existing = await Recording.findOne({ activeMeeting: meeting.meetingId });
   if (existing) return refreshRecording(existing);

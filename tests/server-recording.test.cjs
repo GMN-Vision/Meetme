@@ -16,6 +16,7 @@ function service({ email = 'host@example.com', meeting, recording, quota } = {})
     '@/lib/auth': { auth: async () => email ? { user: { email } } : null },
     '@/lib/db': async () => {}, '@/lib/workspace-usage': { getWorkspaceQuota: async () => quota },
     '@/lib/jitsi-room': load('lib/jitsi-room.ts'), '@/lib/recording-policy': policy,
+    '@/lib/recording-config': load('lib/recording-config.ts'),
     '@/models/Meeting': { findOne: async () => room }, '@/models/Recording': model,
   });
   return { lib, room, model, changes };

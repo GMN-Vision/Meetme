@@ -59,6 +59,8 @@ export function Navbar() {
   const {
     isRecording,
     canRecord: canUseRecording,
+    canStop: canStopRecording,
+    unavailableReason: recordingUnavailableReason,
     status: recordingStatus,
     startRecording,
     stopRecording,
@@ -343,14 +345,14 @@ export function Navbar() {
                       void startRecording(roomMeetingId);
                     }
                   }}
-                  disabled={recordingLoading || !canUseRecording}
+                  disabled={recordingLoading || (isRecording ? !canStopRecording : !canUseRecording)}
                   className={`${navActionButtonClass} ${
                     isRecording
                       ? 'border-red-200 bg-red-50/85 text-red-950 shadow-[0_10px_24px_rgba(239,68,68,0.12)]'
                       : `border-slate-200 bg-slate-100/80 text-slate-950 ${recordingHoverClass}`
                   } disabled:opacity-50`}
                   aria-label={isRecording ? 'Stop server recording' : 'Start server recording'}
-                  title={isRecording ? 'Stop server recording' : canUseRecording ? 'Start server recording' : 'Only the host can record'}
+                  title={isRecording ? 'Stop server recording' : recordingUnavailableReason || (canUseRecording ? 'Start server recording' : 'Only the host can record')}
                 >
                   {isRecording ? <Square className="h-4 w-4 fill-current" /> : canUseRecording ? <Radio className="h-4 w-4" /> : <LockKeyhole className="h-4 w-4" />}
                   <span className="hidden lg:inline">
@@ -545,6 +547,11 @@ export function Navbar() {
         <div className="fixed top-20 right-4 z-[60] rounded-lg bg-emerald-500/90 px-4 py-2 text-white shadow-lg">
           {copyStatus}
         </div>
+      )}
+      {isRoomPage && recordingUnavailableReason && !recordingError && (
+        <p role="status" className="mx-3 my-2 rounded-lg border border-amber-300/40 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+          {recordingUnavailableReason}
+        </p>
       )}
       {recordingError && (
         <div className="fixed top-20 right-4 z-[60] rounded-lg bg-red-500/90 px-4 py-2 text-white shadow-lg flex items-center justify-between gap-3">

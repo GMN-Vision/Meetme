@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test:meeting": "node --test tests/*.test.cjs",
+    "recording:check": "node scripts/check-recording.cjs",
     "meeting-ai": "npm --prefix backend/meeting-ai-service run start"
   },
   "dependencies": {
