@@ -238,7 +238,7 @@ export function StudentLmsDashboard({ view = 'courses' }: { view?: StudentWorksp
         </GlowCard>
 
         <GlowCard id="recordings" className={`scroll-mt-24 ${view === 'recordings' ? '' : 'hidden'}`}>
-          <h3 className="font-display text-xl font-semibold text-slate-950">Recent Recordings</h3>
+          <h3 className="font-display text-xl font-semibold text-slate-950">Course recording attachments</h3>
           <div className="mt-4 space-y-3">
             {dashboard.recentRecordings.map((recording) => (
               <div key={`${recording.courseSessionId}-${recording.createdAt}`} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">

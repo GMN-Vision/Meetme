@@ -18,7 +18,10 @@ export function MeetingRecordings() {
     const response = await fetch('/api/recording', { cache: 'no-store', signal });
     const body = await response.json();
     if (!response.ok) throw new Error(body.error || 'Unable to load recordings.');
-    if (!signal?.aborted) { setRecordings(body.recordings || []); setLoaded(true); }
+    if (!signal?.aborted) {
+      setRecordings(body.recordings || []); setLoaded(true);
+      setError(body.syncPending ? 'Recording status could not be refreshed. Retrying automatically.' : '');
+    }
   }, []);
   useEffect(() => {
     const controller = new AbortController();
@@ -28,7 +31,8 @@ export function MeetingRecordings() {
     const poll = () => { void refresh(controller.signal).catch((err) => { if (!controller.signal.aborted) setError(err.message); }); };
     poll();
     const interval = setInterval(poll, 10000);
-    return () => { controller.abort(); clearInterval(interval); };
+    window.addEventListener('focus', poll);
+    return () => { controller.abort(); clearInterval(interval); window.removeEventListener('focus', poll); };
   }, [refresh]);
   const act = async (recording: Recording, action: 'share' | 'delete') => {
     if (action === 'delete' && !window.confirm('Delete this recording for you and everyone it was shared with?')) return;
