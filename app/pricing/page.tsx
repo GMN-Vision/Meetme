@@ -52,7 +52,7 @@ const valueStats = [
 
 const comparisonRows = [
   ['Meeting rooms', 'Unlimited', 'Unlimited', 'Unlimited'],
-  ['People who can join', '25', '150', '500'],
+  ['People who can join', '120', '250', '600'],
   ['Workspace seats', '1', '25', '100'],
   ['Maximum meeting length', '3 hours', '24 hours', '48 hours'],
   ['AI live captions', 'Not included', 'Included credits', 'Team credits'],
@@ -69,7 +69,7 @@ const comparisonRows = [
 
 const competitorRows = [
   ['Free group meeting length', '3 hours', '40 minutes', '60 minutes'],
-  ['Free-plan participants', '25', '100', '100'],
+  ['Free-plan participants', '120', '100', '100'],
   ['Free server recording', '5 hours/month, 7-day retention', 'Not included', 'Not included'],
   ['Collaboration canvas', 'Excalidraw whiteboard', 'Zoom Whiteboard', 'Workspace tools'],
   ['Live captions', 'Pro and Business', 'Plan dependent', 'Account or edition dependent'],

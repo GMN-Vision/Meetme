@@ -2,7 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const load = require('./load-typescript.cjs');
 
-function accessRoute(plan = { maxMeetingMinutes: 180, maxParticipants: 25 }) {
+function accessRoute(plan = load('lib/billing-plans.ts').BILLING_PLAN_MAP.free) {
   const participants = new Map();
   let quotaReads = 0;
   let email = 'host@example.com';
@@ -45,13 +45,13 @@ function accessRoute(plan = { maxMeetingMinutes: 180, maxParticipants: 25 }) {
   };
 }
 
-test('server admits 25 participants, rejects a 26th, and preserves the session deadline', async (t) => {
+test('server admits 120 participants, rejects a 121st, and preserves the session deadline', async (t) => {
   t.mock.timers.enable({ apis: ['Date'], now: Date.parse('2026-09-30T12:00:00Z') });
   const room = accessRoute();
-  for (let i = 0; i < 25; i++) assert.equal((await room.request(`tab-${i}`, 'join')).status, 200);
+  for (let i = 0; i < 120; i++) assert.equal((await room.request(`tab-${i}`, 'join')).status, 200);
   const deadline = room.meeting.activeSessionEndsAt.getTime();
   assert.equal(deadline - Date.now(), 180 * 60_000);
-  assert.equal((await room.request('tab-26', 'join')).status, 403);
+  assert.equal((await room.request('tab-120', 'join')).status, 403);
   t.mock.timers.tick(179 * 60_000);
   assert.equal((await room.request('tab-0')).status, 200);
   assert.equal(room.meeting.activeSessionEndsAt.getTime(), deadline);

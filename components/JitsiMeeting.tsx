@@ -407,7 +407,7 @@ export function JitsiMeeting({
               },
             },
           },
-          // Bound decoding work on phones while retaining all 25 participants
+          // Bound decoding work on phones while retaining all participants
           // on desktops. Jitsi prioritizes the selected speaker/screenshare.
           channelLastN: mobileBrowser ? 9 : 25,
           desktopSharingFrameRate: { min: 5, max: 30 },

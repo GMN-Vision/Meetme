@@ -39,7 +39,7 @@ page, with the expected camera, microphone and display-capture policy.
 2. Deploy this working tree through the established production process. Run
    `npm ci`, `npm run test:meeting`, and `npm run build` in the deployment checkout,
    then restart the existing app service before anyone joins.
-3. Confirm the host's plan and use a fresh room. Free allows **25 people total**
+3. Confirm the host's plan and use a fresh room. Free allows **120 people total**
    and **180 minutes from the first entry**, including setup/prejoin time. A full
    three-hour agenda plus early setup needs a longer allowance. Free does not
    include captions, AI notes or recording; this change does not override plans.

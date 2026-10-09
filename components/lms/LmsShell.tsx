@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MeetingRecordings } from './MeetingRecordings';
 import {
-  BookOpen,
   CalendarDays,
   ClipboardList,
   FolderOpen,
@@ -37,14 +36,12 @@ export function LmsShell({
   const navigation = workspaceRole === 'instructor'
     ? [
         { href: '/lms', label: 'Meeting hub', icon: Video },
-        { href: '/lms/instructor/course-editor', label: 'Create / edit course', icon: BookOpen },
-        { href: '/lms/instructor', label: 'Course management', icon: GraduationCap },
-        { href: '/lms/instructor/schedule', label: 'Schedule class', icon: CalendarDays },
+        { href: '/lms/instructor', label: 'Courses', icon: GraduationCap },
+        { href: '/lms/instructor/schedule', label: 'Schedule', icon: CalendarDays },
         { href: '/lms/instructor/assignments', label: 'Assignments', icon: ClipboardList },
         { href: '/lms/instructor/students', label: 'Students', icon: Users },
-        { href: '/lms/instructor/resources', label: 'Resources', icon: FolderOpen },
-        { href: '/lms/instructor/course-activity', label: 'Course activity', icon: BookOpen },
-        { href: '/lms/instructor/notes', label: 'AI meeting notes', icon: Sparkles },
+        { href: '/lms/instructor/recordings', label: 'Recordings', icon: FolderOpen },
+        { href: '/lms/instructor/notes', label: 'Notes', icon: Sparkles },
       ]
     : workspaceRole === 'student'
       ? [
@@ -53,12 +50,14 @@ export function LmsShell({
           { href: '/lms/student/classes', label: 'Upcoming classes', icon: CalendarDays },
           { href: '/lms/student/assignments', label: 'Assignments', icon: ClipboardList },
           { href: '/lms/student/recordings', label: 'Recordings', icon: FolderOpen },
-          { href: '/lms/student/notes', label: 'AI meeting notes', icon: Sparkles },
+          { href: '/lms/student/notes', label: 'Notes', icon: Sparkles },
         ]
       : [
           { href: '/lms', label: 'Meeting hub', icon: Video },
           { href: '/lms/admin', label: 'System console', icon: GraduationCap },
         ];
+
+  const activeHref = ['/lms/instructor/course-editor', '/lms/instructor/resources'].includes(pathname) ? '/lms/instructor' : pathname;
 
   return (
     <div className="lms-workspace mx-auto grid w-full max-w-[90rem] gap-6 px-3 py-6 sm:px-5 lg:grid-cols-[15rem_minmax(0,1fr)] lg:py-8">
@@ -69,7 +68,7 @@ export function LmsShell({
         </div>
         <nav className="lms-sidebar__nav" aria-label="Workspace navigation">
           {navigation.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} aria-current={pathname === href ? 'page' : undefined} className={`lms-sidebar__link ${pathname === href ? 'lms-sidebar__link--active' : ''}`}>
+            <Link key={href} href={href} aria-current={activeHref === href ? 'page' : undefined} className={`lms-sidebar__link ${activeHref === href ? 'lms-sidebar__link--active' : ''}`}>
               <Icon className="h-4 w-4" />
               {label}
             </Link>
@@ -84,7 +83,7 @@ export function LmsShell({
       <div className="min-w-0">
         <nav className="lms-mobile-nav mb-5 flex gap-2 overflow-x-auto pb-1 lg:hidden" aria-label="Workspace navigation">
           {navigation.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} aria-current={pathname === href ? 'page' : undefined} className={`lms-mobile-nav__link ${pathname === href ? 'lms-mobile-nav__link--active' : ''}`}>
+            <Link key={href} href={href} aria-current={activeHref === href ? 'page' : undefined} className={`lms-mobile-nav__link ${activeHref === href ? 'lms-mobile-nav__link--active' : ''}`}>
               <Icon className="h-3.5 w-3.5" />
               {label}
             </Link>

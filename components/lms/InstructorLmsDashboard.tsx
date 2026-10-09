@@ -38,7 +38,7 @@ const emptyAssignmentForm = {
   status: 'draft',
 };
 
-export type InstructorWorkspaceView = 'course-editor' | 'courses' | 'schedule' | 'assignments' | 'students' | 'resources' | 'activity' | 'notes';
+export type InstructorWorkspaceView = 'course-editor' | 'courses' | 'schedule' | 'assignments' | 'students' | 'resources' | 'notes';
 
 const workspaceViews: Record<InstructorWorkspaceView, { title: string; description: string }> = {
   'course-editor': {
@@ -46,11 +46,11 @@ const workspaceViews: Record<InstructorWorkspaceView, { title: string; descripti
     description: 'Set course details, status, and learner-facing information in a focused editor.',
   },
   courses: {
-    title: 'Course management',
+    title: 'Courses',
     description: 'Create, edit, and organize the courses that anchor your learning workspace.',
   },
   schedule: {
-    title: 'Schedule class',
+    title: 'Schedule',
     description: 'Attach a live meeting to a course and give learners a clear session time.',
   },
   assignments: {
@@ -58,16 +58,12 @@ const workspaceViews: Record<InstructorWorkspaceView, { title: string; descripti
     description: 'Create course work, publish it to learners, and open submissions for grading.',
   },
   students: {
-    title: 'Student management',
+    title: 'Students',
     description: 'Enroll learners into the active course and keep the roster current.',
   },
   resources: {
     title: 'Course resources',
     description: 'Manage the files and materials available inside the active course.',
-  },
-  activity: {
-    title: 'Course activity',
-    description: 'Review course recordings and submissions that need instructor feedback.',
   },
   notes: {
     title: 'AI meeting notes',
@@ -101,12 +97,17 @@ export function InstructorLmsDashboard({ view = 'courses' }: { view?: Instructor
   const [gradeScore, setGradeScore] = useState('');
   const [gradeFeedback, setGradeFeedback] = useState('');
   const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState<'students' | 'schedule' | null>(null);
+  const [formError, setFormError] = useState('');
   const [loadError, setLoadError] = useState('');
   const page = workspaceViews[view];
   const courseScopedView = view === 'schedule' || view === 'assignments' || view === 'students' || view === 'resources';
   const editCourseIdFromUrl = searchParams.get('courseId') || '';
 
   const selectedCourse = dashboard.courses.find((course) => course._id === selectedCourseId) || dashboard.courses[0] || null;
+
+  const studentEmails = [...new Set(enrollmentValue.toLowerCase().split(/[\s,;]+/).map(email => email.trim()).filter(Boolean))];
+  const newStudentEmails = studentEmails.filter(email => !(selectedCourse?.enrolledStudents || []).some((student: any) => student.email.toLowerCase() === email));
 
   const selectedAssignments = dashboard.assignments.filter((assignment) => assignment.courseId === selectedCourse?._id || assignment.courseId?.toString?.() === selectedCourse?._id);
   const selectedSessions = dashboard.sessions.filter((session) => session.courseId === selectedCourse?._id || session.courseId?.toString?.() === selectedCourse?._id);
@@ -120,13 +121,11 @@ export function InstructorLmsDashboard({ view = 'courses' }: { view?: Instructor
           fetch('/api/lms/dashboard/instructor'),
           fetch('/api/lms/courses/meetings')
         ]);
-        
+
         const dashboardBody = await dashboardResponse.json().catch(() => ({}));
         const meetingsBody = await meetingsResponse.json().catch(() => ({ meetings: [] }));
-        
-        console.log('Dashboard loaded:', dashboardBody);
-        console.log('Meetings loaded:', meetingsBody);
-        
+
+
         if (dashboardResponse.ok) {
           const dashboardData = dashboardBody.dashboard || dashboard;
           setDashboard({
@@ -166,6 +165,12 @@ export function InstructorLmsDashboard({ view = 'courses' }: { view?: Instructor
       status: course.status || 'draft',
     });
   }, [dashboard.courses, editCourseIdFromUrl, editingCourseId, view]);
+
+  useEffect(() => {
+    if (courseScopedView && editCourseIdFromUrl && dashboard.courses.some(course => course._id === editCourseIdFromUrl)) {
+      setSelectedCourseId(editCourseIdFromUrl);
+    }
+  }, [courseScopedView, editCourseIdFromUrl, dashboard.courses]);
 
   const stats = useMemo(
     () => [
@@ -212,7 +217,7 @@ export function InstructorLmsDashboard({ view = 'courses' }: { view?: Instructor
     setCourseForm(emptyCourseForm);
     setEditingCourseId('');
     await reloadDashboard();
-    if (isEditingCourse) router.replace('/lms/instructor/course-editor');
+    router.push('/lms/instructor');
   };
 
   const handleDeleteCourse = async (courseId: string) => {
@@ -226,72 +231,52 @@ export function InstructorLmsDashboard({ view = 'courses' }: { view?: Instructor
 
   const handleEnrollStudents = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!selectedCourseId) return;
-
-    const students = enrollmentValue
-      .split(/[\n,]/)
-      .map((email) => email.trim())
-      .filter(Boolean)
-      .map((email) => ({ email }));
-
-    const response = await fetch(`/api/lms/courses/${selectedCourseId}/enroll`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ students }),
-    });
-
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      setMessage(body.error || 'Enrollment failed');
-      return;
+    if (!selectedCourse || saving) return;
+    setFormError(''); setMessage('');
+    if (studentEmails.some(email => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+      setFormError('Check the email addresses. Use a comma, space, or new line between each address.'); return;
     }
-
-    setEnrollmentValue('');
-    setMessage('Students enrolled');
-    await reloadDashboard();
+    if (!newStudentEmails.length) { setFormError('Enter at least one new student email address.'); return; }
+    setSaving('students');
+    try {
+      const response = await fetch(`/api/lms/courses/${selectedCourse._id}/enroll`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ students: newStudentEmails.map(email => ({ email })) }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || 'Could not add students. Please try again.');
+      setEnrollmentValue('');
+      setMessage('Students added. They can sign in with these email addresses to find this course.');
+      await reloadDashboard();
+    } catch (error) { setFormError(error instanceof Error ? error.message : 'Could not add students. Please try again.'); }
+    finally { setSaving(null); }
   };
 
   const handleSessionSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!selectedCourseId) return;
-
+    if (!selectedCourse || saving) return;
+    setFormError(''); setMessage('');
     const selectedMeeting = dashboard.availableMeetings?.find(m => m._id === sessionForm.meetingId);
-
-    // require either a selected meeting or a manual meeting title
-    if (!selectedMeeting && !String(sessionForm.meetingTitle || '').trim()) {
-      setMessage('Please select a meeting or enter a meeting title');
-      return;
-    }
-
-    const payload: any = {
-      startsAt: sessionForm.startsAt,
-      notes: sessionForm.notes,
-    };
-
-    if (selectedMeeting) {
-      payload.meetingId = selectedMeeting.meetingId;
-      payload.meetingTitle = selectedMeeting.roomName || selectedMeeting.title;
-    } else {
-      // manual meeting details
-      if (sessionForm.meetingTitle) payload.meetingTitle = String(sessionForm.meetingTitle).trim();
-      if (sessionForm.meetingId) payload.meetingId = sessionForm.meetingId; // allow manual custom id if provided
-    }
-
-    const response = await fetch(`/api/lms/courses/${selectedCourseId}/sessions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      setMessage(body.error || 'Failed to schedule class');
-      return;
-    }
-
-    setSessionForm({ meetingId: '', meetingTitle: '', startsAt: '', notes: '' });
-    setMessage('✅ Class scheduled!');
-    await reloadDashboard();
+    if (!selectedMeeting && !sessionForm.meetingTitle.trim()) { setFormError('Give your class a name.'); return; }
+    const startsAt = new Date(sessionForm.startsAt);
+    if (!Number.isFinite(startsAt.getTime()) || startsAt.getTime() <= Date.now()) { setFormError('Choose a future date and time.'); return; }
+    setSaving('schedule');
+    try {
+      const response = await fetch(`/api/lms/courses/${selectedCourse._id}/sessions`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          startsAt: startsAt.toISOString(), notes: sessionForm.notes,
+          meetingTitle: sessionForm.meetingTitle.trim() || selectedMeeting?.title || selectedMeeting?.roomName,
+          ...(selectedMeeting ? { meetingId: selectedMeeting.meetingId } : {}),
+        }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || 'Could not schedule your class. Please try again.');
+      setSessionForm({ meetingId: '', meetingTitle: '', startsAt: '', notes: '' });
+      setMessage('Class scheduled. Students in this course can find it under Upcoming classes.');
+      await reloadDashboard();
+    } catch (error) { setFormError(error instanceof Error ? error.message : 'Could not schedule your class. Please try again.'); }
+    finally { setSaving(null); }
   };
 
   const handleJoinSession = async (session: any) => {
@@ -400,9 +385,9 @@ export function InstructorLmsDashboard({ view = 'courses' }: { view?: Instructor
       description={page.description}
       stats={stats}
     >
-      {message ? <GlowCard><p className="text-sm text-slate-700">{message}</p></GlowCard> : null}
+      {message ? <GlowCard><p role="status" className="text-sm text-slate-700">{message}</p></GlowCard> : null}
 
-      {courseScopedView ? (
+      {courseScopedView && selectedCourse ? (
         <GlowCard className="p-4">
           <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500" htmlFor="active-course">
             Active course
@@ -410,8 +395,8 @@ export function InstructorLmsDashboard({ view = 'courses' }: { view?: Instructor
           <select
             id="active-course"
             className="mt-2 w-full max-w-xl rounded-2xl border border-slate-200 px-4 py-3 text-sm"
-            value={selectedCourse?._id || ''}
-            onChange={(event) => setSelectedCourseId(event.target.value)}
+            disabled={Boolean(saving)} value={selectedCourse?._id || ''}
+            onChange={(event) => { setSelectedCourseId(event.target.value); setFormError(''); setMessage(''); router.replace(`/lms/instructor/${view}?courseId=${encodeURIComponent(event.target.value)}`); }}
           >
             {dashboard.courses.map((course) => <option key={course._id} value={course._id}>{course.title}</option>)}
           </select>
@@ -421,26 +406,31 @@ export function InstructorLmsDashboard({ view = 'courses' }: { view?: Instructor
       {view === 'courses' || view === 'course-editor' ? (
       <div className="grid gap-6">
         <GlowCard id="course-editor" className={`scroll-mt-24 ${view === 'course-editor' ? '' : 'hidden'}`}>
-          <h3 className="font-display text-xl font-semibold text-slate-950">Create or Edit Course</h3>
+          <h3 className="font-display text-xl font-semibold text-slate-950">{editingCourseId ? 'Edit course' : 'New course'}</h3>
           <form onSubmit={handleCourseSubmit} className="mt-4 space-y-3">
-            <input className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Course title" value={courseForm.title} onChange={(event) => setCourseForm({ ...courseForm, title: event.target.value })} />
-            <input className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Course slug" value={courseForm.slug} onChange={(event) => setCourseForm({ ...courseForm, slug: event.target.value })} />
-            <input className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Course code" value={courseForm.code} onChange={(event) => setCourseForm({ ...courseForm, code: event.target.value })} />
-            <textarea className="min-h-[110px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Description" value={courseForm.description} onChange={(event) => setCourseForm({ ...courseForm, description: event.target.value })} />
-            <select className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" value={courseForm.status} onChange={(event) => setCourseForm({ ...courseForm, status: event.target.value })}>
+            <input className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" aria-label="Course title" required placeholder="Course name" value={courseForm.title} onChange={(event) => setCourseForm({ ...courseForm, title: event.target.value })} />
+            <textarea className="min-h-[110px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" aria-label="Course description (optional)" placeholder="What will students learn? (optional)" value={courseForm.description} onChange={(event) => setCourseForm({ ...courseForm, description: event.target.value })} />
+            <details className="rounded-xl border border-slate-700 p-4"><summary className="cursor-pointer text-sm font-semibold">Course settings (optional)</summary><p className="my-3 text-xs text-slate-500">A course code and link are created automatically. Change them here if needed.</p>
+            <input className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" aria-label="Course link slug" placeholder="Course link slug (automatic)" value={courseForm.slug} onChange={(event) => setCourseForm({ ...courseForm, slug: event.target.value })} />
+            <input className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" aria-label="Course code" placeholder="Course code (automatic)" value={courseForm.code} onChange={(event) => setCourseForm({ ...courseForm, code: event.target.value })} />
+            <select aria-label="Course status" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" value={courseForm.status} onChange={(event) => setCourseForm({ ...courseForm, status: event.target.value })}>
               <option value="draft">Draft</option>
               <option value="active">Active</option>
               <option value="archived">Archived</option>
             </select>
+            </details>
             <div className="flex gap-3">
-              <button type="button" onClick={() => { setCourseForm(emptyCourseForm); setEditingCourseId(''); router.replace('/lms/instructor/course-editor'); }} className="rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700">Reset</button>
+              <button type="button" onClick={() => { setCourseForm(emptyCourseForm); setEditingCourseId(''); router.push('/lms/instructor'); }} className="rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700">Cancel</button>
               <button type="submit" className="rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white">{editingCourseId ? 'Update course' : 'Create course'}</button>
             </div>
           </form>
         </GlowCard>
 
         <GlowCard id="course-management" className={`scroll-mt-24 ${view === 'courses' ? '' : 'hidden'}`}>
-          <h3 className="font-display text-xl font-semibold text-slate-950">Course Management</h3>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3 className="font-display text-xl font-semibold text-slate-950">Your courses</h3>
+            <button className="rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white" onClick={() => router.push('/lms/instructor/course-editor')}>Create course</button>
+          </div>
           <div className="mt-4 space-y-3">
             {dashboard.courses.map((course) => (
               <div key={course._id} className={`rounded-2xl border p-4 ${selectedCourseId === course._id ? 'border-sky-300 bg-sky-50/70' : 'border-slate-200 bg-slate-50/70'}`}>
@@ -450,7 +440,7 @@ export function InstructorLmsDashboard({ view = 'courses' }: { view?: Instructor
                     <p className="text-xs text-slate-500">{course.code} • {course.studentCount || course.enrolledStudents?.length || 0} students</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <button className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold" onClick={() => setSelectedCourseId(course._id)}>View</button>
+                    {(['schedule', 'students', 'resources'] as const).map(section => <button key={section} className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold" onClick={() => router.push(`/lms/instructor/${section}?courseId=${encodeURIComponent(course._id)}`)}>{section === 'schedule' ? 'Schedule' : section === 'students' ? 'Students' : 'Resources'}</button>)}
                     <button className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold" onClick={() => router.push(`/lms/instructor/course-editor?courseId=${encodeURIComponent(course._id)}`)}>Edit</button>
                     <button className="rounded-full border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600" onClick={() => handleDeleteCourse(course._id)}>Delete</button>
                   </div>
@@ -465,18 +455,23 @@ export function InstructorLmsDashboard({ view = 'courses' }: { view?: Instructor
 
       {courseScopedView && !selectedCourse ? (
         <GlowCard>
-          <p className="text-sm text-slate-600">Create a course before managing its classes, assignments, students, or resources.</p>
+          <p className="text-sm text-slate-600">Start by creating a course. Then add students and schedule your first class.</p><button className="mt-4 rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white" onClick={() => router.push('/lms/instructor/course-editor')}>Create your first course</button>
         </GlowCard>
       ) : null}
 
       {courseScopedView && selectedCourse ? (
         <div className="grid gap-6 xl:grid-cols-1">
           <GlowCard id="students" className={`scroll-mt-24 ${view === 'students' ? '' : 'hidden'}`}>
-            <h3 className="font-display text-xl font-semibold text-slate-950">Student Management</h3>
+            <h3 className="font-display text-xl font-semibold text-slate-950">Add students</h3>
+            <p className="mt-2 text-sm text-slate-500">Paste email addresses to add students to {selectedCourse.title}. No separate invitation setup needed.</p>
             <form onSubmit={handleEnrollStudents} className="mt-4 space-y-3">
-              <textarea className="min-h-[110px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Enter student emails separated by commas or new lines" value={enrollmentValue} onChange={(event) => setEnrollmentValue(event.target.value)} />
-              <button type="submit" className="rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white">Enroll students</button>
+              <label htmlFor="student-emails" className="block text-sm font-semibold">Student email addresses</label>
+              <textarea id="student-emails" required disabled={Boolean(saving)} aria-describedby="student-email-help" className="min-h-[110px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="alex@example.com, sam@example.com" value={enrollmentValue} onChange={(event) => setEnrollmentValue(event.target.value)} />
+              <p id="student-email-help" className="text-xs text-slate-500">Separate addresses with commas, spaces, or new lines. Duplicate addresses and existing students are skipped.</p>
+              {formError && view === 'students' && <p role="alert" className="text-sm text-red-400">{formError}</p>}
+              <button disabled={Boolean(saving) || !newStudentEmails.length} type="submit" className="rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving === 'students' ? 'Adding students...' : newStudentEmails.length ? `Add ${newStudentEmails.length} student${newStudentEmails.length === 1 ? '' : 's'}` : 'Add students'}</button>
             </form>
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3"><h4 className="text-sm font-semibold">Students in this course ({selectedCourse.enrolledStudents?.length || 0})</h4><button className="text-sm underline" onClick={() => router.push(`/lms/instructor/schedule?courseId=${selectedCourse._id}`)}>Next: schedule a class</button></div>
             <div className="mt-4 space-y-2">
               {(selectedCourse.enrolledStudents || []).map((student: any) => (
                 <div key={student.email} className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-sm text-slate-700">{student.email}</div>
@@ -487,33 +482,20 @@ export function InstructorLmsDashboard({ view = 'courses' }: { view?: Instructor
 
           <GlowCard id="class-schedule" className={`scroll-mt-24 ${view === 'schedule' ? '' : 'hidden'}`}>
             <h3 className="font-display text-xl font-semibold text-slate-950">Schedule a Class</h3>
-            <form onSubmit={handleSessionSubmit} className="mt-4 space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Select Meeting (optional)</label>
-                <select className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" value={sessionForm.meetingId} onChange={(event) => setSessionForm({ ...sessionForm, meetingId: event.target.value })}>
-                  <option value="">-- Choose a meeting --</option>
-                  {(dashboard.availableMeetings || []).map((meeting) => (
-                    <option key={meeting._id} value={meeting._id}>{meeting.roomName || meeting.title || meeting._id}</option>
-                  ))}
-                </select>
-                {(dashboard.availableMeetings || []).length === 0 && (
-                  <p className="mt-1 text-xs text-amber-600">No meetings found. You can enter a meeting title below to schedule without a meeting.</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Or enter meeting title</label>
-                <input className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Meeting title (if not selecting an existing meeting)" value={(sessionForm as any).meetingTitle} onChange={(event) => setSessionForm({ ...sessionForm, meetingTitle: event.target.value })} />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Class Date & Time</label>
-                <input required type="datetime-local" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" value={sessionForm.startsAt} onChange={(event) => setSessionForm({ ...sessionForm, startsAt: event.target.value })} />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Notes (optional)</label>
-                <textarea className="min-h-[80px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Add any notes about this class..." value={sessionForm.notes} onChange={(event) => setSessionForm({ ...sessionForm, notes: event.target.value })} />
-              </div>
-              <button type="submit" className="rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white">Schedule Class</button>
+            <p className="mt-2 text-sm text-slate-500">Name your class and choose a time. Your meeting room is prepared when you start the class.</p>
+            <form onSubmit={handleSessionSubmit} className="mt-4 space-y-4">
+              <fieldset disabled={Boolean(saving)} className="space-y-4">
+                <div><label htmlFor="class-title" className="mb-2 block text-sm font-semibold">Class name</label><input id="class-title" required={!sessionForm.meetingId} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="e.g. Introduction to photography" value={sessionForm.meetingTitle} onChange={(event) => setSessionForm({ ...sessionForm, meetingTitle: event.target.value })} /></div>
+                <div><label htmlFor="class-time" className="mb-2 block text-sm font-semibold">Date and time</label><input id="class-time" required type="datetime-local" aria-describedby="class-time-help" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" value={sessionForm.startsAt} onChange={(event) => setSessionForm({ ...sessionForm, startsAt: event.target.value })} /><p id="class-time-help" className="mt-2 text-xs text-slate-500">Choose the time in your device?s local time zone. Students see it in their own time zone.</p></div>
+                <details className="rounded-xl border border-slate-700 p-4"><summary className="cursor-pointer text-sm font-semibold">More options: notes or an existing meeting</summary>
+                  <label htmlFor="class-notes" className="mb-2 mt-4 block text-sm">Notes (optional)</label><textarea id="class-notes" className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm" placeholder="What should students prepare?" value={sessionForm.notes} onChange={event => setSessionForm({ ...sessionForm, notes: event.target.value })} />
+                  <label htmlFor="class-meeting" className="mb-2 mt-4 block text-sm">Meeting room</label><select id="class-meeting" className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm" value={sessionForm.meetingId} onChange={event => setSessionForm({ ...sessionForm, meetingId: event.target.value })}><option value="">Create a room when class starts (recommended)</option>{(dashboard.availableMeetings || []).map(meeting => <option key={meeting._id} value={meeting._id}>{meeting.roomName || meeting.title}</option>)}</select>
+                </details>
+              </fieldset>
+              {formError && view === 'schedule' && <p role="alert" className="text-sm text-red-400">{formError}</p>}
+              <button type="submit" disabled={Boolean(saving)} className="rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving === 'schedule' ? 'Scheduling...' : 'Schedule class'}</button>
             </form>
+            <p className="mt-4 text-sm text-slate-500">{selectedCourse.enrolledStudents?.length || 0} students in this course. <button className="underline" onClick={() => router.push(`/lms/instructor/students?courseId=${selectedCourse._id}`)}>Add students</button></p>
             <div className="mt-4 space-y-2">
               <p className="text-xs font-semibold text-slate-600 mb-2">Scheduled Classes</p>
               {selectedSessions.map((session) => (
@@ -535,16 +517,16 @@ export function InstructorLmsDashboard({ view = 'courses' }: { view?: Instructor
           </GlowCard>
 
           <GlowCard id="assignments" className={`scroll-mt-24 ${view === 'assignments' ? '' : 'hidden'}`}>
-            <h3 className="font-display text-xl font-semibold text-slate-950">Assignment Management</h3>
+            <h3 className="font-display text-xl font-semibold text-slate-950">Create an assignment</h3>
             <form onSubmit={handleAssignmentSubmit} className="mt-4 space-y-3">
-              <input className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Assignment title" value={assignmentForm.title} onChange={(event) => setAssignmentForm({ ...assignmentForm, title: event.target.value })} />
-              <textarea className="min-h-[110px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Description" value={assignmentForm.description} onChange={(event) => setAssignmentForm({ ...assignmentForm, description: event.target.value })} />
-              <textarea className="min-h-[110px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Instructions" value={assignmentForm.instructions} onChange={(event) => setAssignmentForm({ ...assignmentForm, instructions: event.target.value })} />
+              <input className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" aria-label="Assignment title" required placeholder="Assignment name" value={assignmentForm.title} onChange={(event) => setAssignmentForm({ ...assignmentForm, title: event.target.value })} />
+              <textarea className="min-h-[110px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" aria-label="Assignment description" placeholder="Short description (optional)" value={assignmentForm.description} onChange={(event) => setAssignmentForm({ ...assignmentForm, description: event.target.value })} />
+              <textarea className="min-h-[110px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" aria-label="Assignment instructions" placeholder="What should students do?" value={assignmentForm.instructions} onChange={(event) => setAssignmentForm({ ...assignmentForm, instructions: event.target.value })} />
               <div className="grid gap-3 sm:grid-cols-2">
-                <input type="datetime-local" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" value={assignmentForm.dueAt} onChange={(event) => setAssignmentForm({ ...assignmentForm, dueAt: event.target.value })} />
-                <input type="number" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" value={assignmentForm.pointsPossible} onChange={(event) => setAssignmentForm({ ...assignmentForm, pointsPossible: Number(event.target.value) })} />
+                <label className="text-sm">Due date (optional)<input type="datetime-local" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" value={assignmentForm.dueAt} onChange={(event) => setAssignmentForm({ ...assignmentForm, dueAt: event.target.value })} /></label>
+                <label className="text-sm">Points<input type="number" min="0" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" value={assignmentForm.pointsPossible} onChange={(event) => setAssignmentForm({ ...assignmentForm, pointsPossible: Number(event.target.value) })} /></label>
               </div>
-              <select className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" value={assignmentForm.status} onChange={(event) => setAssignmentForm({ ...assignmentForm, status: event.target.value })}>
+              <select aria-label="Assignment status" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" value={assignmentForm.status} onChange={(event) => setAssignmentForm({ ...assignmentForm, status: event.target.value })}>
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
                 <option value="closed">Closed</option>
@@ -569,7 +551,7 @@ export function InstructorLmsDashboard({ view = 'courses' }: { view?: Instructor
 
           <GlowCard id="resources" className={`scroll-mt-24 ${view === 'resources' ? '' : 'hidden'}`}>
             <h3 className="font-display text-xl font-semibold text-slate-950">Course Resources</h3>
-            <p className="mt-2 text-sm text-slate-600">Uploads are stored in the existing Supabase bucket under a course-scoped folder.</p>
+            <p className="mt-2 text-sm text-slate-600">Share files and learning materials with this course.</p>
             <div className="mt-4">
               <FileShare scopeType="course" scopeId={selectedCourse._id} title="Course Resources" className="rounded-[1.5rem] border border-slate-200 bg-white p-4" />
             </div>
@@ -577,31 +559,21 @@ export function InstructorLmsDashboard({ view = 'courses' }: { view?: Instructor
         </div>
       ) : null}
 
-      {view === 'activity' ? (
-      <GlowCard id="recent-work" className="scroll-mt-24">
-        <h3 className="font-display text-xl font-semibold text-slate-950">Recent Recordings and Submissions</h3>
-        <div className="mt-4 grid gap-6 xl:grid-cols-2">
+      {view === 'assignments' && selectedCourse ? (
+        <GlowCard id="grading" className="scroll-mt-24">
+          <h3 className="font-display text-xl font-semibold text-slate-950">Submissions to grade</h3>
           <div className="space-y-3">
-            {dashboard.recentRecordings.map((recording) => (
-              <div key={`${recording.courseSessionId}-${recording.createdAt}`} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-700">
-                <div className="font-semibold text-slate-950">{recording.title}</div>
-                <div className="text-xs text-slate-500">{new Date(recording.createdAt).toLocaleString()}</div>
-              </div>
-            ))}
-            {dashboard.recentRecordings.length === 0 ? <p className="text-sm text-slate-500">Course recordings will appear here once a session stores one.</p> : null}
-          </div>
-          <div className="space-y-3">
-            {dashboard.pendingGrading.map((submission) => (
+            {dashboard.pendingGrading.filter(submission => String(submission.courseId) === String(selectedCourse._id)).map((submission) => (
               <div key={submission._id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-700">
                 <div className="font-semibold text-slate-950">{submission.studentName || submission.studentEmail}</div>
                 <div className="text-xs text-slate-500">{submission.content?.slice(0, 120) || 'No submission content preview'}</div>
                 <button className="mt-3 text-xs font-semibold text-sky-600 underline" onClick={() => setGradingTarget(submission)}>Open grading</button>
               </div>
             ))}
-            {dashboard.pendingGrading.length === 0 ? <p className="text-sm text-slate-500">No submissions waiting for grading.</p> : null}
+            {dashboard.pendingGrading.filter(submission => String(submission.courseId) === String(selectedCourse._id)).length === 0 ? <p className="text-sm text-slate-500">No submissions waiting for grading.</p> : null}
           </div>
-        </div>
-      </GlowCard>
+
+        </GlowCard>
       ) : null}
 
       {view === 'notes' ? <AIMeetingNotesPanel meetings={dashboard.aiMeetings || []} /> : null}

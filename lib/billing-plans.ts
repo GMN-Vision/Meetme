@@ -131,7 +131,7 @@ export const BILLING_PLANS: BillingPlan[] = [
     monthlyRooms: null,
     maxMeetingMinutes: 180,
     seats: 1,
-    maxParticipants: 25,
+    maxParticipants: 120,
     storageGb: 1,
     recording: { monthlyMinutes: 300, maxSessionMinutes: 180, storageGb: 5, retentionDays: 7 },
     features: {
@@ -145,11 +145,11 @@ export const BILLING_PLANS: BillingPlan[] = [
       lms: true,
       adminControls: false,
     },
-    highlights: ['3-hour meetings at no cost', '25 people can join each meeting', '5 hours of server recording each month', 'File, media, and document sharing'],
+    highlights: ['3-hour meetings at no cost', '120 people can join each meeting', '5 hours of server recording each month', 'File, media, and document sharing'],
     limits: {
       meetingMinutes: '3 hours per room',
       monthlyRooms: 'Unlimited rooms',
-      participants: '25 participants per meeting',
+      participants: '120 participants per meeting',
       seats: '1 workspace seat',
       credits: 'No paid credits included',
       captions: 'Upgrade for captions',
@@ -176,7 +176,7 @@ export const BILLING_PLANS: BillingPlan[] = [
     monthlyRooms: null,
     maxMeetingMinutes: 1440,
     seats: 25,
-    maxParticipants: 150,
+    maxParticipants: 250,
     storageGb: 50,
     recording: { monthlyMinutes: 1800, maxSessionMinutes: 360, storageGb: 50, retentionDays: 30 },
     recommended: true,
@@ -195,7 +195,7 @@ export const BILLING_PLANS: BillingPlan[] = [
     limits: {
       meetingMinutes: '24 hours per room',
       monthlyRooms: 'Unlimited rooms',
-      participants: '150 participants per meeting',
+      participants: '250 participants per meeting',
       seats: '25 workspace seats',
       credits: `${proCredits} credits per month`,
       captions: 'Live captions and transcript credits',
@@ -222,7 +222,7 @@ export const BILLING_PLANS: BillingPlan[] = [
     monthlyRooms: null,
     maxMeetingMinutes: 2880,
     seats: 100,
-    maxParticipants: 500,
+    maxParticipants: 600,
     storageGb: 250,
     recording: { monthlyMinutes: 6000, maxSessionMinutes: 720, storageGb: 250, retentionDays: 90 },
     features: {
@@ -240,7 +240,7 @@ export const BILLING_PLANS: BillingPlan[] = [
     limits: {
       meetingMinutes: '48 hours per room',
       monthlyRooms: 'Unlimited rooms',
-      participants: '500 participants per meeting',
+      participants: '600 participants per meeting',
       seats: '100 workspace seats',
       credits: `${businessCredits} credits per month`,
       captions: 'Team caption credits',
