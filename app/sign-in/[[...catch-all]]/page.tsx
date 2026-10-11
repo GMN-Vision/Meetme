@@ -79,7 +79,6 @@ export default function Page() {
         {notice && <div role="alert" aria-live="polite" className={'mt-5 flex gap-3 rounded-xl border p-4 text-sm leading-6 ' + (notice.type === 'success' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300' : 'border-red-500/30 bg-red-500/10 text-red-300')}>{notice.type === 'success' ? <CheckCircle2 className="mt-1 h-4 w-4 shrink-0" /> : <TriangleAlert className="mt-1 h-4 w-4 shrink-0" />}<p>{notice.text}</p></div>}
         <p className="mt-5 text-center text-xs leading-6 text-zinc-500">No password needed. Your link is single-use.<br />Check your spam folder if it hasn’t arrived.</p>
       </div>
-      <p className="mt-6 text-center text-xs leading-6 text-zinc-500">By continuing, you agree to our <Link href="/terms" className="text-zinc-300 underline underline-offset-4">Terms</Link> and <Link href="/privacy" className="text-zinc-300 underline underline-offset-4">Privacy Policy</Link>.</p>
       <Link href="/admin/login" className="mt-4 text-center text-xs text-zinc-400 hover:text-white">Admin sign in</Link>
     </div>
   );

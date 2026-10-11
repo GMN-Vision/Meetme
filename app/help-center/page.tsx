@@ -1,23 +1,57 @@
 import { InfoPage } from '../info-pages';
 
 export default function HelpCenterPage() {
-  return (
-    <InfoPage
-      eyebrow="Help center"
-      title="Help for getting unstuck quickly."
-      description="Find support topics for the most common Melanam meeting, collaboration, AI, and admin workflows."
-      sections={[
-        { title: 'Getting Started', body: 'Create an account, sign in, and open your workspace dashboard to begin using Melanam.' },
-        { title: 'Creating Meetings', body: 'Start a new room from the Meetings page, then invite participants with the generated meeting link.' },
-        { title: 'Joining Meetings', body: 'Use the shared meeting link and grant required browser permissions for camera, microphone, and screen sharing.' },
-        { title: 'Sharing Files', body: 'Upload meeting resources and keep shared files connected to the active room context.' },
-        { title: 'Whiteboard', body: 'Collaborate visually during a meeting with shared whiteboard tools and saved board state.' },
-        { title: 'Live Captions', body: 'Enable captions when available to improve accessibility and produce transcript-ready meeting context.' },
-        { title: 'AI Summaries', body: 'Review summaries, key notes, decisions, and action items after AI processing completes.' },
-        { title: 'Recording', body: 'Use recording controls where enabled by your plan and organization policies.' },
-        { title: 'Troubleshooting', body: 'Check browser permissions, network connectivity, supported plans, and deployment configuration when features do not load as expected.' },
-        { title: 'Contact Support', body: 'For account, enterprise, security, or deployment support, contact Global Development Networks Ltd through your designated support channel.' },
-      ]}
-    />
-  );
+  return <InfoPage {...{
+  "eyebrow": "Help center",
+  "title": "Help with your next session.",
+  "description": "Troubleshooting and answers for Melanam meetings, recordings, and AI notes.",
+  "ctaHref": "mailto:gmnnetwork@gmail.com",
+  "ctaLabel": "Email support",
+  "sections": [
+    {
+      "title": "Can’t hear or see others",
+      "body": "Check your device volume and output selection. Refresh the page and rejoin."
+    },
+    {
+      "title": "Others can’t hear me",
+      "body": "Confirm the microphone isn’t muted and that the browser has microphone permission."
+    },
+    {
+      "title": "Camera not detected",
+      "body": "Close other apps using the camera, then allow camera access in your browser settings."
+    },
+    {
+      "title": "Choppy video or audio",
+      "body": "Switch to a stronger connection, turn off your video, or close bandwidth-heavy apps."
+    },
+    {
+      "title": "Can’t join a room",
+      "body": "Confirm the invite link is complete and that you’re signed in with the correct account."
+    },
+    {
+      "title": "Captions not appearing",
+      "body": "Make sure captions are enabled for the session and that audio is clear."
+    },
+    {
+      "title": "Summary or transcript missing",
+      "body": "Processing begins after the session ends and can take a few minutes. Check again shortly."
+    },
+    {
+      "title": "Is Melanam only for classes?",
+      "body": "No. It works for live classes, team calls, seminars, and any meeting where you want a lasting record."
+    },
+    {
+      "title": "Are all sessions recorded automatically?",
+      "body": "Recording is a setting that hosts control."
+    },
+    {
+      "title": "When are AI notes ready?",
+      "body": "Shortly after the session ends. A live summary may also appear during the session."
+    },
+    {
+      "title": "Support",
+      "body": "Contact: gmnnetwork@gmail.com. Melanam is a product of Global Development Networks Ltd."
+    }
+  ]
+}} />;
 }

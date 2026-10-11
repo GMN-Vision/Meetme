@@ -30,7 +30,7 @@ export function LandingPage() {
       <div className="pointer-events-none absolute left-1/2 top-1/4 h-[500px] w-[min(800px,100%)] -translate-x-1/2 rounded-full bg-zinc-800/20 blur-3xl" aria-hidden="true" />
       <div className="relative mx-auto max-w-5xl text-center">
         <Reveal><span className="mb-8 inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-zinc-400"><span className="pulse-glow h-2 w-2 rounded-full bg-emerald-500 text-emerald-500" />Your next conversation starts here</span></Reveal>
-        <Reveal delay={.1}><h1 className="mb-6 text-5xl font-bold leading-[1.1] tracking-[-.045em] text-white sm:text-6xl lg:text-7xl">Meet effortlessly.<br /><span className="text-zinc-500">Connect meaningfully.</span></h1></Reveal>
+        <Reveal delay={.1}><h1 className="mb-6 text-5xl font-bold leading-[1.1] tracking-[-.045em] text-white sm:text-6xl lg:text-7xl">Connect. Converse.<br /><span className="text-zinc-500">Collaborate. Create.</span></h1></Reveal>
         <Reveal delay={.2}><p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-zinc-400 sm:text-xl">Video meetings, recordings, and everything in between. Bring your people together with Melanam, right in your browser.</p></Reveal>
         <Reveal delay={.3} className="mb-14 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link href={startHref} className="button-primary shimmer-btn h-12 w-full !px-8 !text-base sm:w-auto">{status === 'authenticated' ? 'Open my meetings' : 'Start meeting free'}<ArrowRight className="h-4 w-4" /></Link>

@@ -1,30 +1,34 @@
 import { InfoPage } from '../info-pages';
 
 export default function SecurityPage() {
-  return (
-    <InfoPage
-      eyebrow="Security"
-      title="Security."
-      description="Melanam is designed using a defense-in-depth security model for secure collaboration environments."
-      sections={[
-        {
-          title: 'Security Measures',
-          body: 'Melanam combines transport encryption, media security, authorization, and isolated infrastructure controls.',
-          items: ['TLS 1.2/1.3 encrypted communication', 'WebRTC DTLS-SRTP media encryption', 'Secure WebSocket signaling', 'Passwordless Magic Link authentication', 'Role-Based Access Control (RBAC)', 'Self-hosted conferencing infrastructure', 'Docker container isolation', 'Firewall and reverse proxy protection', 'Secure file authorization', 'Browser permission enforcement', 'Isolated AI processing services'],
-        },
-        {
-          title: 'Continuous Improvement',
-          body: 'Melanam continuously monitors and improves its security posture to maintain a secure collaboration environment.',
-        },
-        {
-          title: 'Administrative Control',
-          body: 'System administrators can manage users, organizations, subscriptions, and meeting records through protected console workflows.',
-        },
-        {
-          title: 'Production Guidance',
-          body: 'Security documentation and deployment checklists should be reviewed before production release and revisited as infrastructure changes.',
-        },
-      ]}
-    />
-  );
+  return <InfoPage {...{
+  "eyebrow": "Security and privacy",
+  "title": "Private by design.",
+  "description": "Rooms are private, workspaces are controlled, and access is role-aware.",
+  "ctaHref": "mailto:gmnnetwork@gmail.com",
+  "ctaLabel": "Contact support",
+  "sections": [
+    {
+      "title": "Private rooms",
+      "body": "Access is by invite link and workspace permissions."
+    },
+    {
+      "title": "Controlled workspaces",
+      "body": "Administrators decide who belongs and what they can access."
+    },
+    {
+      "title": "Role-aware access",
+      "body": "Content visibility follows each person’s role."
+    },
+    {
+      "title": "Good practice",
+      "body": "Keep session access and shared content intentional.",
+      "items": [
+        "Share invite links only with intended participants.",
+        "Tell attendees when a session is recorded or transcribed.",
+        "Review recordings and AI outputs before distributing them widely."
+      ]
+    }
+  ]
+}} />;
 }
