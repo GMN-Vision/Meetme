@@ -4,7 +4,7 @@ A video conferencing application built with Next.js 14, TypeScript, Tailwind CSS
 
 Everyone uses the same email sign-in and account type. New users are registered through the same form. Open `/meetings` to start or join a call, `/meetings/recordings` for private and shared recordings, and `/meetings/notes` for AI summaries and transcripts. Recording, file sharing, captions, screen sharing, chat, whiteboards, and polls remain available under the existing plan limits.
 
-The former learning dashboards, course builder, courses, enrollment, assignments, and grading have been removed. Existing dashboard bookmarks redirect to Meetings. Existing non-admin account roles normalize to `user` on their next session refresh; internal platform administration remains separate. This source change does not delete stored meeting files, recordings, or database collections.
+The app focuses on video meetings and the records created from them. Existing dashboard bookmarks redirect to Meetings. Existing non-admin account roles normalize to `user` on their next session refresh; internal platform administration remains separate. Existing meeting files, recordings, and database collections remain intact.
 
 ## ðŸš€ Features
 

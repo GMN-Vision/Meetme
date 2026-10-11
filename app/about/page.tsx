@@ -3,27 +3,27 @@ import { InfoPage } from '../info-pages';
 export default function AboutPage() {
   return <InfoPage {...{
   "eyebrow": "About us",
-  "title": "Meet. Teach. Remember.",
-  "description": "Melanam is a secure workspace for live video meetings, online learning, and the intelligence that carries work forward after the call ends.",
+  "title": "Meet. Connect. Remember.",
+  "description": "Melanam is a video meeting workspace with recordings, live captions, and AI-generated meeting notes.",
   "ctaHref": "mailto:gdnvision360@gmail.com",
   "ctaLabel": "Get in touch",
   "sections": [
     {
       "title": "One connected record",
-      "body": "Most video tools stop at “End meeting.” The recording lands in one place, the notes in another, the files somewhere else, and the follow-up tasks get lost. Melanam was built to close that gap. Every session, whether a live class, a team call, or a seminar, becomes one connected record: the video, the transcript, the AI-generated summary, the shared files, the decisions, and the next actions."
+      "body": "Most video tools stop at â€œEnd meeting.â€ The recording lands in one place, the notes in another, the files somewhere else, and the follow-up tasks get lost. Melanam was built to close that gap. Every session, whether a team call, seminar, or workshop, becomes one connected record: the video, the transcript, the AI-generated summary, the shared files, the decisions, and the next actions."
     },
     {
       "title": "What we do",
-      "body": "Melanam combines three things that are usually separate products:",
+      "body": "Melanam brings meetings and follow-up together in one workspace:",
       "items": [
-        "Video meetings: private rooms with invite links, recording, livestreaming, live captions, whiteboards, and polls.",
-        "Learning management (LMS): role-aware courses, sessions, assignments, and resources for instructors and students.",
-        "AI meeting memory: transcripts, summaries, decisions, and action items captured automatically after every session."
+        "Video meetings: private rooms with invite links, recording, live captions, whiteboards, and file sharing.",
+        "Meeting history: recordings and meeting notes stay available in your workspace after a session.",
+        "AI meeting notes: summaries, transcripts, decisions, and action items help you keep track of what was discussed."
       ]
     },
     {
       "title": "One record for every session",
-      "body": "Nothing that happens live should disappear. Recordings, transcripts, files, and follow-ups stay together and stay connected to the course or project they belong to."
+      "body": "Nothing that happens live should disappear. Recordings, transcripts, files, and follow-ups stay together and stay connected to the meeting or project they belong to."
     },
     {
       "title": "Private by design",
@@ -35,14 +35,14 @@ export default function AboutPage() {
     },
     {
       "title": "Work continues after the call",
-      "body": "A session is a starting point. Melanam helps you return to the lesson outline, the assigned task, or the decision that was made."
+      "body": "A session is a starting point. Melanam helps you return to the key discussion points, follow-up actions, or decisions."
     },
     {
       "title": "Who Melanam is for",
-      "body": "A workspace for learning and working together.",
+      "body": "Melanam is for people who want their conversations and next steps in one place.",
       "items": [
-        "Educators and institutions running live classes, cohorts, and courses",
-        "Trainers and coaches delivering seminars and workshops",
+        "Teams holding regular meetings",
+        "People hosting seminars, workshops, and group conversations",
         "Teams that want meetings to produce clear outcomes",
         "Organisations that need controlled, role-based access to their sessions"
       ]

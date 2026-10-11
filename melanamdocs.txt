@@ -1,210 +1,43 @@
- Melanam: Documentation and About Us
+﻿Melanam: Meetings, Recordings, and AI Notes
 
-Draft content based on the public homepage at melanam.com. Items in [brackets] are details I couldn't verify from the site (limits, plan names, contact addresses). Please confirm or replace them before publishing.
+PRODUCT OVERVIEW
+Melanam is a video meeting app. It helps people start or join private meeting rooms, collaborate with room tools, and return to recordings and AI-generated notes afterward.
 
-PART 1: ABOUT US
- Meet. Teach. Remember.
-Melanam is a secure workspace for live video meetings, online learning, and the intelligence that carries work forward after the call ends.
+GETTING STARTED
+1. Open the Meetings workspace and sign in or create an account.
+2. Use a modern browser and allow camera/microphone access when prompted.
+3. Check Pricing for current plan and feature availability.
 
-Most video tools stop at "End meeting." The recording lands in one place, the notes in another, the files somewhere else, and the follow-up tasks get lost. Melanam was built to close that gap. Every session, whether a live class, a team call, or a seminar, becomes one connected record: the video, the transcript, the AI-generated summary, the shared files, the decisions, and the next actions.
+START OR JOIN A MEETING
+- Start meeting opens an instant room.
+- Create meeting lets you enter a title and optional agenda before opening a room.
+- Join meeting accepts a room code or complete invite link.
+- Recent meeting cards let you reopen a room or copy its invite link.
+- Share private invite links only with intended participants.
 
- What we do
-Melanam combines three things that are usually separate products:
+ROOM TOOLS
+- Copy link copies the invite link for the current room.
+- Record starts or stops server recording. Only the host can control recording; availability may depend on the account plan.
+- Whiteboard opens the shared whiteboard.
+- Files opens the file sharing panel; access may require an active plan.
+- Live captions may require Pro.
+- The available controls depend on the user's role and plan. Tell attendees when a meeting is recorded or transcribed.
 
-- Video meetings: private rooms with invite links, recording, livestreaming, live captions, whiteboards, and polls.
-- Learning management (LMS): role-aware courses, sessions, assignments, and resources for instructors and students.
-- AI meeting memory: transcripts, summaries, decisions, and action items captured automatically after every session.
+RECORDINGS
+Open /meetings/recordings to see recordings available to your account. A recording appears after the host records and ends the meeting and processing finishes. Ready recordings can be watched or downloaded. Hosts can share recordings with the meeting group or delete their recording. Processing, expired, or deleted recordings may not be available.
 
-Our principles
-One record for every session. Nothing that happens live should disappear. Recordings, transcripts, files, and follow-ups stay together and stay connected to the course or project they belong to.
+MEETING NOTES
+Open /meetings/notes to review processed meeting summaries, key points, decisions, action items, and transcript lines. Processing starts after the meeting and may take a few minutes. Download the transcript when transcript lines are available. Review AI-generated notes for accuracy before sharing.
 
-Private by design. Rooms are private, workspaces are controlled, and access is role-aware. People see what their role allows, nothing more.
+TROUBLESHOOTING
+- For camera or microphone issues, check browser permissions, device selection, and whether another app is using the device.
+- If others cannot hear you, check that your microphone is not muted.
+- For choppy audio or video, use a stronger connection or turn off video.
+- For joining problems, check that the invite link is complete and that you are signed in to the right account.
+- If a recording or notes are missing, wait for processing to finish and check again.
 
-Intelligent by default. AI is built into the workflow instead of added on top. Summaries and action items appear without anyone having to take notes.
-
-Work continues after the call. A session is a starting point. Melanam helps you return to the lesson outline, the assigned task, or the decision that was made.
-
- Who Melanam is for
-- Educators and institutions running live classes, cohorts, and courses
-- Trainers and coaches delivering seminars and workshops
-- Teams that want meetings to produce clear outcomes
-- Organisations that need controlled, role-based access to their sessions
-
- The company
-Melanam is a product of Global Development Networks Ltd. [Add a sentence or two on the company's mission, founding story, and location.]
-
- Get in touch
-- Website: [www.melanam.com](https://www.melanam.com)
-- Help Center: [www.melanam.com/help-center](https://www.melanam.com/help-center)
-- Email: gdnvision360@gmail.com
- PART 2: DOCUMENTATION
- 1. Introduction
-Melanam is a video meeting and LMS workspace. This guide explains how to set up your account, run meetings, teach courses, use AI notes, and manage what happens after a session.
-Contents
-1. Getting Started
-2. Core Concepts
-3. Meeting Rooms
-4. In-Meeting Tools
-5. Recording, Livestream and Captions
-6. AI Meeting Memory
-7. Learning Workspaces (LMS)
-8. Course Builder
-9. Shared Resources
-10. Roles and Permissions
-11. Security and Privacy
-12. Troubleshooting
-13. FAQ
-14. Support
-
- 2. Getting Started
- Requirements
-- A modern browser such as Chrome, Edge, Firefox, or Safari (latest versions recommended)
-- A working camera and microphone (optional for view-only participants)
-- A stable internet connection [recommended minimum bandwidth]
-
- Create your account and sign in
-
-1. Go to [www.melanam.com](https://www.melanam.com) and select Enter Melanam.
-2. Sign in or create an account on the sign-in page.
-3. Complete your profile and choose your role if prompted.
-4. You'll land in your workspace, where you can start a room, join a session, or open a course.
- Choose a plan
-Plans and membership options are listed on the [Pricing](https://www.melanam.com/pricing) page. [Add plan names and key limits here.]
-3. Core Concepts
- Term  Meaning 
- Workspace:  Your home area for meetings, courses, files, and history. 
- Room  A private video space with its own invite link. 
- Session  A single live event, such as a class or a team call, held in a room. 
- Course  A structured set of sessions, assignments, and resources. 
- Session record  Everything captured from a session: recording, transcript, summary, files, decisions, and action items. 
- Role  Determines what a person can see and do (for example, instructor or student). 
- 4. Meeting Rooms
- Start a meeting
-1. Open your workspace and select New room (or start a session from a course).
-2. Name the room and set any options such as recording or captions.
-3. Select Start.
-Invite participants
-Each room has a private invite link. Copy it and share it by email, chat, or calendar invite. Only people with the link (and, where applicable, the right workspace role) can join.
- Join a meeting
-1. Open the invite link.
-2. Sign in if prompted.
-3. Check your camera and microphone, then select Join.
- Leave or end a session
-Participants can leave at any time. A host or instructor can select End session, which closes the room and begins processing the recording, transcript, and AI summary.
- 5. In-Meeting Tools
-Shared whiteboard
-Draw, sketch, and explain ideas together in real time without leaving the room. Whiteboard activity stays tied to the session.
-
- Polls
-Hosts can launch quick polls to check understanding, gather opinions, or make group decisions. Results stay with the session record.
- File sharing
-Attach files to a session so everyone can access them. Files remain connected to the session and, for courses, to the course resources.
- Participant controls
-Hosts can manage who speaks and who is visible [confirm available controls, e.g. mute, remove, lobby].
- 6. Recording, Livestream and Captions
- Recording
-Enable recording at the start of a session or while it's in progress. Recordings are saved with the session so they can be reviewed later alongside the transcript and summary. Let participants know when a session is being recorded.
- Livestream
-Rooms support livestreaming so you can broadcast a session to a wider audience. [Add supported destinations and setup steps.]
- Live captions
-Turn on captions to display speech as text during the session, improving accessibility and helping participants in noisy environments or across language backgrounds. [Add supported languages.]
- 7. AI Meeting Memory
-After a session ends, Melanam produces a structured record automatically.
-Output  What you get 
-Transcript  A written record of what was said. 
- Summary  A concise overview of the session. 
- Decisions  Key decisions made during the meeting. 
- Action items  Tasks and next steps that came out of the discussion. 
- Shared resources  Files and links attached to the session. 
-
-During a live session, you may also see a Live summary panel that captures key points and resources as they come up.
- Tips for better results
-- Use a good microphone and reduce background noise.
-- Speak one at a time where possible.
-- State decisions and tasks explicitly (for example, "Action: Priya will send the draft by Friday").
-- Review AI outputs before sharing them. Summaries are helpful, but should be checked for accuracy.
-Participation history
-After a session, review who attended and engagement context alongside the recording, which helps instructors follow up with learners.
- 8. Learning Workspaces (LMS)
-The learning workspace brings courses and live sessions together.
-- Courses: organize learning into sessions, modules, and materials.
-- Sessions: schedule or launch live classes directly from a course.
-- Assignments: create, distribute, and track student work.
-- Resources: attach readings, slides, and files to a course or session.
-- Role-aware views: instructors, students, and administrators each see the tools relevant to them.
- Typical teaching workflow
-1. Create a course and add its first session.
-2. Collaborate live using video, captions, whiteboard, polls, and files.
-3. Capture the recording, transcript, and AI summary automatically.
-4. Continue by assigning follow-up work and pointing learners to session resources.
- Typical learner workflow
-
-1. Open the course from your workspace.
-2. Join the live session from the course page.
-3. After class, revisit the recording, summary, and resources.
-4. Complete assignments and follow action items.
- 9. Course Builder
-The Course Builder (Studio) is where instructors design course content.
-1. Open Course Builder from the Product menu or your workspace.
-2. Create a new course and add a title and description.
-3. Add sessions, assignments, and resources in the order learners should encounter them.
-4. Set who can access the course based on role.
-5. Publish when ready. [Confirm publish and draft behavior.]
- 10. Shared Resources
-Files and materials stay connected to the work they belong to.
-- Meeting files are attached to a specific session.
-- Course resources are attached to a course and available to enrolled learners.
-- Everything appears in the session or course context, so there's no need to hunt through chat threads or email.
- 11. Roles and Permissions
-Melanam uses role-aware access, so each person sees only what they need.
- Role  Typical capabilities 
-
- Host / Instructor  Create rooms and courses, manage participants, record, launch polls, view session records. 
- Participant / Student  Join sessions, use the whiteboard and chat tools, access permitted resources and recordings. 
- Administrator  Manage workspace settings, members, and access. 
-[Confirm exact role names and capabilities.]
- 12. Security and Privacy
-- Private rooms: access is by invite link and workspace permissions.
-- Controlled workspaces: administrators decide who belongs and what they can access.
-- Role-aware access: content visibility follows each person's role.
-For full details, see the [Security](https://www.melanam.com/security) and [Privacy](https://www.melanam.com/privacy) pages. [Add encryption, data retention, and compliance details once confirmed.]
-
-Good practice:
-- Share invite links only with intended participants.
-- Tell attendees when a session is recorded or transcribed.
-- Review recordings and AI outputs before distributing them widely.
- 13. Troubleshooting
-
- Problem  Try this 
-
- Can't hear or see others  Check your device volume and output selection. Refresh the page and rejoin. 
- Others can't hear me  Confirm the microphone isn't muted and that the browser has microphone permission. 
- Camera not detected  Close other apps using the camera, then allow camera access in your browser settings. 
- Choppy video or audio  Switch to a stronger connection, turn off your video, or close bandwidth-heavy apps. 
- Can't join a room  Confirm the invite link is complete and that you're signed in with the correct account. 
- Captions not appearing  Make sure captions are enabled for the session and that audio is clear. 
- Summary or transcript missing  Processing begins after the session ends and can take a few minutes. Check again shortly. 
-If a problem persists, check the [Status](https://www.melanam.com/status) page for known issues.
-
- 14. FAQs
-Is Melanam only for classes?
-No. It works for live classes, team calls, seminars, and any meeting where you want a lasting record.
-
-Do participants need an account? [Confirm guest access policy.]
-
-Are all sessions recorded automatically?
-Recording is a setting that hosts control. [Confirm default behavior.]
-
-When are AI notes ready?
-Shortly after the session ends. A live summary may also appear during the session.
-Can I download recordings and transcripts? [Confirm export options.]
-Where can I see what's coming next?
-Visit the [Roadmap](https://www.melanam.com/roadmap).
- 15. Support
-
-- Documentation: [melanam.com/documentation](https://www.melanam.com/documentation)
-- Help Centre: [melanam.com/help-center](https://www.melanam.com/help-centre:
-- System Status: [melanam.com/status](https://www.melanam.com/status)
-- Security: [melanam.com/security](https://www.melanam.com/security)
-- Contact: [gmnnetwork@gmail.com]
+SUPPORT
+Help Center: /help-center
+Documentation: /documentation
+Support: gmnnetwork@gmail.com
 Melanam is a product of Global Development Networks Ltd.

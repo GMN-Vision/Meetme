@@ -37,8 +37,8 @@ export default function HelpCenterPage() {
       "body": "Processing begins after the session ends and can take a few minutes. Check again shortly."
     },
     {
-      "title": "Is Melanam only for classes?",
-      "body": "No. It works for live classes, team calls, seminars, and any meeting where you want a lasting record."
+      "title": "What can I use Melanam for?",
+      "body": "Use Melanam for team calls, seminars, workshops, and other meetings where you want a recording or notes to revisit later."
     },
     {
       "title": "Are all sessions recorded automatically?",

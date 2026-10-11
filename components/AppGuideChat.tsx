@@ -1,13 +1,15 @@
 'use client';
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Bot, LoaderCircle, MessageCircle, Send, X } from 'lucide-react';
 
 type Message = { role: 'user' | 'assistant'; text: string };
 
-const suggestions = ['How do I start a meeting?', 'Where are my recordings?'];
+const suggestions = ['How do I start a meeting?', 'How do I join a room?', 'Where are my meeting notes?'];
 
 export function AppGuideChat() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -29,10 +31,13 @@ export function AppGuideChat() {
     try {
       const response = await fetch('/api/guide-chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: next.slice(-10).map(({ role, text }) => ({ role, content: text })) }),
+        body: JSON.stringify({
+          page: pathname,
+          messages: next.slice(-10).map(({ role, text }) => ({ role, content: text })),
+        }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'I couldn’t get an answer just now. Please try again.');
+      if (!response.ok) throw new Error(data.error || 'I could not get an answer just now. Please try again.');
       setMessages(current => [...current, { role: 'assistant', text: data.answer }]);
     } catch (error) {
       setMessages(current => [...current, { role: 'assistant', text: error instanceof Error ? error.message : 'Something went wrong. Please try again.' }]);
@@ -51,15 +56,15 @@ export function AppGuideChat() {
         </header>
         <div className="app-guide-chat__messages">
           {!messages.length && <div className="app-guide-chat__welcome">
-            <p>Hi! I can guide you through meetings, recordings, notes, and courses.</p>
+            <p>Hi! I can help you start or join a meeting, use room tools, and find recordings or notes.</p>
             <div className="app-guide-chat__suggestions">{suggestions.map(item => <button key={item} onClick={() => void sendMessage(undefined, item)}>{item}</button>)}</div>
           </div>}
           {messages.map((message, index) => <p key={index} className={`app-guide-chat__message app-guide-chat__message--${message.role}`}>{message.text}</p>)}
-          {loading && <p className="app-guide-chat__message app-guide-chat__message--assistant app-guide-chat__thinking"><LoaderCircle size={14} /> Thinking…</p>}
+          {loading && <p className="app-guide-chat__message app-guide-chat__message--assistant app-guide-chat__thinking"><LoaderCircle size={14} /> Thinking...</p>}
           <div ref={endRef} />
         </div>
         <form className="app-guide-chat__form" onSubmit={event => void sendMessage(event)}>
-          <input value={input} onChange={event => setInput(event.target.value)} placeholder="Ask how to do something…" aria-label="Ask the Melanam Guide" maxLength={1000} />
+          <input value={input} onChange={event => setInput(event.target.value)} placeholder="Ask how to do something..." aria-label="Ask the Melanam Guide" maxLength={1000} />
           <button type="submit" aria-label="Send message" disabled={!input.trim() || loading}><Send size={17} /></button>
         </form>
       </section>}
