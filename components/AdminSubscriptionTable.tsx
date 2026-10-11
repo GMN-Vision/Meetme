@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { BILLING_PLANS, formatInr, getPlanPrice, type BillingCycle, type PlanKey } from '@/lib/billing-plans';
+import { BILLING_PLANS, getPlanPrice, type BillingCycle, type PlanKey } from '@/lib/billing-plans';
 
 type Subscription = {
   _id: string;
@@ -27,14 +27,6 @@ type Subscription = {
   updatedAt: string | null;
 };
 
-const statusClasses: Record<Subscription['status'], string> = {
-  active: 'bg-emerald-50 text-emerald-700 ring-emerald-500/20',
-  trialing: 'bg-zinc-800 text-zinc-300 ring-zinc-600/20',
-  pending: 'bg-amber-50 text-amber-700 ring-amber-500/20',
-  past_due: 'bg-orange-50 text-orange-700 ring-orange-500/20',
-  canceled: 'bg-red-50 text-red-700 ring-red-500/20',
-};
-
 function formatDate(value: string | null) {
   if (!value) return 'No period';
   return new Date(value).toLocaleDateString();
@@ -49,10 +41,17 @@ export default function AdminSubscriptionTable() {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [draft, setDraft] = useState<Subscription | null>(null);
+  const [creditAmount, setCreditAmount] = useState(300);
+  const [extendDays, setExtendDays] = useState(30);
 
   const fetchSubscriptions = async () => {
     setLoading(true);
     setError('');
+    setNotice('');
     try {
       const response = await fetch('/api/admin/subscriptions', { credentials: 'include' });
       if (response.status === 403) {
@@ -79,6 +78,7 @@ export default function AdminSubscriptionTable() {
     const savingKey = subscription._id || subscription.userEmail;
     setSavingId(savingKey);
     setError('');
+    setNotice('');
 
     try {
       const response = await fetch('/api/admin/subscriptions', {
@@ -106,6 +106,8 @@ export default function AdminSubscriptionTable() {
             : item
         )
       );
+      setNotice('Membership updated successfully.');
+      setDraft(null);
     } catch (err: any) {
       setError(err.message || 'Failed to update subscription');
     } finally {
@@ -114,15 +116,16 @@ export default function AdminSubscriptionTable() {
   };
 
   const cancelSubscription = async (subscription: Subscription) => {
+    if (!confirm('Cancel this membership?')) return;
     if (!subscription._id) {
       await updateSubscription(subscription, { action: 'cancel' });
       return;
     }
 
-    if (!confirm('Cancel this membership?')) return;
     const savingKey = subscription._id || subscription.userEmail;
     setSavingId(savingKey);
     setError('');
+    setNotice('');
 
     try {
       const response = await fetch(`/api/admin/subscriptions?subscriptionId=${encodeURIComponent(subscription._id)}`, {
@@ -140,6 +143,8 @@ export default function AdminSubscriptionTable() {
       setSubscriptions((prev) =>
         prev.map((item) => (item._id === subscription._id ? { ...item, ...data.subscription } : item))
       );
+      setNotice('Membership canceled.');
+      setDraft(null);
     } catch (err: any) {
       setError(err.message || 'Failed to cancel subscription');
     } finally {
@@ -147,208 +152,60 @@ export default function AdminSubscriptionTable() {
     }
   };
 
-  if (loading) {
-    return <div className="text-sm text-zinc-400">Loading memberships...</div>;
-  }
+  const visible = subscriptions.filter(item => {
+    const matches = `${item.userEmail} ${item.userName || ''}`.toLowerCase().includes(search.trim().toLowerCase());
+    return matches && (filter === 'all' || (filter === 'active' ? item.active : !item.selected));
+  });
+  const runAction = (updates: Record<string, unknown>) => {
+    if (!draft) return;
+    const saved = subscriptions.find(item => item.userEmail === draft.userEmail);
+    if (saved) void updateSubscription(saved, updates);
+  };
 
-  if (error) {
-    return <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>;
-  }
-
-  if (!subscriptions.length) {
-    return <div className="text-sm text-zinc-400">No users found yet.</div>;
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-3 md:grid-cols-3">
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">Active</p>
-          <p className="mt-2 font-display text-2xl font-semibold text-zinc-100">
-            {subscriptions.filter((item) => item.active).length}
-          </p>
-        </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">No Plan</p>
-          <p className="mt-2 font-display text-2xl font-semibold text-zinc-100">
-            {subscriptions.filter((item) => !item.selected).length}
-          </p>
-        </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">Paid Plans</p>
-          <p className="mt-2 font-display text-2xl font-semibold text-zinc-100">
-            {subscriptions.filter((item) => item.active && ['pro', 'business', 'enterprise'].includes(item.plan)).length}
-          </p>
-        </div>
+  return <div className="space-y-5">
+    {error && <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-sm text-red-200"><span>{error}</span>{!subscriptions.length && <button className="underline" onClick={() => void fetchSubscriptions()}>Retry</button>}</div>}
+    {notice && <p role="status" className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-4 text-sm text-emerald-200">{notice}</p>}
+    {loading ? <p role="status" className="text-sm text-zinc-400">Loading memberships…</p> : <>
+      <div className="flex flex-wrap gap-3">
+        <input aria-label="Search memberships" className="input-modern min-w-0 basis-full sm:flex-1" placeholder="Search member name or email" value={search} onChange={e => setSearch(e.target.value)} />
+        <select aria-label="Filter memberships" className="px-3 py-2 text-sm" value={filter} onChange={e => setFilter(e.target.value)}><option value="all">All members ({subscriptions.length})</option><option value="active">Active memberships</option><option value="unselected">No plan selected</option></select>
       </div>
-
-      <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900">
-        <table className="min-w-[1180px] divide-y divide-zinc-800 text-left text-sm text-zinc-400">
-          <thead className="bg-zinc-900 font-semibold text-zinc-100">
-            <tr>
-              <th className="px-4 py-4">Member</th>
-              <th className="px-4 py-4">Plan</th>
-              <th className="px-4 py-4">Status</th>
-              <th className="px-4 py-4">Credits</th>
-              <th className="px-4 py-4">Period</th>
-              <th className="px-4 py-4">Amount</th>
-              <th className="px-4 py-4">Notes</th>
-              <th className="px-4 py-4 text-right">Console Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-800">
-            {subscriptions.map((subscription) => {
-              const saving = savingId === (subscription._id || subscription.userEmail);
-              return (
-                <tr key={subscription._id || subscription.userEmail} className="align-top transition hover:bg-zinc-900/60">
-                  <td className="px-4 py-4">
-                    <div className="font-medium text-zinc-100">{subscription.userEmail}</div>
-                    <div className="mt-1 text-xs text-zinc-400">
-                      {[subscription.userName || 'No name', subscription.userRole || 'user', subscription.userStatus || 'active'].join(' - ')}
-                    </div>
-                    {!subscription.selected ? (
-                      <span className="mt-2 inline-flex rounded-lg bg-amber-50 px-2 py-1 text-sm font-semibold text-amber-700 ring-1 ring-amber-500/20">
-                        No plan selected
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="px-4 py-4">
-                    <select
-                      value={subscription.plan}
-                      onChange={(event) => {
-                        const nextPlan = event.target.value as PlanKey;
-                        updateSubscription(subscription, {
-                          plan: nextPlan,
-                          amount: planAmount(nextPlan, subscription.billingCycle),
-                        });
-                      }}
-                      className="rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs font-semibold"
-                      disabled={saving}
-                    >
-                      {BILLING_PLANS.map((plan) => (
-                        <option key={plan.key} value={plan.key}>
-                          {plan.title}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={subscription.billingCycle}
-                      onChange={(event) =>
-                        updateSubscription(subscription, {
-                          billingCycle: event.target.value as BillingCycle,
-                          amount: planAmount(subscription.plan, event.target.value as BillingCycle),
-                        })
-                      }
-                      className="mt-2 block rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs font-semibold"
-                      disabled={saving}
-                    >
-                      <option value="monthly">Monthly</option>
-                      <option value="annual">Annual</option>
-                    </select>
-                  </td>
-                  <td className="px-4 py-4">
-                    <select
-                      value={subscription.status}
-                      onChange={(event) => updateSubscription(subscription, { status: event.target.value as any })}
-                      className={`rounded-lg px-2 py-1 text-xs font-semibold ring-1 ${statusClasses[subscription.status]}`}
-                      disabled={saving}
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="active">Active</option>
-                      <option value="trialing">Trialing</option>
-                      <option value="past_due">Past Due</option>
-                      <option value="canceled">Canceled</option>
-                    </select>
-                    <p className="mt-2 text-xs text-zinc-400">{subscription.cancelAtPeriodEnd ? 'Cancels at period end' : 'Renewal allowed'}</p>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="text-xs leading-5">
-                      <div><span className="font-semibold text-zinc-100">Left:</span> {subscription.creditBalance == null ? 'Custom' : Math.round(subscription.creditBalance)}</div>
-                      <div><span className="font-semibold text-zinc-100">Included:</span> {Math.round(subscription.includedCredits)}</div>
-                      <div><span className="font-semibold text-zinc-100">Used:</span> {Math.round(subscription.usedCredits)}</div>
-                      <div><span className="font-semibold text-zinc-100">Extra:</span> {Math.round(subscription.extraCredits)}</div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 text-xs text-zinc-400">
-                    <div>{formatDate(subscription.currentPeriodEnd)}</div>
-                    <button
-                      disabled={saving}
-                      onClick={() => updateSubscription(subscription, { action: 'extend', extendDays: 30 })}
-                      className="mt-2 rounded-lg border border-zinc-800 px-2 py-1 font-semibold text-zinc-100 hover:bg-zinc-900 disabled:opacity-50"
-                    >
-                      Extend 30d
-                    </button>
-                  </td>
-                  <td className="px-4 py-4">
-                    <input
-                      type="number"
-                      defaultValue={subscription.amount}
-                      onBlur={(event) => updateSubscription(subscription, { amount: Number(event.target.value) })}
-                      className="w-24 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs"
-                      disabled={saving}
-                    />
-                    <p className="mt-2 text-xs text-zinc-400">{formatInr(subscription.amount)}</p>
-                  </td>
-                  <td className="px-4 py-4">
-                    <input
-                      defaultValue={subscription.notes || ''}
-                      onBlur={(event) => updateSubscription(subscription, { notes: event.target.value })}
-                      className="w-44 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs"
-                      disabled={saving}
-                    />
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <button
-                        disabled={saving}
-                        onClick={() => updateSubscription(subscription, { plan: 'pro', amount: planAmount('pro', 'monthly'), billingCycle: 'monthly', action: 'activate' })}
-                        className="rounded-lg bg-zinc-700 px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-                      >
-                        Give Pro
-                      </button>
-                      <button
-                        disabled={saving}
-                        onClick={() => updateSubscription(subscription, { plan: 'business', amount: planAmount('business', 'monthly'), billingCycle: 'monthly', action: 'activate' })}
-                        className="rounded-lg bg-zinc-950 px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-                      >
-                        Give Business
-                      </button>
-                      <button
-                        disabled={saving}
-                        onClick={() => updateSubscription(subscription, { action: 'activate' })}
-                        className="rounded-lg border border-emerald-200 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 disabled:opacity-50"
-                      >
-                        Activate
-                      </button>
-                      <button
-                        disabled={saving}
-                        onClick={() => updateSubscription(subscription, { action: 'grantCredits', creditAmount: 300 })}
-                        className="rounded-lg border border-zinc-600 px-2.5 py-1.5 text-xs font-semibold text-zinc-300 disabled:opacity-50"
-                      >
-                        +300
-                      </button>
-                      <button
-                        disabled={saving}
-                        onClick={() => updateSubscription(subscription, { action: 'resetCredits' })}
-                        className="rounded-lg border border-zinc-800 px-2.5 py-1.5 text-xs font-semibold text-zinc-100 disabled:opacity-50"
-                      >
-                        Reset
-                      </button>
-                      <button
-                        disabled={saving}
-                        onClick={() => cancelSubscription(subscription)}
-                        className="rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600 disabled:opacity-50"
-                      >
-                        {saving ? 'Saving...' : 'Cancel'}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+      {draft && <form className="rounded-2xl border border-zinc-600 bg-zinc-950 p-5" onSubmit={e => {
+        e.preventDefault();
+        const saved = subscriptions.find(item => item.userEmail === draft.userEmail);
+        if (saved) void updateSubscription(saved, { plan: draft.plan, billingCycle: draft.billingCycle, status: draft.status, amount: draft.amount, notes: draft.notes || '' });
+      }}>
+        <h3 className="font-semibold">Edit membership</h3><p className="mt-1 break-all text-sm text-zinc-400">{draft.userEmail}</p>
+        <fieldset disabled={!!savingId} className="mt-5 space-y-5">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="space-y-2 text-sm text-zinc-400"><span>Plan</span><select className="input-modern" value={draft.plan} onChange={e => { const plan = e.target.value as PlanKey; setDraft({ ...draft, plan, amount: planAmount(plan, draft.billingCycle) }); }}>{BILLING_PLANS.map(plan => <option key={plan.key} value={plan.key}>{plan.title}</option>)}</select></label>
+            <label className="space-y-2 text-sm text-zinc-400"><span>Billing cycle</span><select className="input-modern" value={draft.billingCycle} onChange={e => { const billingCycle = e.target.value as BillingCycle; setDraft({ ...draft, billingCycle, amount: planAmount(draft.plan, billingCycle) }); }}><option value="monthly">Monthly</option><option value="annual">Annual</option></select></label>
+            <label className="space-y-2 text-sm text-zinc-400"><span>Status</span><select className="input-modern" value={draft.status} onChange={e => setDraft({ ...draft, status: e.target.value as Subscription['status'] })}><option value="pending">Pending</option><option value="active">Active</option><option value="trialing">Trial</option><option value="past_due">Past due</option><option value="canceled">Canceled</option></select></label>
+            <label className="space-y-2 text-sm text-zinc-400"><span>Amount ({draft.currency})</span><input className="input-modern" type="number" min="0" step="0.01" required value={draft.amount} onChange={e => setDraft({ ...draft, amount: Number(e.target.value) })} /></label>
+          </div>
+          <label className="block space-y-2 text-sm text-zinc-400"><span>Admin notes</span><textarea className="input-modern py-3" rows={2} value={draft.notes || ''} onChange={e => setDraft({ ...draft, notes: e.target.value })} /></label>
+          <p className="text-xs text-zinc-400">Changes apply only when you save. Changing the plan or billing cycle updates the suggested amount.</p>
+          <div className="flex gap-3"><button type="submit" className="button-primary">{savingId ? 'Saving…' : 'Save changes'}</button><button type="button" className="button-secondary" onClick={() => setDraft(null)}>Cancel</button></div>
+          <details className="border-t border-zinc-800 pt-4"><summary className="cursor-pointer text-sm text-zinc-300">Credits & membership actions</summary>
+            <p className="my-4 text-xs leading-6 text-zinc-400">These actions apply immediately to the saved membership. Save any plan changes above first.</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div><label className="text-sm text-zinc-400">Extra credits<input aria-label="Extra credits" type="number" min="1" step="1" className="input-modern my-2" value={creditAmount} onChange={e => setCreditAmount(Number(e.target.value))} /></label><button type="button" disabled={!Number.isInteger(creditAmount) || creditAmount < 1} onClick={() => runAction({ action: 'grantCredits', creditAmount })} className="button-secondary">Add credits</button></div>
+              <div><label className="text-sm text-zinc-400">Extend by days<input aria-label="Extend by days" type="number" min="1" step="1" className="input-modern my-2" value={extendDays} onChange={e => setExtendDays(Number(e.target.value))} /></label><button type="button" disabled={!Number.isInteger(extendDays) || extendDays < 1} onClick={() => runAction({ action: 'extend', extendDays })} className="button-secondary">Extend membership</button></div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button type="button" className="button-secondary" onClick={() => runAction({ action: 'activate' })}>Activate membership</button>
+              <button type="button" className="button-secondary" onClick={() => { if (confirm('Reset this member’s credit usage?')) runAction({ action: 'resetCredits' }); }}>Reset credit usage</button>
+              <button type="button" className="button-secondary !text-red-300" onClick={() => { const saved = subscriptions.find(item => item.userEmail === draft.userEmail); if (saved) void cancelSubscription(saved); }}>Cancel membership</button>
+            </div>
+          </details>
+        </fieldset>
+      </form>}
+      <p className="text-xs text-zinc-400">{visible.length} members shown</p>
+      {!visible.length && <p className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-400">No members found. Try another search or filter.</p>}
+      <div className="grid gap-3">{visible.map(item => <article key={item.userEmail} className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-800 p-4">
+        <div className="min-w-0"><h3 className="break-all font-medium">{item.userName || item.userEmail}</h3>{item.userName && <p className="break-all text-sm text-zinc-400">{item.userEmail}</p>}<p className="mt-2 text-sm text-zinc-400">{item.selected ? `${BILLING_PLANS.find(plan => plan.key === item.plan)?.title || item.plan} · ${item.status.replace('_', ' ')}` : 'No plan selected'}</p><p className="mt-1 text-xs text-zinc-500">{item.creditBalance == null ? 'Custom credits' : `${Math.round(item.creditBalance)} credits left`} · Ends: {formatDate(item.currentPeriodEnd)}{item.cancelAtPeriodEnd ? ' · Cancels at period end' : ''}</p></div>
+        <button disabled={!!savingId} type="button" className="button-secondary" onClick={() => { setDraft({ ...item }); setError(''); setNotice(''); }}>Edit membership</button>
+      </article>)}</div>
+    </>}
+  </div>;
 }

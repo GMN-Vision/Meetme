@@ -4,9 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { GlowCard } from '../../components/ui/glow-card';
-import { SectionHeading } from '../../components/ui/section-heading';
-import { GradientBorderButton } from '../../components/ui/gradient-border-button';
-import { Footer } from '../../components/ui/footer';
+import { Users, Video, CreditCard, LayoutDashboard, ArrowRight } from 'lucide-react';
 import { Skeleton } from '../../components/ui/skeleton';
 import AdminSubscriptionTable from '../../components/AdminSubscriptionTable';
 
@@ -31,20 +29,6 @@ interface MeetingItem {
   lastSessionAt?: string | null;
 }
 
-interface OrganizationItem {
-  _id: string;
-  name: string;
-  domain?: string;
-  billingPlan: string;
-  memberCount: number;
-  policies: {
-    recordingAllowed: boolean;
-    chatEnabled: boolean;
-    requirePassword: boolean;
-  };
-  createdAt: string;
-}
-
 interface AdminStats {
   totalUsers: number;
   totalMeetings: number;
@@ -59,49 +43,42 @@ interface AdminStats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'users' | 'meetings' | 'organizations' | 'subscriptions' | 'danger'>('users');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'meetings' | 'subscriptions'>('overview');
   
+  const [editingUser, setEditingUser] = useState<UserItem | null>(null);
+  const [userFilter, setUserFilter] = useState('all');
+  const [loadError, setLoadError] = useState('');
+  const navigation = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard, description: 'Choose what you want to manage.' },
+    { id: 'users', label: 'People', icon: Users, description: 'Find a person and manage account access.' },
+    { id: 'subscriptions', label: 'Plans & credits', icon: CreditCard, description: 'Change memberships, billing details, and AI credits.' },
+    { id: 'meetings', label: 'Meeting rooms', icon: Video, description: 'Find rooms and manage their records.' },
+  ] as const;
   // Data states
   const [users, setUsers] = useState<UserItem[]>([]);
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
-  const [organizations, setOrganizations] = useState<OrganizationItem[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
   
   // Search states
   const [userSearch, setUserSearch] = useState('');
   const [meetingSearch, setMeetingSearch] = useState('');
   
-  // Form states (create organization)
-  const [newOrgName, setNewOrgName] = useState('');
-  const [newOrgDomain, setNewOrgDomain] = useState('');
-  const [newOrgPlan, setNewOrgPlan] = useState('enterprise');
-  const [newOrgRecAllowed, setNewOrgRecAllowed] = useState(true);
-  const [newOrgChatEnabled, setNewOrgChatEnabled] = useState(true);
-  
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [adminAuthorized, setAdminAuthorized] = useState(false);
-  const [showOrgModal, setShowOrgModal] = useState(false);
-  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
-  const [deleteConfirmation, setDeleteConfirmation] = useState('');
-  const [showTerminateRoomsModal, setShowTerminateRoomsModal] = useState(false);
-  const [terminateRoomsConfirmation, setTerminateRoomsConfirmation] = useState('');
-
   useEffect(() => {
     void (async () => {
       try {
         if (status === 'authenticated') {
           const userRole = (session?.user as any)?.role;
-          if (userRole !== 'admin') {
-            router.push('/meetings');
+          if (userRole === 'admin') {
+            await fetchAllData();
             return;
           }
-          await fetchAllData();
-          return;
         }
 
-        if (status === 'unauthenticated') {
+        if (status !== 'loading') {
           // Check admin cookie-based session as a fallback (admins authenticate via env creds)
           try {
             const s = await fetch('/api/admin/auth/session', { credentials: 'include' });
@@ -126,19 +103,20 @@ export default function AdminDashboard() {
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setMessage({ text, type });
-    setTimeout(() => setMessage(null), 3000);
+    if (type === 'success') setTimeout(() => setMessage(current => current?.text === text ? null : current), 5000);
   };
 
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [statsRes, usersRes, meetingsRes, orgsRes] = await Promise.all([
+      setLoadError('');
+      const [statsRes, usersRes, meetingsRes] = await Promise.all([
         fetch('/api/admin/stats', { credentials: 'include' }),
         fetch('/api/admin/users', { credentials: 'include' }),
         fetch('/api/admin/meetings', { credentials: 'include' }),
-        fetch('/api/admin/organizations', { credentials: 'include' }),
       ]);
 
+      if ([statsRes, usersRes, meetingsRes].some(res => !res.ok)) setLoadError('Some data could not be loaded. Refresh to try again.');
       if (statsRes.ok) {
         const d = await statsRes.json();
         setStats(d.stats);
@@ -151,13 +129,10 @@ export default function AdminDashboard() {
         const d = await meetingsRes.json();
         setMeetings(d.meetings || []);
       }
-      if (orgsRes.ok) {
-        const d = await orgsRes.json();
-        setOrganizations(d.organizations || []);
-      }
+
     } catch (err) {
       console.error('Error fetching admin data:', err);
-      showToast('Failed to load dashboard data', 'error');
+      setLoadError('Could not load dashboard data. Check your connection and refresh.');
     } finally {
       setLoading(false);
     }
@@ -176,7 +151,8 @@ export default function AdminDashboard() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to update user');
 
-      showToast('User updated successfully');
+      showToast('Changes saved');
+      setEditingUser(null);
       
       // Update local state
       setUsers((prev) =>
@@ -248,173 +224,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleCreateOrg = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      setActionLoading('org-create');
-      const response = await fetch('/api/admin/organizations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          name: newOrgName,
-          domain: newOrgDomain || undefined,
-          billingPlan: newOrgPlan,
-          recordingAllowed: newOrgRecAllowed,
-          chatEnabled: newOrgChatEnabled,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to create organization');
-
-      showToast('Organization created successfully');
-      setShowOrgModal(false);
-      
-      // Reset form
-      setNewOrgName('');
-      setNewOrgDomain('');
-      setNewOrgPlan('enterprise');
-      setNewOrgRecAllowed(true);
-      setNewOrgChatEnabled(true);
-
-      // Refresh organizations
-      const orgsRes = await fetch('/api/admin/organizations', { credentials: 'include' });
-      if (orgsRes.ok) {
-        const d = await orgsRes.json();
-        setOrganizations(d.organizations || []);
-      }
-      
-      // Refresh stats
-      void fetch('/api/admin/stats', { credentials: 'include' }).then((res) => {
-        if (res.ok) res.json().then((d) => setStats(d.stats));
-      });
-    } catch (err: any) {
-      showToast(err.message || 'Failed to create organization', 'error');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleDeleteOrg = async (orgId: string) => {
-    if (!confirm('Are you sure you want to delete this organization? All member links will be dissolved.')) return;
-
-    try {
-      setActionLoading(`org-delete-${orgId}`);
-      const response = await fetch(`/api/admin/organizations?orgId=${orgId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to delete organization');
-
-      showToast('Organization deleted successfully');
-      setOrganizations((prev) => prev.filter((o) => o._id !== orgId));
-      
-      // Refresh users (since their org relations changed)
-      const usersRes = await fetch('/api/admin/users', { credentials: 'include' });
-      if (usersRes.ok) {
-        const d = await usersRes.json();
-        setUsers(d.users || []);
-      }
-
-      // Refresh stats
-      void fetch('/api/admin/stats', { credentials: 'include' }).then((res) => {
-        if (res.ok) res.json().then((d) => setStats(d.stats));
-      });
-    } catch (err: any) {
-      showToast(err.message || 'Failed to delete organization', 'error');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const closeTerminateRoomsModal = () => {
-    if (actionLoading === 'meetings-terminate-all') return;
-    setShowTerminateRoomsModal(false);
-    setTerminateRoomsConfirmation('');
-  };
-
-  const handleTerminateAllRooms = async () => {
-    if (terminateRoomsConfirmation !== 'TERMINATE') return;
-
-    try {
-      setActionLoading('meetings-terminate-all');
-      const response = await fetch('/api/admin/meetings?all=true', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ confirmation: terminateRoomsConfirmation }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to terminate rooms');
-
-      setMeetings([]);
-      setShowTerminateRoomsModal(false);
-      setTerminateRoomsConfirmation('');
-      showToast(data.message || 'All rooms terminated successfully');
-
-      void fetch('/api/admin/stats', { credentials: 'include' }).then((res) => {
-        if (res.ok) res.json().then((d) => setStats(d.stats));
-      });
-    } catch (err: any) {
-      showToast(err.message || 'Failed to terminate rooms', 'error');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const closeDeleteAllModal = () => {
-    if (actionLoading === 'delete-all') return;
-    setShowDeleteAllModal(false);
-    setDeleteConfirmation('');
-  };
-
-  const handleDeleteAllData = async () => {
-    if (deleteConfirmation !== 'DELETE') return;
-
-    try {
-      setActionLoading('delete-all');
-      const response = await fetch('/api/admin/delete-all', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ confirmation: deleteConfirmation }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to delete application data');
-
-      setUsers([]);
-      setMeetings([]);
-      setOrganizations([]);
-      setStats({
-        totalUsers: 0,
-        totalMeetings: 0,
-        totalOrganizations: 0,
-        activeMeetings: 0,
-        roles: {
-          admin: 0,
-          user: 0,
-        },
-      });
-      setShowDeleteAllModal(false);
-      setDeleteConfirmation('');
-      showToast('All application data deleted successfully');
-    } catch (err: any) {
-      showToast(err.message || 'Failed to delete application data', 'error');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
   const filteredUsers = users.filter((u) => {
-    const s = userSearch.toLowerCase();
+    if (userFilter !== 'all' && u.status !== userFilter) return false;
+    const s = userSearch.trim().toLowerCase();
     return (
       (u.name || '').toLowerCase().includes(s) ||
-      u.email.toLowerCase().includes(s) ||
-      (u.organizationName || '').toLowerCase().includes(s)
+      u.email.toLowerCase().includes(s)
     );
   });
 
@@ -456,28 +271,14 @@ export default function AdminDashboard() {
     <div className="page-shell-wide space-y-10 pb-16">
       <section className="overflow-hidden rounded-lg border border-[#27272a] bg-[#18181b] p-6 sm:p-8">
         <div className="space-y-8">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-zinc-400">
-                Administration Portal
-              </p>
-              <h1 className="font-display text-4xl font-semibold leading-tight text-zinc-100 sm:text-5xl">
-                🛡️ System Console
-              </h1>
-              <p className="text-base text-zinc-400">
-                Manage global users, organization billing/policies, and monitor system rooms.
-              </p>
-            </div>
-            {activeTab === 'organizations' && (
-              <GradientBorderButton variant="create" onClick={() => setShowOrgModal(true)}>
-                ➕ Create Organization
-              </GradientBorderButton>
-            )}
-          </div>
-
+          <header className="flex flex-wrap items-center justify-between gap-4">
+            <div><p className="section-kicker">Melanam administration</p><h1 className="mt-2 text-3xl font-semibold">Admin dashboard</h1><p className="mt-2 text-sm text-zinc-400">People, plans, and meeting settings in one place.</p></div>
+            <button className="button-secondary" disabled={!!actionLoading} onClick={() => void fetchAllData()}>Refresh data</button>
+          </header>
+          {loadError && <div role="alert" className="rounded-xl border border-amber-400/30 p-4 text-sm text-amber-200">{loadError}</div>}
           {/* Stats Section */}
-          {stats && (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {stats && activeTab === 'overview' && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <GlowCard className="p-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">Total Users</p>
                 <p className="mt-3 font-display text-3xl font-semibold text-zinc-100">{stats.totalUsers}</p>
@@ -486,181 +287,51 @@ export default function AdminDashboard() {
                 </p>
               </GlowCard>
               <GlowCard className="p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">Organizations</p>
-                <p className="mt-3 font-display text-3xl font-semibold text-zinc-100">{stats.totalOrganizations}</p>
-                <p className="mt-1 text-sm text-zinc-400">Registered SaaS enterprises</p>
-              </GlowCard>
-              <GlowCard className="p-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">Meetings Created</p>
                 <p className="mt-3 font-display text-3xl font-semibold text-zinc-100">{stats.totalMeetings}</p>
-                <p className="mt-1 text-sm text-zinc-400">Cumulative room logs</p>
+                <p className="mt-1 text-sm text-zinc-400">Total room records</p>
               </GlowCard>
               <GlowCard className="p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">Active Sessions</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">Recent Sessions</p>
                 <p className="mt-3 font-display text-3xl font-semibold text-emerald-600">{stats.activeMeetings}</p>
-                <p className="mt-1 text-sm text-zinc-400">Live or touched in last 2h</p>
+                <p className="mt-1 text-sm text-zinc-400">Active in the last two hours</p>
               </GlowCard>
             </div>
           )}
 
-          {/* Tabs Switcher */}
-          <div className="flex flex-wrap border-b border-zinc-800">
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`px-6 py-3 text-sm font-semibold transition border-b-2 -mb-[2px] ${
-                activeTab === 'users'
-                  ? 'border-zinc-600 text-zinc-300'
-                  : 'border-transparent text-zinc-400 hover:text-zinc-100'
-              }`}
-            >
-              👥 User Accounts
-            </button>
-            <button
-              onClick={() => setActiveTab('meetings')}
-              className={`px-6 py-3 text-sm font-semibold transition border-b-2 -mb-[2px] ${
-                activeTab === 'meetings'
-                  ? 'border-zinc-600 text-zinc-300'
-                  : 'border-transparent text-zinc-400 hover:text-zinc-100'
-              }`}
-            >
-              📞 Video Rooms
-            </button>
-            <button
-              onClick={() => setActiveTab('organizations')}
-              className={`px-6 py-3 text-sm font-semibold transition border-b-2 -mb-[2px] ${
-                activeTab === 'organizations'
-                  ? 'border-zinc-600 text-zinc-300'
-                  : 'border-transparent text-zinc-400 hover:text-zinc-100'
-              }`}
-            >
-              🏢 Organizations
-            </button>
-            <button
-              onClick={() => setActiveTab('subscriptions')}
-              className={`px-6 py-3 text-sm font-semibold transition border-b-2 -mb-[2px] ${
-                activeTab === 'subscriptions'
-                  ? 'border-zinc-600 text-zinc-300'
-                  : 'border-transparent text-zinc-400 hover:text-zinc-100'
-              }`}
-            >
-              💳 Subscriptions
-            </button>
-            <button
-              onClick={() => setActiveTab('danger')}
-              className={`px-6 py-3 text-sm font-semibold transition border-b-2 -mb-[2px] ${
-                activeTab === 'danger'
-                  ? 'border-red-500 text-red-600'
-                  : 'border-transparent text-zinc-400 hover:text-red-600'
-              }`}
-            >
-              Danger Zone
-            </button>
+          <nav aria-label="Admin sections" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {navigation.map(item => <button key={item.id} onClick={() => setActiveTab(item.id)} aria-current={activeTab === item.id ? 'page' : undefined} className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm transition ${activeTab === item.id ? 'bg-zinc-50 font-semibold text-zinc-950' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}><item.icon size={16} />{item.label}</button>)}
+          </nav>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div><h2 className="text-xl font-semibold">{navigation.find(item => item.id === activeTab)?.label}</h2><p className="mt-1 text-sm text-zinc-400">{navigation.find(item => item.id === activeTab)?.description}</p></div>
           </div>
-          {/* Tab Contents */}
+          {activeTab === 'overview' && <div className="grid gap-4 sm:grid-cols-2">{navigation.filter(item => item.id !== 'overview').map(item => <button key={item.id} onClick={() => setActiveTab(item.id)} className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-6 text-left transition hover:border-zinc-600 hover:bg-zinc-900"><item.icon size={24} className="mb-4 text-zinc-400" /><span className="flex items-center justify-between font-semibold">{item.label}<ArrowRight size={16} /></span><p className="mt-2 text-sm leading-6 text-zinc-400">{item.description}</p></button>)}</div>}
           <div className="mt-6">
-            {activeTab === 'users' && (
-              <div className="space-y-4">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <input
-                    type="text"
-                    placeholder="Search users by name, email, or organization..."
-                    value={userSearch}
-                    onChange={(e) => setUserSearch(e.target.value)}
-                    className="input-modern max-w-md w-full"
-                  />
-                  <span className="text-sm text-zinc-400">
-                    Showing {filteredUsers.length} of {users.length} users
-                  </span>
-                </div>
-
-                <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900">
-                  <table className="min-w-full divide-y divide-zinc-800 text-left text-sm text-zinc-400">
-                    <thead className="bg-zinc-900 text-zinc-100 font-semibold">
-                      <tr>
-                        <th className="px-6 py-4">User</th>
-                        <th className="px-6 py-4">Role</th>
-                        <th className="px-6 py-4">Organization</th>
-                        <th className="px-6 py-4">Status</th>
-                        <th className="px-6 py-4">Joined Date</th>
-                        <th className="px-6 py-4 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-800">
-                      {filteredUsers.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="px-6 py-8 text-center text-zinc-400">
-                            No users found matching query
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredUsers.map((user) => (
-                          <tr key={user._id} className="hover:bg-zinc-900/50 transition">
-                            <td className="px-6 py-4">
-                              <div className="font-semibold text-zinc-100">{user.name || 'No Name'}</div>
-                              <div className="text-xs text-zinc-400">{user.email}</div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <select
-                                value={user.role}
-                                disabled={actionLoading === `user-update-${user._id}` || user.email === session?.user?.email}
-                                onChange={(e) => handleUpdateUser(user._id, { role: e.target.value as any })}
-                                className="rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-zinc-600"
-                              >
-                                <option value="user">User</option>
-                                <option value="admin">System Admin</option>
-                              </select>
-                            </td>
-                            <td className="px-6 py-4 font-medium text-zinc-100">
-                              {user.organizationName ? (
-                                <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-1 text-xs text-emerald-800">
-                                  🏢 {user.organizationName}
-                                </span>
-                              ) : (
-                                <span className="text-zinc-400 italic">None</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4">
-                              <button
-                                disabled={actionLoading === `user-update-${user._id}` || user.email === session?.user?.email}
-                                onClick={() =>
-                                  handleUpdateUser(user._id, { status: user.status === 'active' ? 'disabled' : 'active' })
-                                }
-                                className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition ${
-                                  user.status === 'active'
-                                    ? 'bg-emerald-500/10 text-emerald-700 ring-emerald-500/20'
-                                    : 'bg-red-500/10 text-red-700 ring-red-500/20'
-                                }`}
-                              >
-                                {user.status === 'active' ? '🟢 Active' : '🔴 Disabled'}
-                              </button>
-                            </td>
-                            <td className="px-6 py-4 text-xs text-zinc-400">
-                              {new Date(user.createdAt).toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <button
-                                disabled={actionLoading === `user-delete-${user._id}` || user.email === session?.user?.email}
-                                onClick={() => handleDeleteUser(user._id)}
-                                className="text-red-500 hover:text-red-700 font-semibold text-xs disabled:opacity-50 transition"
-                              >
-                                {actionLoading === `user-delete-${user._id}` ? 'Deleting...' : 'Delete'}
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
+            {activeTab === 'users' && <div className="space-y-4">
+              <div className="flex flex-wrap gap-3"><input aria-label="Search people" className="input-modern min-w-0 basis-full sm:flex-1" placeholder="Search name or email" value={userSearch} onChange={e => setUserSearch(e.target.value)} /><select aria-label="Filter account status" className="px-3 py-2 text-sm" value={userFilter} onChange={e => setUserFilter(e.target.value)}><option value="all">All accounts</option><option value="active">Active</option><option value="disabled">Disabled</option></select></div>
+              <p className="text-xs text-zinc-400">{filteredUsers.length} of {users.length} people</p>
+              {!filteredUsers.length && <p className="py-8 text-center text-sm text-zinc-400">No accounts match your search.</p>}
+              {filteredUsers.map(user => <article key={user._id} className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><h3 className="break-all font-medium">{user.name || user.email}</h3><p className="break-all text-sm text-zinc-400">{user.email}</p><p className="mt-2 text-xs text-zinc-500">{user.role === 'admin' ? 'Admin' : 'Member'} · {user.status === 'active' ? 'Active' : 'Disabled'}</p></div><button disabled={!!actionLoading} className="button-secondary" onClick={() => setEditingUser({ ...user })}>Edit access</button></div>
+                {editingUser?._id === user._id && <form className="mt-5 border-t border-zinc-800 pt-5" onSubmit={e => { e.preventDefault(); void handleUpdateUser(user._id, { role: editingUser.role, status: editingUser.status }); }}>
+                  <fieldset disabled={!!actionLoading} className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="space-y-2 text-sm text-zinc-400"><span>Account role</span><select aria-label="Account role" className="input-modern" disabled={user.email === session?.user?.email} value={editingUser.role} onChange={e => setEditingUser({ ...editingUser, role: e.target.value as UserItem['role'] })}><option value="user">Member</option><option value="admin">Admin</option></select></label>
+                      <label className="space-y-2 text-sm text-zinc-400"><span>Account access</span><select aria-label="Account access" className="input-modern" disabled={user.email === session?.user?.email} value={editingUser.status} onChange={e => setEditingUser({ ...editingUser, status: e.target.value as UserItem['status'] })}><option value="active">Active — can sign in</option><option value="disabled">Disabled — sign-in blocked</option></select></label>
+                    </div>
+                    <p className="text-xs text-zinc-400">Admins can manage all users and application data. Changes apply when you save.</p>
+                    <div className="flex flex-wrap items-center gap-3"><button className="button-primary" type="submit">{actionLoading ? 'Saving…' : 'Save changes'}</button><button className="button-secondary" type="button" onClick={() => setEditingUser(null)}>Cancel</button><button type="button" disabled={user.email === session?.user?.email} className="ml-auto text-sm text-red-300" onClick={() => void handleDeleteUser(user._id)}>Delete account</button></div>
+                  </fieldset>
+                </form>}
+              </article>)}
+            </div>}
             {activeTab === 'meetings' && (
               <div className="space-y-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <input
                     type="text"
-                    placeholder="Search meetings by title, room ID, or host email..."
+                    aria-label="Search rooms"
+                    placeholder="Search title, room ID, or host email"
                     value={meetingSearch}
                     onChange={(e) => setMeetingSearch(e.target.value)}
                     className="input-modern max-w-md w-full"
@@ -669,14 +340,7 @@ export default function AdminDashboard() {
                     <span className="text-sm text-zinc-400">
                       Showing {filteredMeetings.length} of {meetings.length} rooms
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowTerminateRoomsModal(true)}
-                      disabled={meetings.length === 0}
-                      className="inline-flex items-center justify-center rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-800 disabled:text-zinc-400"
-                    >
-                      Terminate all rooms
-                    </button>
+
                   </div>
                 </div>
 
@@ -735,302 +399,21 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {activeTab === 'organizations' && (
-              <div className="space-y-4">
-                <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900">
-                  <table className="min-w-full divide-y divide-zinc-800 text-left text-sm text-zinc-400">
-                    <thead className="bg-zinc-900 text-zinc-100 font-semibold">
-                      <tr>
-                        <th className="px-6 py-4">Organization Name</th>
-                        <th className="px-6 py-4">Domain Domain</th>
-                        <th className="px-6 py-4">Plan Tier</th>
-                        <th className="px-6 py-4">Active Members</th>
-                        <th className="px-6 py-4">Meeting Policies</th>
-                        <th className="px-6 py-4 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-800">
-                      {organizations.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="px-6 py-8 text-center text-zinc-400">
-                            No organizations created yet. Click "Create Organization" to add one.
-                          </td>
-                        </tr>
-                      ) : (
-                        organizations.map((org) => (
-                          <tr key={org._id} className="hover:bg-zinc-900/50 transition">
-                            <td className="px-6 py-4">
-                              <div className="font-semibold text-zinc-100">{org.name}</div>
-                              <div className="text-xs text-zinc-400">Registered {new Date(org.createdAt).toLocaleDateString()}</div>
-                            </td>
-                            <td className="px-6 py-4 text-zinc-400 font-mono text-xs">
-                              {org.domain ? `@${org.domain}` : <span className="text-zinc-400 italic">No restriction</span>}
-                            </td>
-                            <td className="px-6 py-4 uppercase font-semibold text-zinc-300 text-xs">
-                              {org.billingPlan}
-                            </td>
-                            <td className="px-6 py-4 font-semibold text-zinc-100">
-                              {org.memberCount} members
-                            </td>
-                            <td className="px-6 py-4 text-xs space-y-0.5">
-                              <div>Recordings: {org.policies.recordingAllowed ? '✅ Allowed' : '❌ Disallowed'}</div>
-                              <div>Chat: {org.policies.chatEnabled ? '✅ Enabled' : '❌ Disabled'}</div>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <button
-                                disabled={actionLoading === `org-delete-${org._id}`}
-                                onClick={() => handleDeleteOrg(org._id)}
-                                className="text-red-500 hover:text-red-700 font-semibold text-xs disabled:opacity-50 transition"
-                              >
-                                {actionLoading === `org-delete-${org._id}` ? 'Deleting...' : 'Delete'}
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
             {activeTab === 'subscriptions' && (
               <div className="space-y-4">
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-                  <p className="text-sm text-zinc-400">
-                    Manage app memberships, activation, cancellation, period extensions, manual Pro or Business grants, extra credits, and credit resets.
-                  </p>
-                </div>
                 <AdminSubscriptionTable />
               </div>
             )}
 
-            {activeTab === 'danger' && (
-              <div className="space-y-4">
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-[0.25em] text-red-700">Destructive action</p>
-                      <h2 className="mt-2 font-display text-2xl font-semibold text-red-950">Delete All Data</h2>
-                      <p className="mt-2 max-w-3xl text-sm leading-6 text-red-800">
-                        This opens a confirmation modal before any deletion can occur. You must type DELETE exactly to enable the final delete action.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowDeleteAllModal(true)}
-                      className="inline-flex w-full items-center justify-center rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700 sm:w-auto"
-                    >
-                      Delete All Data
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </section>
 
-      {/* Create Org Modal */}
-      {showOrgModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
-            <h3 className="font-display text-2xl font-semibold text-zinc-100">
-              Create Enterprise Organization
-            </h3>
-            <p className="mt-2 text-sm text-zinc-400">
-              Set up a new company account with domain mapping and default meeting policies.
-            </p>
-
-            <form onSubmit={handleCreateOrg} className="mt-6 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                  Organization Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Acme Corporation"
-                  value={newOrgName}
-                  onChange={(e) => setNewOrgName(e.target.value)}
-                  className="input-modern mt-1.5 w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                  Domain Mapping (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. acme.com"
-                  value={newOrgDomain}
-                  onChange={(e) => setNewOrgDomain(e.target.value)}
-                  className="input-modern mt-1.5 w-full"
-                />
-                <span className="text-sm text-zinc-400 mt-1 block">
-                  New sign-ups matching this domain automatically link to this organization.
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                  Billing Plan Tier
-                </label>
-                <select
-                  value={newOrgPlan}
-                  onChange={(e) => setNewOrgPlan(e.target.value)}
-                  className="input-modern mt-1.5 w-full"
-                >
-                  <option value="enterprise">Enterprise Tier</option>
-                  <option value="premium">Premium Tier</option>
-                  <option value="basic">Basic Tier</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={newOrgRecAllowed}
-                    onChange={(e) => setNewOrgRecAllowed(e.target.checked)}
-                    className="h-4 w-4 rounded border-zinc-800 text-zinc-300 focus:ring-zinc-600"
-                  />
-                  <span className="text-sm text-zinc-400 font-medium">Allow Recording</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={newOrgChatEnabled}
-                    onChange={(e) => setNewOrgChatEnabled(e.target.checked)}
-                    className="h-4 w-4 rounded border-zinc-800 text-zinc-300 focus:ring-zinc-600"
-                  />
-                  <span className="text-sm text-zinc-400 font-medium">Enable Chat</span>
-                </label>
-              </div>
-
-              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-zinc-800">
-                <button
-                  type="button"
-                  onClick={() => setShowOrgModal(false)}
-                  className="rounded-xl border border-zinc-800 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-900 transition"
-                >
-                  Cancel
-                </button>
-                <GradientBorderButton type="submit" variant="create" disabled={actionLoading === 'org-create'}>
-                  {actionLoading === 'org-create' ? 'Creating...' : 'Create Org'}
-                </GradientBorderButton>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Delete All Data Modal */}
-      {showDeleteAllModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-red-200 bg-zinc-900 p-6 shadow-2xl">
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-              <p className="text-xs font-bold uppercase tracking-[0.25em] text-red-700">Danger confirmation</p>
-              <h3 className="mt-2 font-display text-2xl font-semibold text-red-950">
-                Delete All Data
-              </h3>
-              <p className="mt-3 text-sm font-semibold leading-6 text-red-800">
-                This action permanently deletes ALL application data and cannot be undone.
-              </p>
-            </div>
-
-            <div className="mt-6 space-y-3">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                Type DELETE to confirm
-              </label>
-              <input
-                type="text"
-                value={deleteConfirmation}
-                onChange={(e) => setDeleteConfirmation(e.target.value)}
-                autoComplete="off"
-                className="input-modern w-full border-red-200 focus:border-red-500 focus:ring-red-500"
-                placeholder="DELETE"
-              />
-              <p className="text-xs leading-5 text-zinc-400">
-                The delete button remains disabled until the confirmation text exactly matches DELETE.
-              </p>
-            </div>
-
-            <div className="mt-6 flex flex-col-reverse gap-3 border-t border-zinc-800 pt-4 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={closeDeleteAllModal}
-                disabled={actionLoading === 'delete-all'}
-                className="rounded-xl border border-zinc-800 px-4 py-2 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteAllData}
-                disabled={deleteConfirmation !== 'DELETE' || actionLoading === 'delete-all'}
-                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300 disabled:shadow-none"
-              >
-                {actionLoading === 'delete-all' ? 'Deleting...' : 'Delete All Data'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showTerminateRoomsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-red-200 bg-zinc-900 p-6 shadow-2xl">
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-              <p className="text-xs font-bold uppercase tracking-[0.25em] text-red-700">Room management</p>
-              <h3 className="mt-2 font-display text-2xl font-semibold text-red-950">Terminate all rooms</h3>
-              <p className="mt-3 text-sm font-semibold leading-6 text-red-800">
-                This permanently removes all {meetings.length} room records. This action cannot be undone.
-              </p>
-            </div>
-
-            <div className="mt-6 space-y-3">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                Type TERMINATE to confirm
-              </label>
-              <input
-                type="text"
-                value={terminateRoomsConfirmation}
-                onChange={(e) => setTerminateRoomsConfirmation(e.target.value)}
-                autoComplete="off"
-                className="input-modern w-full border-red-200 focus:border-red-500 focus:ring-red-500"
-                placeholder="TERMINATE"
-              />
-            </div>
-
-            <div className="mt-6 flex flex-col-reverse gap-3 border-t border-zinc-800 pt-4 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={closeTerminateRoomsModal}
-                disabled={actionLoading === 'meetings-terminate-all'}
-                className="rounded-xl border border-zinc-800 px-4 py-2 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleTerminateAllRooms}
-                disabled={terminateRoomsConfirmation !== 'TERMINATE' || actionLoading === 'meetings-terminate-all'}
-                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300 disabled:shadow-none"
-              >
-                {actionLoading === 'meetings-terminate-all' ? 'Terminating...' : 'Terminate all rooms'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Floating Toast Notification */}
       {message && (
         <div
-          className={`fixed bottom-5 right-5 z-[100] flex items-center gap-2 rounded-xl px-5 py-3.5 text-white shadow-xl ${
+          role={message.type === 'error' ? 'alert' : 'status'}
+          className={`fixed bottom-5 right-5 z-[1200] flex items-center gap-2 rounded-xl px-5 py-3.5 text-white shadow-xl ${
             message.type === 'error' ? 'bg-red-500/90' : 'bg-zinc-900/90'
           }`}
         >
@@ -1038,7 +421,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <Footer />
+
     </div>
   );
 }

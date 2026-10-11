@@ -83,6 +83,42 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PUT(req: NextRequest) {
+  const { authorized } = await checkAdminAuth(req);
+  if (!authorized) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  try {
+    const { orgId, name, domain, billingPlan, recordingAllowed, chatEnabled } = await req.json();
+    if (typeof orgId !== 'string' || !/^[a-f\d]{24}$/i.test(orgId) ||
+        typeof name !== 'string' || !name.trim() ||
+        (domain !== undefined && typeof domain !== 'string') ||
+        !['basic', 'premium', 'enterprise'].includes(billingPlan) ||
+        typeof recordingAllowed !== 'boolean' || typeof chatEnabled !== 'boolean') {
+      return NextResponse.json({ error: 'Check the organization name, plan, and meeting settings.' }, { status: 400 });
+    }
+    const normalizedDomain = (domain || '').trim().toLowerCase();
+    if (normalizedDomain && !/^(?:[a-z\d](?:[a-z\d-]*[a-z\d])?\.)+[a-z]{2,}$/i.test(normalizedDomain)) {
+      return NextResponse.json({ error: 'Enter an email domain such as example.com.' }, { status: 400 });
+    }
+    await dbConnect();
+    const org = await Organization.findById(orgId);
+    if (!org) return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+    if (normalizedDomain && await Organization.findOne({ domain: normalizedDomain, _id: { $ne: orgId } })) {
+      return NextResponse.json({ error: 'An organization with this domain already exists' }, { status: 400 });
+    }
+    org.name = name.trim();
+    org.domain = normalizedDomain || undefined;
+    org.billingPlan = billingPlan;
+    org.policies.recordingAllowed = recordingAllowed;
+    org.policies.chatEnabled = chatEnabled;
+    await org.save();
+    return NextResponse.json({ success: true, organization: org });
+  } catch (error) {
+    console.error('Admin organizations PUT error:', error);
+    return NextResponse.json({ error: 'Could not save organization settings.' }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const { authorized } = await checkAdminAuth();
