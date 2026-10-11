@@ -37,7 +37,7 @@ export default function FeedbackButtons({ meetingId, userName, userEmail }: { me
   return (
     <div className="absolute left-4 bottom-24 z-50 flex gap-2">
       {BUTTONS.map((b) => (
-        <button key={b.key} onClick={() => send(b.type)} title={b.label} className="px-3 py-2 bg-white/90 dark:bg-slate-800 rounded shadow">
+        <button key={b.key} onClick={() => send(b.type)} title={b.label} className="px-3 py-2 bg-zinc-900/90 dark:bg-zinc-800 rounded shadow">
           <span className="text-lg mr-2">{b.emoji}</span>
           <span className="text-sm hidden sm:inline">{b.label}</span>
         </button>

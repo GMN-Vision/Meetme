@@ -49,27 +49,27 @@ export function MeetingRecordings() {
     } catch (err: any) { setError(err.message); }
     finally { setBusy(''); }
   };
-  const button = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-600 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-slate-700 disabled:opacity-50';
+  const button = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-zinc-600 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-700 disabled:opacity-50';
   return (
-    <section aria-labelledby="meeting-recordings-title" className="rounded-xl border border-[#2a3039] bg-[#12151a] p-4 sm:p-5">
+    <section aria-labelledby="meeting-recordings-title" className="rounded-xl border border-[#27272a] bg-[#18181b] p-4 sm:p-5">
       <div className="flex items-center gap-3">
-        <Video className="h-5 w-5 text-cyan-400" />
-        <h2 id="meeting-recordings-title" className="text-lg font-semibold text-slate-100">Meeting recordings</h2>
+        <Video className="h-5 w-5 text-zinc-300" />
+        <h2 id="meeting-recordings-title" className="text-lg font-semibold text-zinc-100">Meeting recordings</h2>
       </div>
-      <p className="mt-2 text-sm text-slate-400">Your recordings and meetings shared with you. Hosts decide when to share with their recent meeting group.</p>
-      {quota && <p className="mt-2 text-xs text-cyan-300">{quota.plan}: {Math.ceil(quota.usedSeconds / 60)} / {quota.limits.monthlyMinutes} recording minutes used this month · {(quota.storedBytes / 1024 ** 3).toFixed(1)} / {quota.limits.storageGb} GB · {quota.limits.retentionDays}-day retention. Usage updates after processing; minutes reset monthly in UTC.</p>}
+      <p className="mt-2 text-sm text-zinc-400">Your recordings and meetings shared with you. Hosts decide when to share with their recent meeting group.</p>
+      {quota && <p className="mt-2 text-xs text-zinc-300">{quota.plan}: {Math.ceil(quota.usedSeconds / 60)} / {quota.limits.monthlyMinutes} recording minutes used this month · {(quota.storedBytes / 1024 ** 3).toFixed(1)} / {quota.limits.storageGb} GB · {quota.limits.retentionDays}-day retention. Usage updates after processing; minutes reset monthly in UTC.</p>}
       {error && <p role="alert" className="mt-3 text-sm text-red-300">{error}</p>}
-      {!recordings.length && <p className="mt-4 text-sm text-slate-400">{loaded ? 'After the host ends a recorded meeting, it will appear here once processed. Server recording is included on every plan.' : 'Loading recordings...'}</p>}
+      {!recordings.length && <p className="mt-4 text-sm text-zinc-400">{loaded ? 'After the host ends a recorded meeting, it will appear here once processed. Server recording is included on every plan.' : 'Loading recordings...'}</p>}
       <div className="mt-4 grid gap-3">
         {recordings.map(recording => {
           const ready = recording.status === 'ready' && Boolean(recording.expiresAt && Date.parse(recording.expiresAt) > Date.now());
           return (
-            <article key={recording.recordingId} className="rounded-lg border border-slate-700 p-4">
+            <article key={recording.recordingId} className="rounded-lg border border-zinc-600 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="break-words font-semibold text-slate-100">{recording.title}</h3>
-                  <p className="mt-1 text-xs text-slate-400">{new Date(recording.createdAt).toLocaleString()} · {recording.isHost ? (recording.sharedAt ? 'Shared with meeting group' : 'Private to you') : 'Shared by host'}</p>
-                  <p className="mt-1 text-xs text-slate-400">{ready ? `${Math.ceil(recording.durationSeconds / 60)} min · Available until ${new Date(recording.expiresAt!).toLocaleDateString()}` : recording.status === 'failed' ? recording.error || 'Recording failed' : recording.status === 'expired' || recording.status === 'ready' ? 'Recording expired or deleted' : 'Processing recording...'}</p>
+                  <h3 className="break-words font-semibold text-zinc-100">{recording.title}</h3>
+                  <p className="mt-1 text-xs text-zinc-400">{new Date(recording.createdAt).toLocaleString()} · {recording.isHost ? (recording.sharedAt ? 'Shared with meeting group' : 'Private to you') : 'Shared by host'}</p>
+                  <p className="mt-1 text-xs text-zinc-400">{ready ? `${Math.ceil(recording.durationSeconds / 60)} min · Available until ${new Date(recording.expiresAt!).toLocaleDateString()}` : recording.status === 'failed' ? recording.error || 'Recording failed' : recording.status === 'expired' || recording.status === 'ready' ? 'Recording expired or deleted' : 'Processing recording...'}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {ready && <>

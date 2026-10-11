@@ -47,19 +47,19 @@ export function YouTubeStreamModal({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[100] bg-slate-950/40 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] bg-zinc-950/40 backdrop-blur-sm"
         onClick={onClose}
       />
       
       {/* Modal */}
       <div className="fixed inset-0 z-[101] flex items-center justify-center pointer-events-none">
-        <div className="pointer-events-auto w-full max-w-md mx-4 rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="pointer-events-auto w-full max-w-md mx-4 rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-slate-900">Go Live on YouTube</h2>
+              <h2 className="text-xl font-semibold text-zinc-100">Go Live on YouTube</h2>
               <button
                 onClick={onClose}
-                className="text-slate-400 hover:text-slate-600 transition"
+                className="text-zinc-400 hover:text-zinc-400 transition"
               >
                 ✕
               </button>
@@ -67,7 +67,7 @@ export function YouTubeStreamModal({
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-zinc-100 mb-2">
                   YouTube Stream URL
                 </label>
                 <input
@@ -75,10 +75,10 @@ export function YouTubeStreamModal({
                   value={streamUrl}
                   onChange={(e) => setStreamUrl(e.target.value)}
                   placeholder="rtmps://a.rtmp.youtube.com/live2/your-stream-key"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-zinc-800 rounded-lg text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   disabled={loading}
                 />
-                <p className="mt-2 text-xs text-slate-500">
+                <p className="mt-2 text-xs text-zinc-400">
                   Get your stream URL from YouTube Studio &gt; Go Live &gt; Stream settings
                 </p>
               </div>
@@ -94,7 +94,7 @@ export function YouTubeStreamModal({
                   type="button"
                   onClick={onClose}
                   disabled={loading}
-                  className="flex-1 px-4 py-2 text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition disabled:opacity-50"
+                  className="flex-1 px-4 py-2 text-zinc-100 border border-zinc-800 rounded-lg hover:bg-zinc-900 transition disabled:opacity-50"
                 >
                   Cancel
                 </button>

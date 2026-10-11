@@ -616,15 +616,15 @@ export default function RoomPage() {
 
   if (meetingError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0b0d10]">
+      <div className="min-h-screen flex items-center justify-center bg-[#09090b]">
         <div className="text-center">
           <p className="text-red-400 text-lg mb-2">{meetingError}</p>
-          <p className="text-gray-400 text-sm mb-4">
+          <p className="text-zinc-400 text-sm mb-4">
             Meeting ID: {meetingId}
           </p>
           <button
             onClick={() => router.push(fallbackRoute)}
-            className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition"
+            className="px-4 py-2 bg-zinc-700 text-white rounded-lg hover:bg-zinc-700 transition"
           >
             Go Back
           </button>
@@ -634,10 +634,10 @@ export default function RoomPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[64rem] overflow-hidden px-3 pt-6 text-slate-950 sm:px-5">
-      {!userEmail && <p className="mb-3 text-sm text-slate-300">To receive shared recordings in your recordings, <a className="text-cyan-300 underline" href={`/sign-in?callbackUrl=${encodeURIComponent(`/room/${meetingId}`)}`}>sign in and rejoin</a> before the host ends the meeting.</p>}
+    <div className="mx-auto w-full max-w-[64rem] overflow-hidden px-3 pt-6 text-zinc-100 sm:px-5">
+      {!userEmail && <p className="mb-3 text-sm text-zinc-300">To receive shared recordings in your recordings, <a className="text-zinc-300 underline" href={`/sign-in?callbackUrl=${encodeURIComponent(`/room/${meetingId}`)}`}>sign in and rejoin</a> before the host ends the meeting.</p>}
       {meeting?.hostEmail?.toLowerCase() === userEmail?.toLowerCase() && (
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-300">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm text-zinc-300">
           <span>Recordings stay private until you share them from your recordings.</span>
           <button type="button" disabled={endingMeeting} onClick={endMeetingForEveryone}
             className="rounded-lg bg-red-700 px-4 py-2 font-semibold text-white disabled:opacity-50">
@@ -645,10 +645,10 @@ export default function RoomPage() {
           </button>
         </div>
       )}
-      <div className="relative min-h-[24rem] overflow-hidden rounded-lg border border-[#2a3039] bg-slate-950">
+      <div className="relative min-h-[24rem] overflow-hidden rounded-lg border border-[#27272a] bg-zinc-950">
         <div
           ref={handleVideoStageRef}
-          className="relative h-[min(68dvh,40rem)] min-h-[24rem] w-full overflow-hidden bg-slate-950"
+          className="relative h-[min(68dvh,40rem)] min-h-[24rem] w-full overflow-hidden bg-zinc-950"
         >
           {canMountJitsi ? (
             <>
@@ -677,7 +677,7 @@ export default function RoomPage() {
               />
             </>
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-slate-950 text-sm font-semibold text-slate-300">
+            <div className="flex h-full w-full items-center justify-center bg-zinc-950 text-sm font-semibold text-zinc-300">
               Preparing meeting...
             </div>
           )}
@@ -688,11 +688,11 @@ export default function RoomPage() {
           </div>
         )}
         {showAiResults && aiResults && (
-          <div className="fixed right-0 top-16 z-60 h-[calc(100vh-4rem)] w-full max-w-lg overflow-auto border-l border-gray-200 bg-white/95 shadow-2xl dark:border-gray-800 dark:bg-slate-900/95">
-            <div className="flex items-center justify-between border-b border-gray-100 p-4 dark:border-gray-800">
+          <div className="fixed right-0 top-16 z-60 h-[calc(100vh-4rem)] w-full max-w-lg overflow-auto border-l border-zinc-800 bg-zinc-900/95 shadow-2xl dark:border-zinc-600 dark:bg-zinc-900/95">
+            <div className="flex items-center justify-between border-b border-zinc-800 p-4 dark:border-zinc-600">
               <h3 className="text-lg font-semibold">AI Meeting Results</h3>
               <div className="flex items-center gap-2">
-                <button onClick={() => setShowAiResults(false)} className="text-sm text-slate-600 dark:text-slate-300">Close</button>
+                <button onClick={() => setShowAiResults(false)} className="text-sm text-zinc-400 dark:text-zinc-300">Close</button>
               </div>
             </div>
             <div className="p-4">

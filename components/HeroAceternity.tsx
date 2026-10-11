@@ -22,7 +22,7 @@ export default function HeroAceternity() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.15, duration: 0.5 }}
-            className="mt-6 text-lg text-slate-600"
+            className="mt-6 text-lg text-zinc-400"
           >
             All the features you need — private rooms, persistent chat, activity history, and optional AI captions — in a single polished workspace.
           </motion.p>
@@ -49,10 +49,10 @@ export default function HeroAceternity() {
           transition={{ delay: 0.4 }}
           className="mt-12 flex justify-center"
         >
-          <div className="rounded-3xl bg-white/40 px-6 py-3 shadow-md backdrop-blur-md flex gap-6">
-            <div className="text-sm text-slate-800 font-semibold">Private rooms</div>
-            <div className="text-sm text-slate-800 font-semibold">Saved chat</div>
-            <div className="text-sm text-slate-800 font-semibold">Live captions</div>
+          <div className="rounded-3xl bg-zinc-900/40 px-6 py-3 shadow-md backdrop-blur-md flex gap-6">
+            <div className="text-sm text-zinc-100 font-semibold">Private rooms</div>
+            <div className="text-sm text-zinc-100 font-semibold">Saved chat</div>
+            <div className="text-sm text-zinc-100 font-semibold">Live captions</div>
           </div>
         </motion.div>
       </div>

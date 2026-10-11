@@ -19,10 +19,10 @@ export function Marquee({ items, className = '' }: MarqueeProps) {
         {loopItems.map((item, index) => (
           <div
             key={`${item.title}-${index}`}
-            className="w-[240px] shrink-0 rounded-2xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)]"
+            className="w-[240px] shrink-0 rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-xl"
           >
-            <p className="text-sm font-semibold text-slate-950">{item.title}</p>
-            <p className="mt-2 text-xs text-slate-600">{item.description}</p>
+            <p className="text-sm font-semibold text-zinc-100">{item.title}</p>
+            <p className="mt-2 text-xs text-zinc-400">{item.description}</p>
           </div>
         ))}
       </div>

@@ -50,14 +50,14 @@ export default function AdminLoginPage() {
 
   return (
     <div className="page-shell-wide flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md rounded-[2rem] border border-white/70 bg-white/80 p-8 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur">
-        <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">Admin billing console</p>
-        <h1 className="mt-3 font-display text-3xl font-semibold text-slate-950">Login</h1>
-        <p className="mt-2 text-sm text-slate-600">Use the admin username and password from <span className="font-semibold">.env.local</span>.</p>
+      <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl backdrop-blur">
+        <p className="text-xs font-semibold uppercase tracking-[0.4em] text-zinc-400">Melanam administration</p>
+        <h1 className="mt-3 font-display text-3xl font-semibold text-zinc-100">Login</h1>
+        <p className="mt-2 text-sm text-zinc-400">Sign in with your administrator credentials to manage Melanam.</p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">Username</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">Username</label>
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -66,7 +66,7 @@ export default function AdminLoginPage() {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">Password</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">Password</label>
             <input
               type="password"
               value={password}

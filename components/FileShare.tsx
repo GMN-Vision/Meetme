@@ -126,20 +126,20 @@ export default function FileShare({
   }
 
   return (
-    <div className={className || 'rounded-2xl border border-slate-200 bg-white p-4'}>
+    <div className={className || 'rounded-2xl border border-zinc-800 bg-zinc-900 p-4'}>
       <div className="mb-3 flex items-center justify-between">
-        <div className="text-sm font-semibold text-slate-900">{title}</div>
-        <div className="text-xs text-slate-500">{loadingList ? 'Syncing...' : `${files.length} files`}</div>
+        <div className="text-sm font-semibold text-zinc-100">{title}</div>
+        <div className="text-xs text-zinc-400">{loadingList ? 'Syncing...' : `${files.length} files`}</div>
       </div>
 
       {notice ? (
-        <div className="mb-3 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs text-cyan-800">
+        <div className="mb-3 rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-xs text-zinc-300">
           {notice}
         </div>
       ) : null}
 
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <input ref={fileInputRef} type="file" onChange={handleChange} className="block w-full text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-xs file:font-medium file:text-slate-800 hover:file:bg-slate-200" />
+        <input ref={fileInputRef} type="file" onChange={handleChange} className="block w-full text-sm text-zinc-100 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-800 file:px-3 file:py-2 file:text-xs file:font-medium file:text-zinc-100 hover:file:bg-zinc-800" />
         <button
           onClick={handleUpload}
           disabled={!selected || uploading || !isReady}
@@ -152,15 +152,15 @@ export default function FileShare({
 
       <ul className="max-h-64 space-y-2 overflow-y-auto">
         {files.map((f) => (
-          <li key={f.path} className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+          <li key={f.path} className="flex items-center justify-between gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
             <div className="min-w-0 flex items-center gap-2">
-              <FileText className="h-4 w-4 shrink-0 text-slate-500" />
-              <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="truncate text-sm text-slate-800 hover:text-cyan-700 hover:underline">
+              <FileText className="h-4 w-4 shrink-0 text-zinc-400" />
+              <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="truncate text-sm text-zinc-100 hover:text-zinc-300 hover:underline">
                 {f.name.split('/').pop()}
               </a>
             </div>
             <div className="flex items-center gap-2">
-              <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 hover:bg-cyan-200" title="Download">
+              <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-800" title="Download">
                 <Download className="h-4 w-4" />
               </a>
               <button onClick={() => handleDelete(f.path)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-100 text-rose-700 hover:bg-rose-200" title="Delete">
@@ -172,7 +172,7 @@ export default function FileShare({
       </ul>
 
       {files.length === 0 ? (
-        <div className="mt-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">
+        <div className="mt-3 rounded-lg border border-dashed border-zinc-800 bg-zinc-900 px-3 py-4 text-center text-xs text-zinc-400">
           No shared files yet. Upload once and everyone in this room can view/download here.
         </div>
       ) : null}

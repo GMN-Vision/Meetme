@@ -109,11 +109,11 @@ export function AIMeetingNotesPanel({
     <GlowCard id="meeting-insights" className="ai-notes-panel scroll-mt-24">
       <div className="ai-notes-panel__header flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-xl">
-          <div className="inline-flex items-center gap-2 rounded-md border border-[#37d7ff]/45 bg-[#12303a] px-2.5 py-1 text-xs font-bold text-[#58defe]">
+          <div className="inline-flex items-center gap-2 rounded-md border border-[#d4d4d8]/45 bg-[#27272a] px-2.5 py-1 text-xs font-bold text-[#e4e4e7]">
             <Sparkles className="h-4 w-4" />
             Meeting Intelligence
           </div>
-          <h3 className="mt-2 font-display text-xl font-semibold text-[#f4f7fa]">{title}</h3>
+          <h3 className="mt-2 font-display text-xl font-semibold text-[#fafafa]">{title}</h3>
         </div>
         <div className="grid grid-cols-3 gap-2 text-center">
           <PanelMetric label="Briefs" value={allMeetings.length} />
@@ -123,7 +123,7 @@ export function AIMeetingNotesPanel({
       </div>
 
       {message ? (
-        <div className="mt-3 rounded-md border border-[#2a3039] bg-[#181c22] px-3 py-2 text-sm font-semibold text-[#a7b1bc]">
+        <div className="mt-3 rounded-md border border-[#27272a] bg-[#27272a] px-3 py-2 text-sm font-semibold text-[#a1a1aa]">
           {message}
         </div>
       ) : null}
@@ -146,15 +146,15 @@ export function AIMeetingNotesPanel({
               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-[15px] font-semibold text-[#f4f7fa]">
+                    <p className="truncate text-[15px] font-semibold text-[#fafafa]">
                       {meeting.title || meeting.meetingId}
                     </p>
-                    <span className="rounded-md border border-[#343c47] bg-[#181c22] px-2 py-1 text-sm font-semibold text-[#9ca8b8]">
+                    <span className="rounded-md border border-[#3f3f46] bg-[#27272a] px-2 py-1 text-sm font-semibold text-[#a1a1aa]">
                       {meeting.updatedAt ? new Date(meeting.updatedAt).toLocaleDateString() : 'Recent'}
                     </span>
                   </div>
-                  <p className="mt-1.5 line-clamp-2 text-sm leading-5 text-[#b8c2ce]">{leadSummary}</p>
-                  <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs font-medium text-[#a7b1bc]">
+                  <p className="mt-1.5 line-clamp-2 text-sm leading-5 text-[#d4d4d8]">{leadSummary}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs font-medium text-[#a1a1aa]">
                     <StatChip icon={FileText} label={`${(meeting.transcript || []).length} transcript lines`} />
                     <StatChip icon={Users} label={`${(meeting.speakerLabels || []).length || 0} speakers`} />
                     <StatChip icon={CheckCircle2} label={`${(meeting.keyDecisions || []).length} decisions`} />
@@ -166,14 +166,14 @@ export function AIMeetingNotesPanel({
                     type="button"
                     onClick={() => downloadTranscript(meeting)}
                     disabled={(meeting.transcript || []).length === 0}
-                    className="inline-flex h-8 items-center gap-2 rounded-md border border-[#343c47] bg-[#181c22] px-2.5 text-xs font-semibold text-[#58defe] transition hover:border-[#37d7ff]/70 hover:bg-[#12303a] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex h-8 items-center gap-2 rounded-md border border-[#3f3f46] bg-[#27272a] px-2.5 text-xs font-semibold text-[#e4e4e7] transition hover:border-[#d4d4d8]/70 hover:bg-[#27272a] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Download className="h-3.5 w-3.5" />
                     Transcript
                   </button>
                   <Link
                     href={`/recordings/${encodeURIComponent(meeting.meetingId)}`}
-                    className="inline-flex h-8 items-center rounded-md bg-[#26303d] px-2.5 text-xs font-semibold text-[#f4f7fa] transition hover:bg-[#343f4d]"
+                    className="inline-flex h-8 items-center rounded-md bg-[#27272a] px-2.5 text-xs font-semibold text-[#fafafa] transition hover:bg-[#3f3f46]"
                   >
                     Open Brief
                   </Link>
@@ -200,7 +200,7 @@ export function AIMeetingNotesPanel({
           <button
             type="button"
             onClick={() => setVisibleCount((count) => count + 3)}
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-[#343c47] bg-[#181c22] px-3 text-sm font-semibold text-[#a7b1bc] transition hover:border-[#37d7ff]/70 hover:text-[#58defe]"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-[#3f3f46] bg-[#27272a] px-3 text-sm font-semibold text-[#a1a1aa] transition hover:border-[#d4d4d8]/70 hover:text-[#e4e4e7]"
           >
             <ChevronDown className="h-4 w-4" />
             Show more summaries
@@ -209,7 +209,7 @@ export function AIMeetingNotesPanel({
           <button
             type="button"
             onClick={() => setVisibleCount(3)}
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-[#343c47] bg-[#181c22] px-3 text-sm font-semibold text-[#a7b1bc] transition hover:border-[#37d7ff]/70 hover:text-[#58defe]"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-[#3f3f46] bg-[#27272a] px-3 text-sm font-semibold text-[#a1a1aa] transition hover:border-[#d4d4d8]/70 hover:text-[#e4e4e7]"
           >
             <ChevronUp className="h-4 w-4" />
             Show fewer
@@ -217,7 +217,7 @@ export function AIMeetingNotesPanel({
         ) : null}
 
         {allMeetings.length === 0 ? (
-          <div className="rounded-md border border-dashed border-[#343c47] bg-[#181c22] p-4 text-sm leading-6 text-[#9ca8b8]">
+          <div className="rounded-md border border-dashed border-[#3f3f46] bg-[#27272a] p-4 text-sm leading-6 text-[#a1a1aa]">
             Professional summaries, key notes, decisions, action items, and downloadable transcripts will appear here after meetings are processed.
           </div>
         ) : null}
@@ -230,17 +230,17 @@ export function AIMeetingNotesPanel({
 
 function PanelMetric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="min-w-[5.25rem] rounded-md border border-[#343c47] bg-[#181c22] px-3 py-2">
-      <div className="text-base font-semibold text-[#f4f7fa]">{value}</div>
-      <div className="text-sm font-semibold uppercase tracking-[0.12em] text-[#9ca8b8]">{label}</div>
+    <div className="min-w-[5.25rem] rounded-md border border-[#3f3f46] bg-[#27272a] px-3 py-2">
+      <div className="text-base font-semibold text-[#fafafa]">{value}</div>
+      <div className="text-sm font-semibold uppercase tracking-[0.12em] text-[#a1a1aa]">{label}</div>
     </div>
   );
 }
 
 function StatChip({ icon: Icon, label }: { icon: typeof FileText; label: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-[#343c47] bg-[#181c22] px-2.5 py-1">
-      <Icon className="h-3.5 w-3.5 text-[#37d7ff]" />
+    <span className="inline-flex items-center gap-1 rounded-full border border-[#3f3f46] bg-[#27272a] px-2.5 py-1">
+      <Icon className="h-3.5 w-3.5 text-[#d4d4d8]" />
       {label}
     </span>
   );
@@ -274,12 +274,12 @@ function MeetingHighlights({
 
 function MiniList({ title, items }: { title: string; items: string[] }) {
   return (
-    <div className="rounded-md border border-[#343c47] bg-[#181c22] p-3">
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#9ca8b8]">{title}</p>
+    <div className="rounded-md border border-[#3f3f46] bg-[#27272a] p-3">
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#a1a1aa]">{title}</p>
       <div className="mt-2 space-y-1.5">
         {items.map((item, index) => (
           <div key={`${title}-${index}`} className="flex gap-2 text-xs leading-4 text-[#d5dbe3]">
-            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#37d7ff]" />
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#d4d4d8]" />
             <span>{item}</span>
           </div>
         ))}
@@ -334,29 +334,29 @@ function CompactRecordingHistory() {
   }, []);
 
   return (
-    <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+    <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-900/70 p-3">
       <div className="flex items-center justify-between gap-3">
-        <h4 className="text-sm font-semibold text-slate-950">Meeting History</h4>
-        <span className="text-xs font-semibold text-slate-500">Metadata only</span>
+        <h4 className="text-sm font-semibold text-zinc-100">Meeting History</h4>
+        <span className="text-xs font-semibold text-zinc-400">Metadata only</span>
       </div>
 
       {loading ? (
-        <p className="mt-2 text-sm text-slate-500">Loading history...</p>
+        <p className="mt-2 text-sm text-zinc-400">Loading history...</p>
       ) : meetings.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500">No downloaded recordings yet.</p>
+        <p className="mt-2 text-sm text-zinc-400">No downloaded recordings yet.</p>
       ) : (
         <div className="mt-3 grid gap-2 lg:grid-cols-3">
           {meetings.map((meeting) => (
-            <div key={meeting._id || meeting.meetingId} className="rounded-lg border border-slate-200 bg-white p-3">
-              <p className="truncate text-sm font-semibold text-slate-950">{meeting.title || meeting.meetingId || 'Meeting'}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <div key={meeting._id || meeting.meetingId} className="rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+              <p className="truncate text-sm font-semibold text-zinc-100">{meeting.title || meeting.meetingId || 'Meeting'}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
                 <span className="inline-flex items-center gap-1">
                   <Clock3 className="h-3.5 w-3.5" />
                   {formatShortDuration(meeting.recordingDurationSeconds, meeting.recordingDuration)}
                 </span>
                 <span>{meeting.recordingStatus || 'Downloaded'}</span>
               </div>
-              <p className="mt-1 truncate text-xs text-slate-500">{meeting.recordedBy || 'Recorder'} &middot; {meeting.recordingDate || 'Recent'}</p>
+              <p className="mt-1 truncate text-xs text-zinc-400">{meeting.recordedBy || 'Recorder'} &middot; {meeting.recordingDate || 'Recent'}</p>
             </div>
           ))}
         </div>

@@ -36,29 +36,29 @@ export function BentoCard({
 }: BentoCardProps) {
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl border border-white/60 bg-white/75 p-5 shadow-[0_20px_56px_rgba(15,23,42,0.08)] backdrop-blur transition-shadow duration-200 hover:shadow-[0_24px_64px_rgba(15,23,42,0.1)] ${className}`}
+      className={`relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900/75 p-5 shadow-xl backdrop-blur transition-shadow duration-200 hover:shadow-xl ${className}`}
     >
       <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
       <div className="relative z-10 flex h-full flex-col gap-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             {eyebrow ? (
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">
                 {eyebrow}
               </p>
             ) : null}
-            <h3 className="mt-2 font-display text-lg font-semibold text-slate-950 sm:text-xl">
+            <h3 className="mt-2 font-display text-lg font-semibold text-zinc-100 sm:text-xl">
               {title}
             </h3>
           </div>
           {icon ? (
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-900 text-white shadow-sm">
               {icon}
             </div>
           ) : null}
         </div>
         {description ? (
-          <p className="text-sm text-slate-600">{description}</p>
+          <p className="text-sm text-zinc-400">{description}</p>
         ) : null}
         {children}
         {actions ? (

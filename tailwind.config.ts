@@ -9,6 +9,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Manrope', 'Arial', 'sans-serif'],
+        display: ['Manrope', 'Arial', 'sans-serif'],
+      },
       colors: {
         brand: {
           50: '#EEF2FF',

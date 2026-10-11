@@ -35,17 +35,17 @@ export function MeetingCard({
 
   return (
     <Link href={`/room/${meetingId}`}>
-      <div className="surface group cursor-pointer rounded-3xl p-4 transition-shadow duration-200 hover:shadow-[0_26px_60px_rgba(15,23,42,0.12)] sm:p-5">
+      <div className="surface group cursor-pointer rounded-3xl p-4 transition-shadow duration-200 hover:shadow-xl sm:p-5">
         <div className="mb-3 flex items-start justify-between gap-3">
-          <h3 className="truncate font-display text-sm font-semibold text-slate-950 sm:text-base">
+          <h3 className="truncate font-display text-sm font-semibold text-zinc-100 sm:text-base">
             {title}
           </h3>
         </div>
-        <p className="mb-3 truncate text-xs text-slate-500 sm:text-sm">{hostEmail}</p>
+        <p className="mb-3 truncate text-xs text-zinc-400 sm:text-sm">{hostEmail}</p>
         {activityText ? (
-          <p className="mb-4 line-clamp-2 text-xs leading-5 text-slate-600 sm:text-sm">{activityText}</p>
+          <p className="mb-4 line-clamp-2 text-xs leading-5 text-zinc-400 sm:text-sm">{activityText}</p>
         ) : null}
-        <p className="text-xs text-slate-500">Created {timeAgo}</p>
+        <p className="text-xs text-zinc-400">Created {timeAgo}</p>
       </div>
     </Link>
   );

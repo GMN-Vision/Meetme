@@ -1,6 +1,8 @@
 "use client";
 
 import Script from 'next/script';
+import { BillingToggle, PlanCards } from '@/components/marketing/PlanCards';
+import type { BillingPlan } from '@/lib/billing-plans';
 import { useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -44,50 +46,11 @@ type Membership = {
   selected: boolean;
 };
 
-const valueStats = [
-  { label: 'Razorpay-ready', value: 'INR', icon: Landmark },
-  { label: 'Free server recording', value: '5 hrs/mo', icon: BarChart3 },
-  { label: 'Credits start from', value: 'Rs. 0.69/min', icon: Gauge },
+const planDetails: Array<[string, keyof BillingPlan['limits']]> = [
+  ['Meeting length', 'meetingMinutes'], ['Participants', 'participants'], ['Meeting rooms', 'monthlyRooms'],
+  ['Workspace seats', 'seats'], ['AI credits', 'credits'], ['Live captions', 'captions'], ['AI summaries', 'summaries'],
+  ['Server recording', 'recordings'], ['File sharing', 'fileSharing'], ['File storage', 'storage'], ['Whiteboards', 'whiteboards'], ['Admin controls', 'adminControls'],
 ];
-
-const comparisonRows = [
-  ['Meeting rooms', 'Unlimited', 'Unlimited', 'Unlimited'],
-  ['People who can join', '120', '250', '600'],
-  ['Workspace seats', '1', '25', '100'],
-  ['Maximum meeting length', '3 hours', '24 hours', '48 hours'],
-  ['AI live captions', 'Not included', 'Included credits', 'Team credits'],
-  ['AI meeting summaries', 'Not included', 'Included', 'Advanced notes and tasks'],
-  ['Server recording', ...BILLING_PLANS.filter(plan => plan.key !== 'enterprise').map(plan => plan.limits.recordings)],
-  ['File, media, and document sharing', '100 MB / upload', '1 GB / upload', '5 GB / upload'],
-  ['Workspace file storage (separate from recordings)', '1 GB', '50 GB', '250 GB'],
-  ['Concurrent server recordings per workspace', '1', '1', '1'],
-  ['Excalidraw whiteboard', '1 board / meeting', 'Unlimited boards', 'Boards and templates'],
-  ['YouTube livestreaming', 'Not included', 'Not included', 'Included'],
-  ['Admin controls', 'Not included', 'Basic member controls', 'Full plan and policy controls'],
-];
-
-const competitorRows = [
-  ['Free group meeting length', '3 hours', '40 minutes', '60 minutes'],
-  ['Free-plan participants', '120', '100', '100'],
-  ['Free server recording', '5 hours/month, 7-day retention', 'Not included', 'Not included'],
-  ['Collaboration canvas', 'Excalidraw whiteboard', 'Zoom Whiteboard', 'Workspace tools'],
-  ['Live captions', 'Pro and Business', 'Plan dependent', 'Account or edition dependent'],
-  ['YouTube livestreaming', 'Business included', 'Plan or add-on dependent', 'Eligible Workspace editions'],
-  ['File, media, and document sharing', 'Built into workspace', 'In-meeting and app ecosystem', 'Google Drive ecosystem'],
-  ['AI meeting recap', 'Pro and Business included', 'Product or add-on dependent', 'Workspace edition dependent'],
-];
-
-function PlanPrice({ planKey, cycle }: { planKey: PlanKey; cycle: BillingCycle }) {
-  const price = getPlanPrice(planKey, cycle);
-  const suffix = planKey === 'enterprise' ? '' : cycle === 'annual' ? '/year' : '/month';
-
-  return (
-    <div className="pricing-plan-price">
-      <span>{formatInr(price)}</span>
-      {suffix ? <small>{suffix}</small> : null}
-    </div>
-  );
-}
 
 function planChangeBlocked(membership: Membership | null, targetPlan: PlanKey) {
   if (!membership?.active) return '';
@@ -217,7 +180,7 @@ export default function PricingPage() {
         prefill: {
           email: session?.user?.email || '',
         },
-        theme: { color: '#ef233c' },
+        theme: { color: '#3f3f46' },
       });
 
       checkout.open();
@@ -256,228 +219,38 @@ export default function PricingPage() {
   return (
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
-      <div className="pricing-noir page-shell-wide pb-20 sm:pb-28">
-        <header className="pricing-hero">
-          <div className="pricing-hero__copy">
-            <p className="pricing-kicker"><Sparkles /> Melanam pricing</p>
-            <h1>Simple plans.<br /><span>Serious capability.</span></h1>
-            <p className="pricing-hero__description">
-              Start with full 3-hour meetings at no cost. Record on every plan. Upgrade for more recording hours, live captions, AI notes, YouTube livestreaming, and larger team workflows become daily work.
-            </p>
-
-            <div className="pricing-cycle" aria-label="Billing cycle">
-              {(['monthly', 'annual'] as BillingCycle[]).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setCycle(item)}
-                  className={cycle === item ? 'pricing-cycle__option pricing-cycle__option--active' : 'pricing-cycle__option'}
-                  aria-pressed={cycle === item}
-                >
-                  {item === 'monthly' ? 'Monthly' : 'Annual'}
-                </button>
-              ))}
-            </div>
-            <div className="pricing-trust-line">
-              <span><Check /> 3-hour free meetings</span>
-              <span><Check /> Unlimited rooms</span>
-              <span><Check /> Save 10% or more yearly</span>
-              <span><Check /> Secure INR checkout</span>
-            </div>
-          </div>
-
-          <aside className="pricing-assurance" aria-label="Membership and checkout information">
-            <div className="pricing-assurance__topline">
-              <span><LockKeyhole /> Membership status</span>
-              <b>{isAuthenticated ? 'Signed in' : 'Secure access'}</b>
-            </div>
-            {loadingMembership ? (
-              <p className="pricing-assurance__loading">Loading membership...</p>
-            ) : membership?.active ? (
-              <div className="pricing-assurance__membership">
-                <span>Current workspace</span>
-                <strong>{BILLING_PLANS.find((plan) => plan.key === membership.plan)?.title || membership.plan}</strong>
-                <p>Active until {membership.currentPeriodEnd ? new Date(membership.currentPeriodEnd).toLocaleDateString() : 'manual renewal'} · {membership.creditBalance == null ? 'Custom credits' : `${Math.round(membership.creditBalance)} credits left`}</p>
-                <GradientBorderLink href="/meetings" variant="dark" className="mt-1 w-fit">
-                  Go to meetings <ArrowRight className="h-4 w-4" />
-                </GradientBorderLink>
-              </div>
-            ) : (
-              <div className="pricing-assurance__membership">
-                <span>Workspace access</span>
-                <strong>Choose a plan to begin.</strong>
-                <p>Free activates without payment. Paid plans unlock after Razorpay verification.</p>
-              </div>
-            )}
-            <div className="pricing-assurance__stats">
-              {valueStats.map(({ label, value, icon: Icon }) => (
-                <div key={label}>
-                  <span><Icon /> {label}</span>
-                  <strong>{value}</strong>
-                </div>
-              ))}
-            </div>
-            <small>Seats are signed-in workspace members. Meeting participants are counted separately.</small>
-          </aside>
+      <div className="mx-auto max-w-6xl px-4 pb-20 pt-12 sm:px-6 sm:pt-20">
+        <header className="mb-14 text-center">
+          <p className="section-kicker mb-4">Melanam pricing</p>
+          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">Simple, transparent pricing.</h1>
+          <p className="mx-auto mb-8 mt-5 max-w-2xl text-zinc-400">Start free. Record on every plan. Upgrade for longer meetings, live captions, and AI notes.</p>
+          <BillingToggle cycle={cycle} onChange={setCycle} />
+          {loadingMembership && <p role="status" className="mt-4 text-sm text-zinc-400">Loading your plan…</p>}
         </header>
-
-        {message ? (
-          <div className={`pricing-message pricing-message--${message.type}`} role="status">{message.text}</div>
-        ) : null}
-
-        {currentPlan ? (
-          <section className="pricing-current-plan">
-            <div>
-              <p className="pricing-kicker">Current plan</p>
-              <h2>{currentPlan.title}</h2>
-              <p>{currentPlan.description} You can upgrade at any time. Downgrades unlock after this plan ends.</p>
-            </div>
-            <dl>
-              <div><dt>Rooms</dt><dd>{currentPlan.limits.monthlyRooms}</dd></div>
-              <div><dt>Participants</dt><dd>{currentPlan.limits.participants}</dd></div>
-              <div><dt>Seats</dt><dd>{currentPlan.limits.seats}</dd></div>
-              <div><dt>Credits left</dt><dd>{membership.creditBalance == null ? 'Custom' : Math.round(membership.creditBalance)}</dd></div>
-            </dl>
-          </section>
-        ) : null}
-
-        <section className="pricing-plans" aria-labelledby="pricing-plans-title">
-          <div className="pricing-section-heading">
-            <div>
-              <p className="pricing-kicker">{currentPlan ? 'All plans' : 'Choose your plan'}</p>
-              <h2 id="pricing-plans-title">One clear tier for every stage.</h2>
-            </div>
-            <p>All plans include unlimited meeting rooms.</p>
+        {message && <div role="status" className={'mb-8 rounded-xl border p-4 text-sm ' + (message.type === 'error' ? 'border-red-500/30 bg-red-500/10 text-red-300' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300')}>{message.text}</div>}
+        {currentPlan && <section className="mb-10 flex flex-wrap items-center justify-between gap-6 rounded-2xl border border-zinc-700 bg-zinc-900 p-6">
+          <div><p className="section-kicker">Your current plan</p><h2 className="mt-2 text-2xl font-semibold text-white">{currentPlan.title}</h2><p className="mt-1 text-sm text-zinc-400">{membership.creditBalance == null ? 'Custom AI credits' : Math.round(membership.creditBalance) + ' AI credits remaining'}</p></div>
+          <GradientBorderLink href="/meetings" variant="light">Go to meetings <ArrowRight className="h-4 w-4" /></GradientBorderLink>
+        </section>}
+        <PlanCards cycle={cycle} action={planKey => {
+          const isCurrent = membership?.active && membership.plan === planKey;
+          const blocked = planChangeBlocked(membership, planKey);
+          return <><button onClick={() => selectPlan(planKey)} disabled={Boolean(isCurrent || busyKey || blocked || loadingMembership)} className={(planKey === 'pro' ? 'button-primary shimmer-btn' : 'button-secondary') + ' w-full'}>{isCurrent ? 'Current plan' : blocked ? 'Downgrade locked' : busyKey === planKey ? 'Working…' : planKey === 'free' ? 'Get started free' : planKey === 'enterprise' ? 'Contact sales' : 'Choose ' + BILLING_PLANS.find(plan => plan.key === planKey)?.title}</button>{blocked && <p className="mt-3 text-xs text-zinc-400">{blocked}</p>}</>;
+        }} />
+        <section className="py-24" aria-labelledby="plan-details-title">
+          <h2 id="plan-details-title" className="mb-3 text-center text-3xl font-bold tracking-tight text-white">Find your perfect fit.</h2>
+          <p className="mb-10 text-center text-zinc-400">Every plan detail, in one place.</p>
+          <div className="overflow-x-auto rounded-2xl border border-zinc-800" tabIndex={0} role="region" aria-label="Plan details; scroll horizontally">
+            <table className="comparison-table"><caption className="sr-only">Melanam plan features and allowances</caption><thead><tr><th scope="col">Included</th>{BILLING_PLANS.map(plan => <th key={plan.key} scope="col">{plan.title}</th>)}</tr></thead><tbody>
+              {planDetails.map(([label,key]) => <tr key={key}><th scope="row">{label}</th>{BILLING_PLANS.map(plan => <td key={plan.key}>{plan.limits[key]}</td>)}</tr>)}
+            </tbody></table>
           </div>
-
-          <div className={`pricing-plan-grid ${visiblePlans.length < 4 ? 'pricing-plan-grid--compact' : ''}`}>
-            {visiblePlans.map((plan) => {
-              const isCurrent = membership?.active && membership.plan === plan.key;
-              const annualSavings = getAnnualSavings(plan.key);
-              const blockedReason = planChangeBlocked(membership, plan.key);
-              const disabled = Boolean(isCurrent || busyKey || blockedReason);
-
-              return (
-                <article key={plan.key} className={`pricing-plan-card ${plan.recommended ? 'pricing-plan-card--recommended' : ''}`}>
-                  {plan.recommended ? <span className="pricing-plan-card__recommended">Recommended</span> : null}
-                  <div className="pricing-plan-card__header">
-                    <span>{plan.badge}</span>
-                    <h3>{plan.title}</h3>
-                    <p>{plan.description}</p>
-                  </div>
-
-                  <div className="pricing-plan-card__price">
-                    <PlanPrice planKey={plan.key} cycle={cycle} />
-                    {cycle === 'annual' && annualSavings > 0 ? <span>Save {formatInr(annualSavings)} yearly</span> : null}
-                  </div>
-
-                  <dl className="pricing-plan-card__metrics">
-                    <div><dt>Room length</dt><dd>{plan.limits.meetingMinutes}</dd></div>
-                    <div><dt>Participants</dt><dd>{plan.limits.participants}</dd></div>
-                    <div><dt>Workspace seats</dt><dd>{plan.limits.seats}</dd></div>
-                    <div><dt>Credits</dt><dd>{plan.limits.credits}</dd></div>
-                  </dl>
-
-                  <ul className="pricing-plan-card__features">
-                    {plan.highlights.map((highlight) => (
-                      <li key={highlight}><Check /> <span>{highlight}</span></li>
-                    ))}
-                  </ul>
-
-                  <div className="pricing-plan-card__action">
-                    <GradientBorderButton
-                      variant={plan.recommended ? 'create' : 'dark'}
-                      onClick={() => selectPlan(plan.key)}
-                      disabled={disabled}
-                      className="w-full"
-                    >
-                      {plan.key === 'enterprise' ? <Infinity className="h-4 w-4" /> : <CreditCard className="h-4 w-4" />}
-                      {isCurrent ? 'Current plan' : blockedReason ? 'Downgrade locked' : busyKey === plan.key ? 'Working...' : plan.key === 'free' ? 'Activate Free' : plan.key === 'enterprise' ? 'Contact Sales' : `Buy ${plan.title}`}
-                    </GradientBorderButton>
-                    {blockedReason ? <p>{blockedReason}</p> : null}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+          <p className="mt-4 text-xs leading-6 text-zinc-400">Recording allowances reset monthly in UTC, including annual plans. Recording storage is separate from file storage. One server recording at a time per workspace.</p>
         </section>
-
-        <section className="pricing-comparison" aria-labelledby="pricing-comparison-title">
-          <div className="pricing-section-heading">
-            <div>
-              <p className="pricing-kicker">System matrix</p>
-              <h2 id="pricing-comparison-title">Everything included, at a glance.</h2>
-            </div>
-            <p>Recording allowances reset each calendar month in UTC, including annual plans. One recording at a time per workspace. Recording storage is separate from file storage; recordings expire after the listed retention period.</p>
-          </div>
-          <div className="pricing-comparison__scroll">
-            <div className="pricing-comparison__table">
-              <div className="pricing-comparison__head">
-                <span>Capability</span><span>Free</span><span>Pro</span><span>Business</span>
-              </div>
-              {comparisonRows.map(([feature, free, pro, business]) => (
-                <div key={feature} className="pricing-comparison__row">
-                  <strong>{feature}</strong><span>{free}</span><span>{pro}</span><span>{business}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="pricing-benchmark" aria-labelledby="pricing-benchmark-title">
-          <div className="pricing-section-heading">
-            <div>
-              <p className="pricing-kicker">How we compare</p>
-              <h2 id="pricing-benchmark-title">More time to meet. More ways to work together.</h2>
-            </div>
-            <p>Melanam combines video meetings with a collaborative workspace, rather than making teams stitch together separate tools.</p>
-          </div>
-          <div className="pricing-benchmark__scroll">
-            <div className="pricing-benchmark__table">
-              <div className="pricing-benchmark__head">
-                <span>Capability</span><span>Melanam</span><span>Zoom</span><span>Google Meet</span>
-              </div>
-              {competitorRows.map(([feature, melanam, zoom, meet]) => (
-                <div key={feature} className="pricing-benchmark__row">
-                  <strong>{feature}</strong><span>{melanam}</span><span>{zoom}</span><span>{meet}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <p className="pricing-benchmark__note">
-            Provider allowances and availability vary by account, edition, region, and configuration. Comparison checked 7 October 2026. Free meeting-time and participant figures are based on published <a href="https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067966" target="_blank" rel="noreferrer">Zoom</a> and <a href="https://support.google.com/meet/answer/13396001" target="_blank" rel="noreferrer">Google Meet</a> documentation. Recording availability is based on <a href="https://zoom.us/pricing/" target="_blank" rel="noreferrer">Zoom pricing</a> and <a href="https://workspace.google.com/pricing" target="_blank" rel="noreferrer">Google Workspace pricing</a>.
-          </p>
-        </section>
-
-        <section className="pricing-credits" aria-labelledby="pricing-credits-title">
-          <div className="pricing-credits__intro">
-            <span><WalletCards /></span>
-            <p className="pricing-kicker">On-demand power</p>
-            <h2 id="pricing-credits-title">Extra credits, only when needed.</h2>
-            <p>Top up AI summaries and captions without changing your plan. Server recording uses a separate monthly allowance.</p>
-          </div>
-          <div className="pricing-credit-grid">
-            {CREDIT_PACKS.map((pack) => (
-              <article key={pack.key} className={pack.key === 'growth' ? 'pricing-credit-card pricing-credit-card--popular' : 'pricing-credit-card'}>
-                {pack.key === 'growth' ? <span className="pricing-credit-card__badge">Popular</span> : null}
-                <div>
-                  <span>{pack.title}</span>
-                  <strong>{formatInr(pack.amountInr)}</strong>
-                  <b>{pack.credits} credits</b>
-                  <p>{pack.description}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => openCheckout({ creditPackKey: pack.key })}
-                  disabled={!membership?.active || Boolean(busyKey)}
-                  className={pack.key === 'growth' ? 'noir-shimmer-button' : ''}
-                >
-                  <span><Zap /> {busyKey === pack.key ? 'Opening...' : 'Select pack'}</span>
-                </button>
-              </article>
-            ))}
-          </div>
-          {!membership?.active ? <p className="pricing-credits__note">Activate Free, Pro, or Business before adding credits.</p> : null}
+        <section aria-labelledby="credits-title">
+          <div className="mb-10 text-center"><h2 id="credits-title" className="text-3xl font-bold tracking-tight text-white">A little extra, when you need it.</h2><p className="mt-4 text-zinc-400">Top up credits for AI notes and captions. Your recording allowance stays separate.</p></div>
+          <div className="grid gap-4 md:grid-cols-3">{CREDIT_PACKS.map(pack => <article key={pack.key} className="template-card flex flex-col"><h3 className="text-lg font-semibold text-white">{pack.title}</h3><strong className="mt-4 text-3xl text-white">{formatInr(pack.amountInr)}</strong><p className="mt-2 text-sm text-zinc-300">{pack.credits} credits</p><p className="mb-6 mt-3 flex-1 text-sm text-zinc-400">{pack.description}</p><button onClick={() => openCheckout({ creditPackKey: pack.key })} disabled={!membership?.active || Boolean(busyKey)} className="button-secondary w-full">{busyKey === pack.key ? 'Opening…' : 'Add credits'}</button></article>)}</div>
+          {!membership?.active && <p className="mt-4 text-center text-sm text-zinc-400">Activate a plan to add extra credits.</p>}
         </section>
       </div>
       <Footer />

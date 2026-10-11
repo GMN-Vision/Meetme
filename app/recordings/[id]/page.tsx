@@ -52,7 +52,7 @@ export default function RecordingPage() {
   }, [id, router]);
 
   if (loading) {
-    return <div className="p-6 text-sm font-medium text-slate-600">Loading meeting brief...</div>;
+    return <div className="p-6 text-sm font-medium text-zinc-400">Loading meeting brief...</div>;
   }
 
   if (!meeting) {
@@ -61,13 +61,13 @@ export default function RecordingPage() {
 
   return (
     <div className="mx-auto w-full max-w-[80rem] px-4 py-8 sm:px-5">
-      <div className="mb-5 border-b border-[#2a3039] pb-5">
-        <p className="text-xs font-bold uppercase tracking-[0.14em] text-cyan-700">Recording and AI insights</p>
-        <h1 className="mt-2 font-display text-2xl font-semibold text-slate-950">
+      <div className="mb-5 border-b border-[#27272a] pb-5">
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-300">Recording and AI insights</p>
+        <h1 className="mt-2 font-display text-2xl font-semibold text-zinc-100">
           {meeting.title || meeting.meetingId}
         </h1>
         {meeting.description ? (
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{meeting.description}</p>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-400">{meeting.description}</p>
         ) : null}
       </div>
 
@@ -95,8 +95,8 @@ export default function RecordingPage() {
             speakerLabels={meeting.speakerLabels || []}
           />
 
-          <section className="rounded-lg border border-slate-200 bg-white p-4">
-            <h2 className="font-display text-lg font-semibold text-slate-950">Participation</h2>
+          <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+            <h2 className="font-display text-lg font-semibold text-zinc-100">Participation</h2>
             <div className="mt-3">
               <ParticipationAnalytics meetingId={meeting.meetingId} />
             </div>
@@ -104,15 +104,15 @@ export default function RecordingPage() {
         </div>
 
         <aside className="space-y-5">
-          <section className="rounded-lg border border-slate-200 bg-white p-4">
-            <h2 className="font-display text-lg font-semibold text-slate-950">Tasks</h2>
+          <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+            <h2 className="font-display text-lg font-semibold text-zinc-100">Tasks</h2>
             <div className="mt-3">
               <TaskList meetingId={meeting.meetingId} />
             </div>
           </section>
 
-          <section className="rounded-lg border border-slate-200 bg-white p-4">
-            <h2 className="font-display text-lg font-semibold text-slate-950">Files</h2>
+          <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+            <h2 className="font-display text-lg font-semibold text-zinc-100">Files</h2>
             <div className="mt-3">
               <FileShare meetingId={meeting.meetingId} />
             </div>

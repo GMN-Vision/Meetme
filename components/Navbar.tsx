@@ -246,33 +246,33 @@ export function Navbar() {
       href: '/meetings',
       tag: 'Live',
       description: 'Create rooms and start calls fast.',
-      hoverClass: 'hover:-translate-y-0.5 hover:border-cyan-300 hover:bg-cyan-100 hover:shadow-[0_14px_30px_rgba(6,182,212,0.2)]',
-      tagClass: 'bg-cyan-500/15 text-cyan-800 ring-cyan-500/20',
+      hoverClass: 'hover:-translate-y-0.5 hover:border-zinc-600 hover:bg-zinc-800 hover:shadow-xl',
+      tagClass: 'bg-zinc-700/15 text-zinc-300 ring-zinc-600/20',
     },
     {
       name: 'Live Captions',
       href: '/meetings',
       tag: 'AI',
       description: 'Stream captions in real time.',
-      hoverClass: 'hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-100 hover:shadow-[0_14px_30px_rgba(139,92,246,0.2)]',
-      tagClass: 'bg-violet-500/15 text-violet-800 ring-violet-500/20',
+      hoverClass: 'hover:-translate-y-0.5 hover:border-zinc-600 hover:bg-zinc-800 hover:shadow-xl',
+      tagClass: 'bg-zinc-700/15 text-zinc-300 ring-zinc-600/20',
     },
     {
       name: 'File Share',
       href: '/meetings',
       tag: 'Now',
       description: 'Keep room uploads in one place.',
-      hoverClass: 'hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-100 hover:shadow-[0_14px_30px_rgba(16,185,129,0.2)]',
+      hoverClass: 'hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-100 hover:shadow-xl',
       tagClass: 'bg-emerald-500/15 text-emerald-800 ring-emerald-500/20',
     },
   ];
 
   const navActionButtonClass =
-    'inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-[#2a3039] bg-[#181c22] px-0 text-base font-semibold text-[#f4f7fa] transition-colors hover:bg-[#20252d] lg:w-auto lg:px-4';
+    'inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-[#27272a] bg-[#27272a] px-0 text-base font-semibold text-[#fafafa] transition-colors hover:bg-[#3f3f46] lg:w-auto lg:px-4';
   const copyInviteHoverClass =
-    'hover:border-[#37d7ff] hover:text-[#37d7ff]';
+    'hover:border-[#d4d4d8] hover:text-[#d4d4d8]';
   const uploadMediaHoverClass =
-    'hover:border-[#49d17d] hover:text-[#49d17d]';
+    'hover:border-[#34d399] hover:text-[#34d399]';
   const whiteboardHoverClass =
     'hover:border-[#f2b84b] hover:text-[#f2b84b]';
   const recordingHoverClass =
@@ -282,7 +282,7 @@ export function Navbar() {
 
   return (
     <nav className="fixed inset-x-0 top-0 z-[1000] px-3 pt-3 sm:px-5 sm:pt-5">
-      <div className={`app-navbar-shell mx-auto max-w-[80rem] rounded-2xl border border-white/10 bg-black/70 shadow-[0_18px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl ${pathname === '/' ? 'app-navbar-shell--landing' : ''} ${isRoomPage ? 'app-navbar-shell--room' : ''}`}>
+      <div className={`app-navbar-shell mx-auto max-w-[80rem] rounded-2xl border border-white/10 bg-black/70 shadow-xl backdrop-blur-xl ${pathname === '/' ? 'app-navbar-shell--landing' : ''} ${isRoomPage ? 'app-navbar-shell--room' : ''}`}>
         <div className="flex h-14 items-center justify-between gap-3">
           <div className="flex items-center gap-3 sm:gap-4">
             <Link href="/" className="app-navbar-brand flex items-center gap-2.5" aria-label="Melanam home">
@@ -319,7 +319,7 @@ export function Navbar() {
                   <AudioCapture
                     meetingId={roomMeetingId}
                     className="relative flex flex-col gap-2"
-                    buttonClassName={`${navActionButtonClass} border-slate-200 bg-slate-100/80 text-slate-950 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-100 hover:text-blue-950 hover:shadow-[0_14px_30px_rgba(59,130,246,0.2)]`}
+                    buttonClassName={`${navActionButtonClass} border-zinc-800 bg-zinc-800/80 text-zinc-100 hover:-translate-y-0.5 hover:border-zinc-600 hover:bg-zinc-800 hover:text-zinc-300 hover:shadow-xl`}
                     labelClassName="hidden lg:inline"
                     speakerName={captionSpeakerName}
                     speakerId={captionSpeakerId}
@@ -328,7 +328,7 @@ export function Navbar() {
                   <button
                     type="button"
                     onClick={() => requestPaidFeature('Live captions', 'pro')}
-                    className={`${navActionButtonClass} border-slate-200 bg-slate-100/80 text-slate-950 hover:border-blue-300 hover:bg-blue-100 hover:text-blue-950`}
+                    className={`${navActionButtonClass} border-zinc-800 bg-zinc-800/80 text-zinc-100 hover:border-zinc-600 hover:bg-zinc-800 hover:text-zinc-300`}
                     aria-label="Live captions require Pro"
                     title="Live captions require Pro"
                   >
@@ -348,8 +348,8 @@ export function Navbar() {
                   disabled={recordingLoading || (isRecording ? !canStopRecording : !canUseRecording)}
                   className={`${navActionButtonClass} ${
                     isRecording
-                      ? 'border-red-200 bg-red-50/85 text-red-950 shadow-[0_10px_24px_rgba(239,68,68,0.12)]'
-                      : `border-slate-200 bg-slate-100/80 text-slate-950 ${recordingHoverClass}`
+                      ? 'border-red-200 bg-red-50/85 text-red-950 shadow-xl'
+                      : `border-zinc-800 bg-zinc-800/80 text-zinc-100 ${recordingHoverClass}`
                   } disabled:opacity-50`}
                   aria-label={isRecording ? 'Stop server recording' : 'Start server recording'}
                   title={isRecording ? 'Stop server recording' : recordingUnavailableReason || (canUseRecording ? 'Start server recording' : 'Only the host can record')}
@@ -361,7 +361,7 @@ export function Navbar() {
                 </button>
                 {(isRecording || recordingStatus === 'starting') && (
                   <div
-                    className="inline-flex h-9 items-center gap-2 rounded-xl border border-red-200 bg-red-50/90 px-3 text-xs font-bold text-red-700 shadow-[0_10px_24px_rgba(239,68,68,0.12)] lg:inline-flex"
+                    className="inline-flex h-9 items-center gap-2 rounded-xl border border-red-200 bg-red-50/90 px-3 text-xs font-bold text-red-700 shadow-xl lg:inline-flex"
                     aria-live="polite"
                   >
                     <span className="h-2.5 w-2.5 rounded-full bg-red-600 animate-pulse" />
@@ -381,7 +381,7 @@ export function Navbar() {
                   disabled={livestreamLoading}
                   className={`${navActionButtonClass} ${
                     isStreaming
-                      ? 'border-rose-200 bg-rose-50/85 text-rose-950 shadow-[0_10px_24px_rgba(244,63,94,0.12)]'
+                      ? 'border-rose-200 bg-rose-50/85 text-rose-950 shadow-xl'
                       : livestreamHoverClass
                   } disabled:opacity-50`}
                   aria-label={isStreaming ? 'Stop livestream' : 'Start livestream'}
@@ -400,7 +400,7 @@ export function Navbar() {
                   }}
                   className={`${navActionButtonClass} ${
                     isWhiteboardOpen
-                      ? 'border-amber-200 bg-amber-50/85 text-amber-950 shadow-[0_10px_24px_rgba(245,158,11,0.12)]'
+                      ? 'border-amber-200 bg-amber-50/85 text-amber-950 shadow-xl'
                       : whiteboardHoverClass
                   }`}
                   aria-label={isWhiteboardOpen ? 'Close whiteboard' : 'Open whiteboard'}
@@ -420,7 +420,7 @@ export function Navbar() {
                     }}
                     className={`${navActionButtonClass} ${
                       isFilesOpen
-                        ? 'border-emerald-200 bg-emerald-50/85 text-emerald-950 shadow-[0_10px_24px_rgba(16,185,129,0.12)]'
+                        ? 'border-emerald-200 bg-emerald-50/85 text-emerald-950 shadow-xl'
                         : uploadMediaHoverClass
                     }`}
                     aria-label={isFilesOpen ? 'Close upload media' : 'Open upload media'}
@@ -430,7 +430,7 @@ export function Navbar() {
                     <span className="hidden lg:inline">Files</span>
                   </button>
                   {isFilesOpen && (
-                    <div className="fixed left-1/2 top-20 z-[1010] w-[calc(100vw-1.5rem)] max-w-[520px] -translate-x-1/2 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-[0_24px_80px_rgba(15,23,42,0.22)] sm:absolute sm:left-0 sm:top-auto sm:mt-3 sm:w-[520px] sm:max-w-[calc(100vw-2rem)] sm:translate-x-0">
+                    <div className="fixed left-1/2 top-20 z-[1010] w-[calc(100vw-1.5rem)] max-w-[520px] -translate-x-1/2 overflow-hidden rounded-[1.5rem] border border-zinc-800 bg-zinc-900 p-3 shadow-xl sm:absolute sm:left-0 sm:top-auto sm:mt-3 sm:w-[520px] sm:max-w-[calc(100vw-2rem)] sm:translate-x-0">
                       <FileShare
                         meetingId={roomMeetingId}
                         scopeType="meeting"
@@ -448,45 +448,45 @@ export function Navbar() {
             {isLoggedIn ? (
               <div className="flex items-center gap-2 sm:gap-2.5">
                 {!isRoomPage && (
-                  <Link href="/pricing" className="font-display inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-[#ef233c]/60 hover:bg-white/10 hover:text-white">
+                  <Link href="/pricing" className="font-display inline-flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/5 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-[#3f3f46]/60 hover:bg-zinc-900/10 hover:text-white">
                     Pricing
                   </Link>
                 )}
                 {!isRoomPage && !isMeetingsPage && (
-                  <Link href="/meetings" className="noir-shimmer-button font-display inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 active:scale-[0.97]">
+                  <Link href="/meetings" className="shimmer-btn font-display inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 active:scale-[0.97]">
                     <span>Continue</span>
                   </Link>
                 )}
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="font-display inline-flex items-center gap-2 rounded-full border border-[#ef233c]/35 bg-[#ef233c]/10 px-4 py-2 text-sm font-semibold text-[#fda4af] transition hover:border-[#ef233c]/60 hover:bg-[#ef233c]/18 hover:text-white"
+                  className="font-display inline-flex items-center gap-2 rounded-full border border-[#3f3f46]/35 bg-[#3f3f46]/10 px-4 py-2 text-sm font-semibold text-[#fda4af] transition hover:border-[#3f3f46]/60 hover:bg-[#3f3f46]/18 hover:text-white"
                 >
                   Logout
                 </button>
-                <span className="hidden h-8 items-center whitespace-nowrap px-1 text-sm leading-none text-slate-500 lg:inline-flex">
+                <span className="hidden h-8 items-center whitespace-nowrap px-1 text-sm leading-none text-zinc-400 lg:inline-flex">
                   {userEmail}
                 </span>
                 <div className="relative">
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-sm font-semibold leading-none text-white shadow-sm"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-950 text-sm font-semibold leading-none text-white shadow-sm"
                   >
                     {userInitial}
                   </button>
 
                   {isDropdownOpen && (
-                    <div className="absolute right-0 z-[1010] mt-3 w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl sm:w-52">
+                    <div className="absolute right-0 z-[1010] mt-3 w-48 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 shadow-xl sm:w-52">
                       <Link
                         href="/meetings"
-                        className="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition"
+                        className="block px-4 py-3 text-sm text-zinc-100 hover:bg-zinc-900 transition"
                       >
                         My meetings
                       </Link>
                       {!isRoomPage && (
                         <Link
                           href="/pricing"
-                          className="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition"
+                          className="block px-4 py-3 text-sm text-zinc-100 hover:bg-zinc-900 transition"
                         >
                           Membership & credits
                         </Link>
@@ -494,14 +494,14 @@ export function Navbar() {
                       {(session?.user as any)?.role === 'admin' && (
                         <Link
                           href="/admin"
-                          className="block px-4 py-3 text-sm text-cyan-700 hover:bg-slate-50 transition font-medium"
+                          className="block px-4 py-3 text-sm text-zinc-300 hover:bg-zinc-900 transition font-medium"
                         >
                           System Console
                         </Link>
                       )}
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition border-t border-slate-100"
+                        className="w-full text-left px-4 py-3 text-sm text-zinc-100 hover:bg-zinc-900 transition border-t border-zinc-800"
                       >
                         Logout
                       </button>
@@ -515,7 +515,7 @@ export function Navbar() {
                   <Link
                     href="/admin/login"
                     aria-label="Admin login"
-                    className="font-display inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-zinc-300 transition hover:border-[#ef233c]/60 hover:bg-white/10 hover:text-white"
+                    className="font-display inline-flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/5 px-3 py-2 text-sm font-semibold text-zinc-300 transition hover:border-[#3f3f46]/60 hover:bg-zinc-900/10 hover:text-white"
                   >
                     <ShieldCheck className="h-4 w-4" />
                     <span className="hidden sm:inline">Admin Login</span>
@@ -523,12 +523,12 @@ export function Navbar() {
                 )}
                 <Link
                   href={signInHref}
-                  className="font-display inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-[#ef233c]/60 hover:bg-white/10 hover:text-white"
+                  className="font-display inline-flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/5 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-[#3f3f46]/60 hover:bg-zinc-900/10 hover:text-white"
                 >
                   Sign In
                 </Link>
                 {!isRoomPage && (
-                  <Link href="/pricing" className="noir-shimmer-button font-display group inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 active:scale-[0.97]">
+                  <Link href="/pricing" className="shimmer-btn font-display group inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 active:scale-[0.97]">
                     <span>Pricing</span>
                   </Link>
                 )}
@@ -570,27 +570,27 @@ export function Navbar() {
         </div>
       )}
       {upgradePrompt && (
-        <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="upgrade-title">
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-zinc-950/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="upgrade-title">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#161b22] p-6 text-white shadow-2xl">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-400/15 text-cyan-200">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-700/15 text-zinc-300">
               <LockKeyhole className="h-5 w-5" />
             </div>
             <h2 id="upgrade-title" className="mt-4 text-xl font-semibold">Upgrade to {upgradePrompt.plan}</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-300">
+            <p className="mt-2 text-sm leading-6 text-zinc-300">
               {upgradePrompt.feature} is available on the {upgradePrompt.plan} plan. Upgrade your membership to use this feature.
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setUpgradePrompt(null)}
-                className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
+                className="rounded-lg px-4 py-2 text-sm font-semibold text-zinc-300 transition hover:bg-zinc-900/10 hover:text-white"
               >
                 Not now
               </button>
               <Link
                 href="/pricing"
                 onClick={() => setUpgradePrompt(null)}
-                className="rounded-lg bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+                className="rounded-lg bg-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-800"
               >
                 View plans
               </Link>
@@ -603,9 +603,9 @@ export function Navbar() {
           <button
             aria-label="Close whiteboard backdrop"
             onClick={requestWhiteboardClose}
-            className="absolute inset-0 h-full w-full cursor-default bg-slate-950/40 backdrop-blur-sm"
+            className="absolute inset-0 h-full w-full cursor-default bg-zinc-950/40 backdrop-blur-sm"
           />
-          <div className="absolute right-0 top-0 flex h-full w-full max-w-[72rem] flex-col border-l border-white/10 bg-slate-950 shadow-[0_28px_100px_rgba(2,6,23,0.45)] sm:w-[92vw]">
+          <div className="absolute right-0 top-0 flex h-full w-full max-w-[72rem] flex-col border-l border-white/10 bg-zinc-950 shadow-xl sm:w-[92vw]">
             <Whiteboard
               meetingId={roomMeetingId}
               closeRequestId={whiteboardCloseRequestId}

@@ -430,7 +430,7 @@ export default function AdminDashboard() {
   if (status === 'loading' || loading) {
     return (
       <div className="page-shell-wide space-y-10">
-        <section className="relative overflow-hidden rounded-[2.75rem] border border-white/70 bg-white/75 p-6 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur sm:p-10">
+        <section className="relative overflow-hidden rounded-[2.75rem] border border-zinc-800 bg-zinc-900/75 p-6 shadow-xl backdrop-blur sm:p-10">
           <Skeleton className="h-3 w-28" />
           <Skeleton className="mt-4 h-12 w-full max-w-2xl" />
           <div className="mt-8 grid gap-4 md:grid-cols-4">
@@ -454,17 +454,17 @@ export default function AdminDashboard() {
 
   return (
     <div className="page-shell-wide space-y-10 pb-16">
-      <section className="overflow-hidden rounded-lg border border-[#2a3039] bg-[#12151a] p-6 sm:p-8">
+      <section className="overflow-hidden rounded-lg border border-[#27272a] bg-[#18181b] p-6 sm:p-8">
         <div className="space-y-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">
+              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-zinc-400">
                 Administration Portal
               </p>
-              <h1 className="font-display text-4xl font-semibold leading-tight text-slate-950 sm:text-5xl">
+              <h1 className="font-display text-4xl font-semibold leading-tight text-zinc-100 sm:text-5xl">
                 🛡️ System Console
               </h1>
-              <p className="text-base text-slate-600">
+              <p className="text-base text-zinc-400">
                 Manage global users, organization billing/policies, and monitor system rooms.
               </p>
             </div>
@@ -479,38 +479,38 @@ export default function AdminDashboard() {
           {stats && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <GlowCard className="p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Total Users</p>
-                <p className="mt-3 font-display text-3xl font-semibold text-slate-950">{stats.totalUsers}</p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">Total Users</p>
+                <p className="mt-3 font-display text-3xl font-semibold text-zinc-100">{stats.totalUsers}</p>
+                <p className="mt-1 text-sm text-zinc-400">
                   Admins: {stats.roles.admin}
                 </p>
               </GlowCard>
               <GlowCard className="p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Organizations</p>
-                <p className="mt-3 font-display text-3xl font-semibold text-slate-950">{stats.totalOrganizations}</p>
-                <p className="mt-1 text-sm text-slate-500">Registered SaaS enterprises</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">Organizations</p>
+                <p className="mt-3 font-display text-3xl font-semibold text-zinc-100">{stats.totalOrganizations}</p>
+                <p className="mt-1 text-sm text-zinc-400">Registered SaaS enterprises</p>
               </GlowCard>
               <GlowCard className="p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Meetings Created</p>
-                <p className="mt-3 font-display text-3xl font-semibold text-slate-950">{stats.totalMeetings}</p>
-                <p className="mt-1 text-sm text-slate-500">Cumulative room logs</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">Meetings Created</p>
+                <p className="mt-3 font-display text-3xl font-semibold text-zinc-100">{stats.totalMeetings}</p>
+                <p className="mt-1 text-sm text-zinc-400">Cumulative room logs</p>
               </GlowCard>
               <GlowCard className="p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Active Sessions</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">Active Sessions</p>
                 <p className="mt-3 font-display text-3xl font-semibold text-emerald-600">{stats.activeMeetings}</p>
-                <p className="mt-1 text-sm text-slate-500">Live or touched in last 2h</p>
+                <p className="mt-1 text-sm text-zinc-400">Live or touched in last 2h</p>
               </GlowCard>
             </div>
           )}
 
           {/* Tabs Switcher */}
-          <div className="flex flex-wrap border-b border-slate-200">
+          <div className="flex flex-wrap border-b border-zinc-800">
             <button
               onClick={() => setActiveTab('users')}
               className={`px-6 py-3 text-sm font-semibold transition border-b-2 -mb-[2px] ${
                 activeTab === 'users'
-                  ? 'border-cyan-500 text-cyan-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700'
+                  ? 'border-zinc-600 text-zinc-300'
+                  : 'border-transparent text-zinc-400 hover:text-zinc-100'
               }`}
             >
               👥 User Accounts
@@ -519,8 +519,8 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab('meetings')}
               className={`px-6 py-3 text-sm font-semibold transition border-b-2 -mb-[2px] ${
                 activeTab === 'meetings'
-                  ? 'border-cyan-500 text-cyan-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700'
+                  ? 'border-zinc-600 text-zinc-300'
+                  : 'border-transparent text-zinc-400 hover:text-zinc-100'
               }`}
             >
               📞 Video Rooms
@@ -529,8 +529,8 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab('organizations')}
               className={`px-6 py-3 text-sm font-semibold transition border-b-2 -mb-[2px] ${
                 activeTab === 'organizations'
-                  ? 'border-cyan-500 text-cyan-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700'
+                  ? 'border-zinc-600 text-zinc-300'
+                  : 'border-transparent text-zinc-400 hover:text-zinc-100'
               }`}
             >
               🏢 Organizations
@@ -539,8 +539,8 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab('subscriptions')}
               className={`px-6 py-3 text-sm font-semibold transition border-b-2 -mb-[2px] ${
                 activeTab === 'subscriptions'
-                  ? 'border-cyan-500 text-cyan-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700'
+                  ? 'border-zinc-600 text-zinc-300'
+                  : 'border-transparent text-zinc-400 hover:text-zinc-100'
               }`}
             >
               💳 Subscriptions
@@ -550,7 +550,7 @@ export default function AdminDashboard() {
               className={`px-6 py-3 text-sm font-semibold transition border-b-2 -mb-[2px] ${
                 activeTab === 'danger'
                   ? 'border-red-500 text-red-600'
-                  : 'border-transparent text-slate-500 hover:text-red-600'
+                  : 'border-transparent text-zinc-400 hover:text-red-600'
               }`}
             >
               Danger Zone
@@ -568,14 +568,14 @@ export default function AdminDashboard() {
                     onChange={(e) => setUserSearch(e.target.value)}
                     className="input-modern max-w-md w-full"
                   />
-                  <span className="text-sm text-slate-500">
+                  <span className="text-sm text-zinc-400">
                     Showing {filteredUsers.length} of {users.length} users
                   </span>
                 </div>
 
-                <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-                  <table className="min-w-full divide-y divide-slate-200 text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50 text-slate-800 font-semibold">
+                <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900">
+                  <table className="min-w-full divide-y divide-zinc-800 text-left text-sm text-zinc-400">
+                    <thead className="bg-zinc-900 text-zinc-100 font-semibold">
                       <tr>
                         <th className="px-6 py-4">User</th>
                         <th className="px-6 py-4">Role</th>
@@ -585,38 +585,38 @@ export default function AdminDashboard() {
                         <th className="px-6 py-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-zinc-800">
                       {filteredUsers.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="px-6 py-8 text-center text-slate-400">
+                          <td colSpan={6} className="px-6 py-8 text-center text-zinc-400">
                             No users found matching query
                           </td>
                         </tr>
                       ) : (
                         filteredUsers.map((user) => (
-                          <tr key={user._id} className="hover:bg-slate-50/50 transition">
+                          <tr key={user._id} className="hover:bg-zinc-900/50 transition">
                             <td className="px-6 py-4">
-                              <div className="font-semibold text-slate-900">{user.name || 'No Name'}</div>
-                              <div className="text-xs text-slate-500">{user.email}</div>
+                              <div className="font-semibold text-zinc-100">{user.name || 'No Name'}</div>
+                              <div className="text-xs text-zinc-400">{user.email}</div>
                             </td>
                             <td className="px-6 py-4">
                               <select
                                 value={user.role}
                                 disabled={actionLoading === `user-update-${user._id}` || user.email === session?.user?.email}
                                 onChange={(e) => handleUpdateUser(user._id, { role: e.target.value as any })}
-                                className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                                className="rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-zinc-600"
                               >
                                 <option value="user">User</option>
                                 <option value="admin">System Admin</option>
                               </select>
                             </td>
-                            <td className="px-6 py-4 font-medium text-slate-900">
+                            <td className="px-6 py-4 font-medium text-zinc-100">
                               {user.organizationName ? (
                                 <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-1 text-xs text-emerald-800">
                                   🏢 {user.organizationName}
                                 </span>
                               ) : (
-                                <span className="text-slate-400 italic">None</span>
+                                <span className="text-zinc-400 italic">None</span>
                               )}
                             </td>
                             <td className="px-6 py-4">
@@ -634,7 +634,7 @@ export default function AdminDashboard() {
                                 {user.status === 'active' ? '🟢 Active' : '🔴 Disabled'}
                               </button>
                             </td>
-                            <td className="px-6 py-4 text-xs text-slate-500">
+                            <td className="px-6 py-4 text-xs text-zinc-400">
                               {new Date(user.createdAt).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4 text-right">
@@ -666,23 +666,23 @@ export default function AdminDashboard() {
                     className="input-modern max-w-md w-full"
                   />
                   <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-sm text-slate-500">
+                    <span className="text-sm text-zinc-400">
                       Showing {filteredMeetings.length} of {meetings.length} rooms
                     </span>
                     <button
                       type="button"
                       onClick={() => setShowTerminateRoomsModal(true)}
                       disabled={meetings.length === 0}
-                      className="inline-flex items-center justify-center rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                      className="inline-flex items-center justify-center rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-800 disabled:text-zinc-400"
                     >
                       Terminate all rooms
                     </button>
                   </div>
                 </div>
 
-                <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-                  <table className="min-w-full divide-y divide-slate-200 text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50 text-slate-800 font-semibold">
+                <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900">
+                  <table className="min-w-full divide-y divide-zinc-800 text-left text-sm text-zinc-400">
+                    <thead className="bg-zinc-900 text-zinc-100 font-semibold">
                       <tr>
                         <th className="px-6 py-4">Room Title</th>
                         <th className="px-6 py-4">Room ID</th>
@@ -692,29 +692,29 @@ export default function AdminDashboard() {
                         <th className="px-6 py-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-zinc-800">
                       {filteredMeetings.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="px-6 py-8 text-center text-slate-400">
+                          <td colSpan={6} className="px-6 py-8 text-center text-zinc-400">
                             No active or logged rooms found
                           </td>
                         </tr>
                       ) : (
                         filteredMeetings.map((meeting) => (
-                          <tr key={meeting._id} className="hover:bg-slate-50/50 transition">
-                            <td className="px-6 py-4 font-semibold text-slate-900">
+                          <tr key={meeting._id} className="hover:bg-zinc-900/50 transition">
+                            <td className="px-6 py-4 font-semibold text-zinc-100">
                               {meeting.title}
                             </td>
-                            <td className="px-6 py-4 font-mono text-xs text-slate-500">
+                            <td className="px-6 py-4 font-mono text-xs text-zinc-400">
                               {meeting.meetingId}
                             </td>
-                            <td className="px-6 py-4 text-slate-600">
+                            <td className="px-6 py-4 text-zinc-400">
                               {meeting.hostEmail}
                             </td>
-                            <td className="px-6 py-4 font-semibold text-slate-900">
+                            <td className="px-6 py-4 font-semibold text-zinc-100">
                               {meeting.joinCount}
                             </td>
-                            <td className="px-6 py-4 text-xs text-slate-500">
+                            <td className="px-6 py-4 text-xs text-zinc-400">
                               {new Date(meeting.createdAt).toLocaleString()}
                             </td>
                             <td className="px-6 py-4 text-right">
@@ -737,9 +737,9 @@ export default function AdminDashboard() {
 
             {activeTab === 'organizations' && (
               <div className="space-y-4">
-                <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-                  <table className="min-w-full divide-y divide-slate-200 text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50 text-slate-800 font-semibold">
+                <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900">
+                  <table className="min-w-full divide-y divide-zinc-800 text-left text-sm text-zinc-400">
+                    <thead className="bg-zinc-900 text-zinc-100 font-semibold">
                       <tr>
                         <th className="px-6 py-4">Organization Name</th>
                         <th className="px-6 py-4">Domain Domain</th>
@@ -749,27 +749,27 @@ export default function AdminDashboard() {
                         <th className="px-6 py-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-zinc-800">
                       {organizations.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="px-6 py-8 text-center text-slate-400">
+                          <td colSpan={6} className="px-6 py-8 text-center text-zinc-400">
                             No organizations created yet. Click "Create Organization" to add one.
                           </td>
                         </tr>
                       ) : (
                         organizations.map((org) => (
-                          <tr key={org._id} className="hover:bg-slate-50/50 transition">
+                          <tr key={org._id} className="hover:bg-zinc-900/50 transition">
                             <td className="px-6 py-4">
-                              <div className="font-semibold text-slate-900">{org.name}</div>
-                              <div className="text-xs text-slate-400">Registered {new Date(org.createdAt).toLocaleDateString()}</div>
+                              <div className="font-semibold text-zinc-100">{org.name}</div>
+                              <div className="text-xs text-zinc-400">Registered {new Date(org.createdAt).toLocaleDateString()}</div>
                             </td>
-                            <td className="px-6 py-4 text-slate-600 font-mono text-xs">
-                              {org.domain ? `@${org.domain}` : <span className="text-slate-400 italic">No restriction</span>}
+                            <td className="px-6 py-4 text-zinc-400 font-mono text-xs">
+                              {org.domain ? `@${org.domain}` : <span className="text-zinc-400 italic">No restriction</span>}
                             </td>
-                            <td className="px-6 py-4 uppercase font-semibold text-cyan-600 text-xs">
+                            <td className="px-6 py-4 uppercase font-semibold text-zinc-300 text-xs">
                               {org.billingPlan}
                             </td>
-                            <td className="px-6 py-4 font-semibold text-slate-900">
+                            <td className="px-6 py-4 font-semibold text-zinc-100">
                               {org.memberCount} members
                             </td>
                             <td className="px-6 py-4 text-xs space-y-0.5">
@@ -796,8 +796,8 @@ export default function AdminDashboard() {
 
             {activeTab === 'subscriptions' && (
               <div className="space-y-4">
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <p className="text-sm text-slate-600">
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+                  <p className="text-sm text-zinc-400">
                     Manage app memberships, activation, cancellation, period extensions, manual Pro or Business grants, extra credits, and credit resets.
                   </p>
                 </div>
@@ -833,18 +833,18 @@ export default function AdminDashboard() {
 
       {/* Create Org Modal */}
       {showOrgModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
-            <h3 className="font-display text-2xl font-semibold text-slate-950">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
+            <h3 className="font-display text-2xl font-semibold text-zinc-100">
               Create Enterprise Organization
             </h3>
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-2 text-sm text-zinc-400">
               Set up a new company account with domain mapping and default meeting policies.
             </p>
 
             <form onSubmit={handleCreateOrg} className="mt-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
                   Organization Name *
                 </label>
                 <input
@@ -858,7 +858,7 @@ export default function AdminDashboard() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
                   Domain Mapping (Optional)
                 </label>
                 <input
@@ -868,13 +868,13 @@ export default function AdminDashboard() {
                   onChange={(e) => setNewOrgDomain(e.target.value)}
                   className="input-modern mt-1.5 w-full"
                 />
-                <span className="text-sm text-slate-400 mt-1 block">
+                <span className="text-sm text-zinc-400 mt-1 block">
                   New sign-ups matching this domain automatically link to this organization.
                 </span>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
                   Billing Plan Tier
                 </label>
                 <select
@@ -894,9 +894,9 @@ export default function AdminDashboard() {
                     type="checkbox"
                     checked={newOrgRecAllowed}
                     onChange={(e) => setNewOrgRecAllowed(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+                    className="h-4 w-4 rounded border-zinc-800 text-zinc-300 focus:ring-zinc-600"
                   />
-                  <span className="text-sm text-slate-600 font-medium">Allow Recording</span>
+                  <span className="text-sm text-zinc-400 font-medium">Allow Recording</span>
                 </label>
 
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -904,17 +904,17 @@ export default function AdminDashboard() {
                     type="checkbox"
                     checked={newOrgChatEnabled}
                     onChange={(e) => setNewOrgChatEnabled(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+                    className="h-4 w-4 rounded border-zinc-800 text-zinc-300 focus:ring-zinc-600"
                   />
-                  <span className="text-sm text-slate-600 font-medium">Enable Chat</span>
+                  <span className="text-sm text-zinc-400 font-medium">Enable Chat</span>
                 </label>
               </div>
 
-              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-zinc-800">
                 <button
                   type="button"
                   onClick={() => setShowOrgModal(false)}
-                  className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                  className="rounded-xl border border-zinc-800 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-900 transition"
                 >
                   Cancel
                 </button>
@@ -929,8 +929,8 @@ export default function AdminDashboard() {
 
       {/* Delete All Data Modal */}
       {showDeleteAllModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-red-200 bg-white p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-red-200 bg-zinc-900 p-6 shadow-2xl">
             <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-red-700">Danger confirmation</p>
               <h3 className="mt-2 font-display text-2xl font-semibold text-red-950">
@@ -942,7 +942,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="mt-6 space-y-3">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
                 Type DELETE to confirm
               </label>
               <input
@@ -953,17 +953,17 @@ export default function AdminDashboard() {
                 className="input-modern w-full border-red-200 focus:border-red-500 focus:ring-red-500"
                 placeholder="DELETE"
               />
-              <p className="text-xs leading-5 text-slate-500">
+              <p className="text-xs leading-5 text-zinc-400">
                 The delete button remains disabled until the confirmation text exactly matches DELETE.
               </p>
             </div>
 
-            <div className="mt-6 flex flex-col-reverse gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end">
+            <div className="mt-6 flex flex-col-reverse gap-3 border-t border-zinc-800 pt-4 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={closeDeleteAllModal}
                 disabled={actionLoading === 'delete-all'}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-xl border border-zinc-800 px-4 py-2 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Cancel
               </button>
@@ -981,8 +981,8 @@ export default function AdminDashboard() {
       )}
 
       {showTerminateRoomsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-red-200 bg-white p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-red-200 bg-zinc-900 p-6 shadow-2xl">
             <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-red-700">Room management</p>
               <h3 className="mt-2 font-display text-2xl font-semibold text-red-950">Terminate all rooms</h3>
@@ -992,7 +992,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="mt-6 space-y-3">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
                 Type TERMINATE to confirm
               </label>
               <input
@@ -1005,12 +1005,12 @@ export default function AdminDashboard() {
               />
             </div>
 
-            <div className="mt-6 flex flex-col-reverse gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end">
+            <div className="mt-6 flex flex-col-reverse gap-3 border-t border-zinc-800 pt-4 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={closeTerminateRoomsModal}
                 disabled={actionLoading === 'meetings-terminate-all'}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-xl border border-zinc-800 px-4 py-2 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Cancel
               </button>
@@ -1031,7 +1031,7 @@ export default function AdminDashboard() {
       {message && (
         <div
           className={`fixed bottom-5 right-5 z-[100] flex items-center gap-2 rounded-xl px-5 py-3.5 text-white shadow-xl ${
-            message.type === 'error' ? 'bg-red-500/90' : 'bg-slate-900/90'
+            message.type === 'error' ? 'bg-red-500/90' : 'bg-zinc-900/90'
           }`}
         >
           <span className="text-sm font-medium">{message.text}</span>

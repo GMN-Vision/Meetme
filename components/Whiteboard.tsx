@@ -10,7 +10,7 @@ const Excalidraw = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full w-full items-center justify-center bg-slate-950 text-slate-100">
+      <div className="flex h-full w-full items-center justify-center bg-zinc-950 text-zinc-100">
         <Loader />
       </div>
     ),
@@ -413,7 +413,7 @@ export function Whiteboard({ meetingId, onClose, closeRequestId = 0 }: Whiteboar
 
   if (!isLoaded) {
     return (
-      <div className="flex h-full min-h-[24rem] items-center justify-center bg-slate-950 text-slate-100">
+      <div className="flex h-full min-h-[24rem] items-center justify-center bg-zinc-950 text-zinc-100">
         <Loader />
       </div>
     );
@@ -421,13 +421,13 @@ export function Whiteboard({ meetingId, onClose, closeRequestId = 0 }: Whiteboar
 
   if (error) {
     return (
-      <div className="flex h-full min-h-[24rem] items-center justify-center bg-slate-950 px-6 text-center text-slate-100">
+      <div className="flex h-full min-h-[24rem] items-center justify-center bg-zinc-950 px-6 text-center text-zinc-100">
         <div className="max-w-md space-y-3">
           <p className="text-lg font-semibold text-white">Whiteboard unavailable</p>
-          <p className="text-sm text-slate-300">{error}</p>
+          <p className="text-sm text-zinc-300">{error}</p>
           <button
             onClick={onClose}
-            className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/15"
+            className="rounded-full border border-white/15 bg-zinc-900/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-900/15"
           >
             Close
           </button>
@@ -589,30 +589,30 @@ function CollaborativeWhiteboard({
   }, [lastRemoteVersionRef, meetingId, onRemoteSceneApplied, onSceneChange, setStatus, whiteboardUrl]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-slate-950 text-white">
+    <div className="flex h-full min-h-0 flex-col bg-zinc-950 text-white">
       <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5">
         <div className="min-w-0">
-          <div className="text-xs uppercase tracking-[0.24em] text-slate-400">Whiteboard session</div>
+          <div className="text-xs uppercase tracking-[0.24em] text-zinc-400">Whiteboard session</div>
           <div className="truncate text-sm font-medium text-white">{meetingId}</div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
+          <span className="rounded-full border border-white/10 bg-zinc-900/5 px-3 py-1 text-xs text-zinc-200">
             Shared realtime
           </span>
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
+          <span className="rounded-full border border-white/10 bg-zinc-900/5 px-3 py-1 text-xs text-zinc-200">
             {isClosing ? 'Saving before close' : isSaving ? 'Saving' : status}
           </span>
           <button
             onClick={onClose}
             disabled={isClosing}
-            className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-full border border-white/15 bg-zinc-900/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-900/15 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Close
           </button>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 bg-slate-900">
+      <div className="min-h-0 flex-1 bg-zinc-900">
         <Excalidraw
           key={meetingId}
           name={meetingId}

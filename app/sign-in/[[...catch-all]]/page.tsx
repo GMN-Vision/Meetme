@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
@@ -67,72 +68,19 @@ export default function Page() {
   };
 
   return (
-    <div className="page-shell flex min-h-[calc(100vh-4rem)] items-center justify-center py-8">
-      <div className="grid w-full max-w-5xl gap-7 lg:grid-cols-[1fr_0.9fr] lg:items-center">
-        <div className="space-y-4 sm:space-y-5">
-          <p className="section-kicker">Welcome to Melanam</p>
-          <h1 className="section-title font-display text-3xl font-semibold text-slate-950 sm:text-5xl">
-            Continue with your email.
-          </h1>
-          <p className="max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
-            No passwords and no separate sign-up form. New accounts are created automatically when you request your first secure link.
-          </p>
-          <p className="max-w-xl text-sm leading-6 text-slate-500">
-            After you sign in, this device stays signed in for 7 days.
-          </p>
-        </div>
-
-        <div className="surface-strong rounded-[2rem] p-3 sm:p-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">Continue with email</h2>
-                <p className="mt-1 text-xs leading-5 text-slate-500">We will send a one-time, secure sign-in link.</p>
-              </div>
-              <AuthHelpButton mode="sign-in" />
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700">Email address</label>
-              <div className="relative">
-                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="you@example.com"
-                  className="input-modern w-full pl-10"
-                />
-              </div>
-              <button type="submit" disabled={loading} className="button-primary w-full justify-center py-3 text-sm sm:text-base">
-                {loading ? 'Sending secure link…' : 'Send secure sign-in link'}
-              </button>
-            </form>
-
-            {notice && (
-              <div
-                className={`mt-4 flex gap-3 rounded-xl border p-3.5 text-sm leading-6 ${
-                  notice.type === 'success'
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
-                    : 'border-red-200 bg-red-50 text-red-800'
-                }`}
-                role="alert"
-                aria-live="polite"
-              >
-                {notice.type === 'success' ? <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" /> : <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />}
-                <p>{notice.text}</p>
-              </div>
-            )}
-
-            <p className="mt-4 text-xs leading-5 text-slate-500">
-              The link is single-use. If it is not in your inbox, check spam or request a fresh link.
-            </p>
-          </div>
-        </div>
+    <div className="mx-auto flex min-h-[calc(100dvh-96px)] max-w-lg flex-col justify-center px-4 py-10">
+      <header className="mb-8 text-center"><p className="section-kicker mb-4">Welcome to Melanam</p><h1 className="text-4xl font-bold tracking-tight text-white">Good conversations<br /><span className="text-zinc-500">start here.</span></h1><p className="mt-5 text-sm leading-6 text-zinc-400">One email. One secure link. Sign in or create your account to start meeting.</p></header>
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 sm:p-8">
+        <div className="mb-6 flex items-center justify-between"><h2 className="text-lg font-semibold text-white">Continue with email</h2><AuthHelpButton mode="sign-in" /></div>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div><label htmlFor="email" className="mb-2 block text-sm font-medium text-zinc-300">Email address</label><div className="relative"><Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" /><input id="email" type="email" autoComplete="email" required value={email} onChange={event => setEmail(event.target.value)} placeholder="you@example.com" className="input-modern !pl-11" /></div></div>
+          <button type="submit" disabled={loading} className="button-primary shimmer-btn w-full">{loading ? 'Sending secure link…' : 'Send sign-in link'}</button>
+        </form>
+        {notice && <div role="alert" aria-live="polite" className={'mt-5 flex gap-3 rounded-xl border p-4 text-sm leading-6 ' + (notice.type === 'success' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300' : 'border-red-500/30 bg-red-500/10 text-red-300')}>{notice.type === 'success' ? <CheckCircle2 className="mt-1 h-4 w-4 shrink-0" /> : <TriangleAlert className="mt-1 h-4 w-4 shrink-0" />}<p>{notice.text}</p></div>}
+        <p className="mt-5 text-center text-xs leading-6 text-zinc-500">No password needed. Your link is single-use.<br />Check your spam folder if it hasn’t arrived.</p>
       </div>
+      <p className="mt-6 text-center text-xs leading-6 text-zinc-500">By continuing, you agree to our <Link href="/terms" className="text-zinc-300 underline underline-offset-4">Terms</Link> and <Link href="/privacy" className="text-zinc-300 underline underline-offset-4">Privacy Policy</Link>.</p>
+      <Link href="/admin/login" className="mt-4 text-center text-xs text-zinc-400 hover:text-white">Admin sign in</Link>
     </div>
   );
 }

@@ -193,16 +193,16 @@ export default function UploadMedia({
     <div
       className={
         className ||
-        'w-full rounded-[1.5rem] border border-slate-200 bg-white/95 p-4 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.2)]'
+        'w-full rounded-[1.5rem] border border-zinc-800 bg-zinc-900/95 p-4 text-zinc-100 shadow-xl'
       }
     >
-      <div className="mb-4 flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+      <div className="mb-4 flex items-start justify-between gap-3 border-b border-zinc-800 pb-4">
         <div>
-          <p className="text-sm uppercase tracking-[0.26em] text-cyan-600">Upload Media</p>
-          <h3 className="mt-1 font-display text-xl font-semibold text-slate-950">Share files with everyone</h3>
-          <p className="mt-1 text-sm text-slate-500">Drop a file or browse from your device. Everyone in the room will see it.</p>
+          <p className="text-sm uppercase tracking-[0.26em] text-zinc-300">Upload Media</p>
+          <h3 className="mt-1 font-display text-xl font-semibold text-zinc-100">Share files with everyone</h3>
+          <p className="mt-1 text-sm text-zinc-400">Drop a file or browse from your device. Everyone in the room will see it.</p>
         </div>
-        <span className="rounded-full bg-cyan-50 px-3 py-1 text-sm font-semibold text-cyan-700 ring-1 ring-cyan-200">
+        <span className="rounded-full bg-zinc-800 px-3 py-1 text-sm font-semibold text-zinc-300 ring-1 ring-zinc-600">
           {files.length} shared
         </span>
       </div>
@@ -211,7 +211,7 @@ export default function UploadMedia({
         {notifications.map((notification) => (
           <div
             key={notification.id}
-            className="rounded-2xl border border-cyan-100 bg-cyan-50 px-3 py-2 text-sm text-cyan-900 shadow-sm animate-in fade-in slide-in-from-top-2"
+            className="rounded-2xl border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-300 shadow-sm animate-in fade-in slide-in-from-top-2"
           >
             {notification.message}
           </div>
@@ -231,8 +231,8 @@ export default function UploadMedia({
       {files.length > 0 ? (
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm font-semibold text-slate-900">Shared media</p>
-            <p className="text-xs text-slate-500">Click to download</p>
+            <p className="text-sm font-semibold text-zinc-100">Shared media</p>
+            <p className="text-xs text-zinc-400">Click to download</p>
           </div>
           <ul className="max-h-64 space-y-2 overflow-y-auto pr-1">
             {files.map((file) => {
@@ -240,9 +240,9 @@ export default function UploadMedia({
               return (
                 <li
                   key={file.path}
-                  className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50/40"
+                  className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900 px-3 py-3 shadow-sm transition hover:border-zinc-600 hover:bg-zinc-800/40"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-800 text-zinc-300 ring-1 ring-zinc-600">
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.9">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                     </svg>
@@ -251,7 +251,7 @@ export default function UploadMedia({
                     href={downloadUrls[file.path] || '#'}
                     target="_blank"
                     rel="noreferrer"
-                    className="min-w-0 flex-1 text-sm font-medium text-slate-900 truncate hover:text-cyan-700"
+                    className="min-w-0 flex-1 text-sm font-medium text-zinc-100 truncate hover:text-zinc-300"
                   >
                     {fileName}
                   </a>
@@ -260,7 +260,7 @@ export default function UploadMedia({
                       href={downloadUrls[file.path] || '#'}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-200"
+                      className="rounded-full bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-100 transition hover:bg-zinc-800"
                     >
                       Download
                     </a>
@@ -277,7 +277,7 @@ export default function UploadMedia({
           </ul>
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-6 text-center text-sm text-slate-500">
+        <div className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-900 px-4 py-6 text-center text-sm text-zinc-400">
           No shared media yet. The first upload will appear here for everyone in the room.
         </div>
       )}

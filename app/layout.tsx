@@ -4,13 +4,11 @@ import { Providers } from './providers';
 import ThemeInitializer from '../components/ThemeInitializer';
 import '@excalidraw/excalidraw/index.css';
 import './globals.css';
-import '@fontsource/space-grotesk/400.css';
-import '@fontsource/space-grotesk/500.css';
-import '@fontsource/space-grotesk/600.css';
-import '@fontsource/space-grotesk/700.css';
-import '@fontsource/orbitron/400.css';
-import '@fontsource/orbitron/500.css';
-import '@fontsource/orbitron/700.css';
+import '@fontsource/manrope/400.css';
+import '@fontsource/manrope/500.css';
+import '@fontsource/manrope/600.css';
+import '@fontsource/manrope/700.css';
+import '@fontsource/manrope/800.css';
 import { absoluteUrl, getPublicSiteUrl, SEO_KEYWORDS, SITE_DESCRIPTION, SITE_NAME } from '../lib/seo';
 
 export const metadata: Metadata = {
@@ -91,7 +89,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -102,6 +100,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <div className="noise-overlay" aria-hidden="true" />
         <Providers>
           <ThemeInitializer />
           <AppChrome />

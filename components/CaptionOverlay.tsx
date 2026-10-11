@@ -595,7 +595,7 @@ export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }
         aria-atomic="false"
       >
         {hasVisibleCaptions && (
-          <div className="overflow-hidden rounded-[18px] bg-black/90 px-4 py-3 text-left shadow-[0_18px_60px_rgba(0,0,0,0.45)] ring-1 ring-white/10 backdrop-blur-md sm:px-5">
+          <div className="overflow-hidden rounded-[18px] bg-black/90 px-4 py-3 text-left shadow-xl ring-1 ring-white/10 backdrop-blur-md sm:px-5">
             <div className="flex flex-col gap-2">
               {captions.map((caption) => (
                 <div

@@ -139,8 +139,8 @@ export function AIAssistant({ meetingId, onAIToggle }: AIAssistantProps) {
         whileTap={{ scale: 0.95 }}
         className={`relative inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-all ${
           aiEnabled
-            ? 'border-blue-300 bg-blue-100/85 text-blue-700 shadow-[0_10px_24px_rgba(37,99,235,0.16)] dark:border-blue-500/40 dark:bg-blue-500/20 dark:text-blue-300'
-            : 'border-slate-200 bg-slate-100/80 text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)] hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-200/80 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:border-gray-600 dark:hover:bg-gray-700'
+            ? 'border-zinc-600 bg-zinc-800/85 text-zinc-300 shadow-xl dark:border-zinc-600/40 dark:bg-zinc-700/20 dark:text-zinc-300'
+            : 'border-zinc-800 bg-zinc-800/80 text-zinc-100 shadow-xl hover:-translate-y-0.5 hover:border-zinc-800 hover:bg-zinc-800/80 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700'
         }`}
         aria-label="AI assistant"
         title="AI Assistant"
@@ -158,7 +158,7 @@ export function AIAssistant({ meetingId, onAIToggle }: AIAssistantProps) {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="absolute right-0 top-12 w-96 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
+          className="absolute right-0 top-12 w-96 bg-zinc-900 dark:bg-zinc-900 rounded-lg shadow-xl border border-zinc-800 dark:border-zinc-600 z-50 overflow-hidden"
         >
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white flex items-center justify-between">
@@ -168,7 +168,7 @@ export function AIAssistant({ meetingId, onAIToggle }: AIAssistantProps) {
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="hover:bg-blue-700 p-1 rounded transition"
+              className="hover:bg-zinc-700 p-1 rounded transition"
             >
               <IconX size={18} />
             </button>
@@ -178,14 +178,14 @@ export function AIAssistant({ meetingId, onAIToggle }: AIAssistantProps) {
           <div className="p-4 space-y-4">
             {/* Status */}
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm font-medium text-zinc-100 dark:text-zinc-300">
                 Status
               </span>
               <div className="flex items-center gap-2">
                 {isLoading ? (
                   <>
-                    <IconLoader2 size={16} className="animate-spin text-blue-500" />
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                    <IconLoader2 size={16} className="animate-spin text-zinc-300" />
+                    <span className="text-xs text-zinc-400 dark:text-zinc-400">
                       Updating...
                     </span>
                   </>
@@ -194,7 +194,7 @@ export function AIAssistant({ meetingId, onAIToggle }: AIAssistantProps) {
                     className={`text-xs font-medium px-2 py-1 rounded-full ${
                       aiEnabled
                         ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                        : 'bg-zinc-800 text-zinc-100 dark:bg-zinc-800 dark:text-zinc-300'
                     }`}
                   >
                     {aiEnabled ? 'Active' : 'Inactive'}
@@ -205,18 +205,18 @@ export function AIAssistant({ meetingId, onAIToggle }: AIAssistantProps) {
 
             {/* Toggle AI */}
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm font-medium text-zinc-100 dark:text-zinc-300">
                 Enable AI Assistant
               </span>
               <button
                 onClick={toggleAI}
                 disabled={isLoading}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  aiEnabled ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
+                  aiEnabled ? 'bg-zinc-700' : 'bg-zinc-800 dark:bg-zinc-700'
                 } disabled:opacity-50`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  className={`inline-block h-4 w-4 transform rounded-full bg-zinc-900 transition-transform ${
                     aiEnabled ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
@@ -225,14 +225,14 @@ export function AIAssistant({ meetingId, onAIToggle }: AIAssistantProps) {
 
             {/* Language Selection */}
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+              <label className="text-sm font-medium text-zinc-100 dark:text-zinc-300 block mb-2">
                 Transcription Language
               </label>
               <select
                 value={selectedLanguage}
                 onChange={(e) => handleLanguageChange(e.target.value)}
                 disabled={aiEnabled || isLoading}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm disabled:opacity-50"
+                className="w-full px-3 py-2 border border-zinc-800 dark:border-zinc-600 rounded-lg bg-zinc-900 dark:bg-zinc-800 text-zinc-100 dark:text-zinc-100 text-sm disabled:opacity-50"
               >
                 {languages.map((lang) => (
                   <option key={lang.code} value={lang.code}>
@@ -240,7 +240,7 @@ export function AIAssistant({ meetingId, onAIToggle }: AIAssistantProps) {
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-zinc-400 dark:text-zinc-400 mt-1">
                 {aiEnabled
                   ? 'Cannot change language while recording'
                   : 'Select language before enabling AI'}
@@ -250,22 +250,22 @@ export function AIAssistant({ meetingId, onAIToggle }: AIAssistantProps) {
             {/* Live Captions */}
             {aiEnabled && (
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+                <label className="text-sm font-medium text-zinc-100 dark:text-zinc-300 block mb-2">
                   Live Captions
                 </label>
-                <div className="max-h-32 overflow-y-auto bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                <div className="max-h-32 overflow-y-auto bg-zinc-900 dark:bg-zinc-800 rounded-lg p-3 border border-zinc-800 dark:border-zinc-600">
                   {captions.length === 0 ? (
-                    <p className="text-xs text-gray-500 italic">
+                    <p className="text-xs text-zinc-400 italic">
                       Captions will appear here...
                     </p>
                   ) : (
                     <div className="space-y-2">
                       {captions.slice(-5).map((caption, idx) => (
                         <div key={idx} className="text-xs">
-                          <span className="font-semibold text-blue-600 dark:text-blue-400">
+                          <span className="font-semibold text-zinc-300 dark:text-zinc-300">
                             {caption.speaker}
                           </span>
-                          <p className="text-gray-700 dark:text-gray-300 mt-1">
+                          <p className="text-zinc-100 dark:text-zinc-300 mt-1">
                             {caption.text}
                           </p>
                         </div>
@@ -277,8 +277,8 @@ export function AIAssistant({ meetingId, onAIToggle }: AIAssistantProps) {
             )}
 
             {/* Info */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-              <p className="text-xs text-gray-700 dark:text-gray-300">
+            <div className="bg-zinc-800 dark:bg-zinc-700/20 border border-zinc-600 dark:border-zinc-600 rounded-lg p-3">
+              <p className="text-xs text-zinc-100 dark:text-zinc-300">
                 <span className="font-semibold">
                   {aiEnabled
                     ? 'Recording with AI Assistant'

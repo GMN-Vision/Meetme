@@ -50,28 +50,28 @@ export default function Polls({ meetingId }: { meetingId: string }) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-medium">Polls</h4>
-        <button onClick={() => setCreating(!creating)} className="text-sm text-sky-600">{creating ? 'Cancel' : 'Create Poll'}</button>
+        <button onClick={() => setCreating(!creating)} className="text-sm text-zinc-300">{creating ? 'Cancel' : 'Create Poll'}</button>
       </div>
 
       {creating && (
-        <div className="p-3 bg-white/60 rounded">
+        <div className="p-3 bg-zinc-900/60 rounded">
           <input value={q} onChange={e => setQ(e.target.value)} placeholder="Question" className="w-full mb-2 p-2 border rounded" />
           <textarea value={opts} onChange={e => setOpts(e.target.value)} placeholder="One option per line" className="w-full p-2 border rounded mb-2" rows={4} />
           <div className="flex justify-end">
-            <button onClick={create} className="px-3 py-1 bg-sky-600 text-white rounded">Create</button>
+            <button onClick={create} className="px-3 py-1 bg-zinc-700 text-white rounded">Create</button>
           </div>
         </div>
       )}
 
       <div className="space-y-2">
         {polls.map(p => (
-          <div key={p._id} className="p-2 bg-white/60 rounded">
+          <div key={p._id} className="p-2 bg-zinc-900/60 rounded">
             <div className="font-medium">{p.question}</div>
             <div className="mt-2 space-y-2">
               {p.options.map(o => (
                 <div key={o.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <button onClick={() => vote(p._id, o.id)} className="px-2 py-1 bg-slate-100 rounded">Vote</button>
+                    <button onClick={() => vote(p._id, o.id)} className="px-2 py-1 bg-zinc-800 rounded">Vote</button>
                     <div>{o.label}</div>
                   </div>
                   <div className="text-sm">{o.votes}</div>

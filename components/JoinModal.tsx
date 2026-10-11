@@ -83,23 +83,19 @@ export function JoinModal({ isOpen, onClose }: JoinModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 backdrop-blur-sm">
-      <div className="surface-strong relative w-full max-w-md overflow-hidden rounded-[2rem] p-6 shadow-[0_30px_90px_rgba(15,23,42,0.24)]">
-        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500" />
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+      <div role="dialog" aria-modal="true" aria-label="Join a meeting" className="surface-strong relative w-full max-w-md overflow-hidden rounded-2xl p-6 shadow-xl">
         <div className="mb-6">
           <div className="flex items-center justify-between gap-3">
             <p className="section-kicker mb-2">Join room</p>
-            <span className="rounded-full bg-amber-500/10 px-3 py-1 text-sm font-semibold text-amber-700 ring-1 ring-amber-500/15">
-              Quick join
-            </span>
           </div>
-          <h2 className="font-display text-2xl font-semibold text-slate-950">Enter a meeting link or ID</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-500">Paste a full invite URL or a room code and jump straight in.</p>
+          <h2 className="font-display text-2xl font-semibold text-zinc-100">Enter a meeting link or ID</h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-400">Paste a full invite URL or a room code and jump straight in.</p>
         </div>
 
         <form onSubmit={handleJoin} className="space-y-4">
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
+            <label className="mb-2 block text-sm font-semibold text-zinc-100">
               Meeting ID
             </label>
             <input
@@ -112,7 +108,7 @@ export function JoinModal({ isOpen, onClose }: JoinModalProps) {
           </div>
 
           {error && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
               {error}
             </div>
           )}
@@ -122,14 +118,14 @@ export function JoinModal({ isOpen, onClose }: JoinModalProps) {
               type="button"
               onClick={onClose}
               disabled={isJoining}
-              className="button-secondary flex-1 border border-slate-200/80 bg-white/75"
+              className="button-secondary flex-1 border border-zinc-800/80 bg-zinc-900/75"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isJoining}
-              className="button-primary flex-1 shadow-[0_14px_30px_rgba(29,78,216,0.26)]"
+              className="button-primary flex-1 shadow-xl"
             >
               {isJoining ? 'Joining...' : 'Join'}
             </button>

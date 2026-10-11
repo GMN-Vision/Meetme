@@ -29,7 +29,7 @@ type Subscription = {
 
 const statusClasses: Record<Subscription['status'], string> = {
   active: 'bg-emerald-50 text-emerald-700 ring-emerald-500/20',
-  trialing: 'bg-cyan-50 text-cyan-700 ring-cyan-500/20',
+  trialing: 'bg-zinc-800 text-zinc-300 ring-zinc-600/20',
   pending: 'bg-amber-50 text-amber-700 ring-amber-500/20',
   past_due: 'bg-orange-50 text-orange-700 ring-orange-500/20',
   canceled: 'bg-red-50 text-red-700 ring-red-500/20',
@@ -148,7 +148,7 @@ export default function AdminSubscriptionTable() {
   };
 
   if (loading) {
-    return <div className="text-sm text-slate-500">Loading memberships...</div>;
+    return <div className="text-sm text-zinc-400">Loading memberships...</div>;
   }
 
   if (error) {
@@ -156,35 +156,35 @@ export default function AdminSubscriptionTable() {
   }
 
   if (!subscriptions.length) {
-    return <div className="text-sm text-slate-500">No users found yet.</div>;
+    return <div className="text-sm text-zinc-400">No users found yet.</div>;
   }
 
   return (
     <div className="space-y-4">
       <div className="grid gap-3 md:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Active</p>
-          <p className="mt-2 font-display text-2xl font-semibold text-slate-950">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">Active</p>
+          <p className="mt-2 font-display text-2xl font-semibold text-zinc-100">
             {subscriptions.filter((item) => item.active).length}
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">No Plan</p>
-          <p className="mt-2 font-display text-2xl font-semibold text-slate-950">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">No Plan</p>
+          <p className="mt-2 font-display text-2xl font-semibold text-zinc-100">
             {subscriptions.filter((item) => !item.selected).length}
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Paid Plans</p>
-          <p className="mt-2 font-display text-2xl font-semibold text-slate-950">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">Paid Plans</p>
+          <p className="mt-2 font-display text-2xl font-semibold text-zinc-100">
             {subscriptions.filter((item) => item.active && ['pro', 'business', 'enterprise'].includes(item.plan)).length}
           </p>
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-        <table className="min-w-[1180px] divide-y divide-slate-200 text-left text-sm text-slate-600">
-          <thead className="bg-slate-50 font-semibold text-slate-800">
+      <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900">
+        <table className="min-w-[1180px] divide-y divide-zinc-800 text-left text-sm text-zinc-400">
+          <thead className="bg-zinc-900 font-semibold text-zinc-100">
             <tr>
               <th className="px-4 py-4">Member</th>
               <th className="px-4 py-4">Plan</th>
@@ -196,14 +196,14 @@ export default function AdminSubscriptionTable() {
               <th className="px-4 py-4 text-right">Console Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-zinc-800">
             {subscriptions.map((subscription) => {
               const saving = savingId === (subscription._id || subscription.userEmail);
               return (
-                <tr key={subscription._id || subscription.userEmail} className="align-top transition hover:bg-slate-50/60">
+                <tr key={subscription._id || subscription.userEmail} className="align-top transition hover:bg-zinc-900/60">
                   <td className="px-4 py-4">
-                    <div className="font-medium text-slate-900">{subscription.userEmail}</div>
-                    <div className="mt-1 text-xs text-slate-500">
+                    <div className="font-medium text-zinc-100">{subscription.userEmail}</div>
+                    <div className="mt-1 text-xs text-zinc-400">
                       {[subscription.userName || 'No name', subscription.userRole || 'user', subscription.userStatus || 'active'].join(' - ')}
                     </div>
                     {!subscription.selected ? (
@@ -222,7 +222,7 @@ export default function AdminSubscriptionTable() {
                           amount: planAmount(nextPlan, subscription.billingCycle),
                         });
                       }}
-                      className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold"
+                      className="rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs font-semibold"
                       disabled={saving}
                     >
                       {BILLING_PLANS.map((plan) => (
@@ -239,7 +239,7 @@ export default function AdminSubscriptionTable() {
                           amount: planAmount(subscription.plan, event.target.value as BillingCycle),
                         })
                       }
-                      className="mt-2 block rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold"
+                      className="mt-2 block rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs font-semibold"
                       disabled={saving}
                     >
                       <option value="monthly">Monthly</option>
@@ -259,22 +259,22 @@ export default function AdminSubscriptionTable() {
                       <option value="past_due">Past Due</option>
                       <option value="canceled">Canceled</option>
                     </select>
-                    <p className="mt-2 text-xs text-slate-500">{subscription.cancelAtPeriodEnd ? 'Cancels at period end' : 'Renewal allowed'}</p>
+                    <p className="mt-2 text-xs text-zinc-400">{subscription.cancelAtPeriodEnd ? 'Cancels at period end' : 'Renewal allowed'}</p>
                   </td>
                   <td className="px-4 py-4">
                     <div className="text-xs leading-5">
-                      <div><span className="font-semibold text-slate-800">Left:</span> {subscription.creditBalance == null ? 'Custom' : Math.round(subscription.creditBalance)}</div>
-                      <div><span className="font-semibold text-slate-800">Included:</span> {Math.round(subscription.includedCredits)}</div>
-                      <div><span className="font-semibold text-slate-800">Used:</span> {Math.round(subscription.usedCredits)}</div>
-                      <div><span className="font-semibold text-slate-800">Extra:</span> {Math.round(subscription.extraCredits)}</div>
+                      <div><span className="font-semibold text-zinc-100">Left:</span> {subscription.creditBalance == null ? 'Custom' : Math.round(subscription.creditBalance)}</div>
+                      <div><span className="font-semibold text-zinc-100">Included:</span> {Math.round(subscription.includedCredits)}</div>
+                      <div><span className="font-semibold text-zinc-100">Used:</span> {Math.round(subscription.usedCredits)}</div>
+                      <div><span className="font-semibold text-zinc-100">Extra:</span> {Math.round(subscription.extraCredits)}</div>
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-xs text-slate-500">
+                  <td className="px-4 py-4 text-xs text-zinc-400">
                     <div>{formatDate(subscription.currentPeriodEnd)}</div>
                     <button
                       disabled={saving}
                       onClick={() => updateSubscription(subscription, { action: 'extend', extendDays: 30 })}
-                      className="mt-2 rounded-lg border border-slate-200 px-2 py-1 font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
+                      className="mt-2 rounded-lg border border-zinc-800 px-2 py-1 font-semibold text-zinc-100 hover:bg-zinc-900 disabled:opacity-50"
                     >
                       Extend 30d
                     </button>
@@ -284,16 +284,16 @@ export default function AdminSubscriptionTable() {
                       type="number"
                       defaultValue={subscription.amount}
                       onBlur={(event) => updateSubscription(subscription, { amount: Number(event.target.value) })}
-                      className="w-24 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs"
+                      className="w-24 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs"
                       disabled={saving}
                     />
-                    <p className="mt-2 text-xs text-slate-500">{formatInr(subscription.amount)}</p>
+                    <p className="mt-2 text-xs text-zinc-400">{formatInr(subscription.amount)}</p>
                   </td>
                   <td className="px-4 py-4">
                     <input
                       defaultValue={subscription.notes || ''}
                       onBlur={(event) => updateSubscription(subscription, { notes: event.target.value })}
-                      className="w-44 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs"
+                      className="w-44 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs"
                       disabled={saving}
                     />
                   </td>
@@ -302,14 +302,14 @@ export default function AdminSubscriptionTable() {
                       <button
                         disabled={saving}
                         onClick={() => updateSubscription(subscription, { plan: 'pro', amount: planAmount('pro', 'monthly'), billingCycle: 'monthly', action: 'activate' })}
-                        className="rounded-lg bg-cyan-600 px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                        className="rounded-lg bg-zinc-700 px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                       >
                         Give Pro
                       </button>
                       <button
                         disabled={saving}
                         onClick={() => updateSubscription(subscription, { plan: 'business', amount: planAmount('business', 'monthly'), billingCycle: 'monthly', action: 'activate' })}
-                        className="rounded-lg bg-slate-950 px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                        className="rounded-lg bg-zinc-950 px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                       >
                         Give Business
                       </button>
@@ -323,14 +323,14 @@ export default function AdminSubscriptionTable() {
                       <button
                         disabled={saving}
                         onClick={() => updateSubscription(subscription, { action: 'grantCredits', creditAmount: 300 })}
-                        className="rounded-lg border border-sky-200 px-2.5 py-1.5 text-xs font-semibold text-sky-700 disabled:opacity-50"
+                        className="rounded-lg border border-zinc-600 px-2.5 py-1.5 text-xs font-semibold text-zinc-300 disabled:opacity-50"
                       >
                         +300
                       </button>
                       <button
                         disabled={saving}
                         onClick={() => updateSubscription(subscription, { action: 'resetCredits' })}
-                        className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 disabled:opacity-50"
+                        className="rounded-lg border border-zinc-800 px-2.5 py-1.5 text-xs font-semibold text-zinc-100 disabled:opacity-50"
                       >
                         Reset
                       </button>

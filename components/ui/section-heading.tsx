@@ -24,7 +24,7 @@ export function SectionHeading({
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500"
+          className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400"
         >
           {kicker}
         </motion.p>
@@ -33,7 +33,7 @@ export function SectionHeading({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="font-display text-2xl font-semibold text-slate-950 sm:text-3xl md:text-4xl"
+        className="font-display text-2xl font-semibold text-zinc-100 sm:text-3xl md:text-4xl"
       >
         {title}
       </motion.h2>
@@ -42,7 +42,7 @@ export function SectionHeading({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1, duration: 0.4 }}
-          className="max-w-2xl text-sm text-slate-600 sm:text-base"
+          className="max-w-2xl text-sm text-zinc-400 sm:text-base"
         >
           {description}
         </motion.p>

@@ -35,7 +35,7 @@ export function JitsiMeetingContainer({
   isLoading = false,
   error = null,
   onRetry,
-  bgColor = 'bg-slate-900',
+  bgColor = 'bg-zinc-900',
   height = '100%',
   className,
   ...jitsiProps
@@ -59,14 +59,14 @@ export function JitsiMeetingContainer({
               />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-gray-100 mb-2">
+          <h3 className="text-lg font-semibold text-zinc-100 mb-2">
             Unable to Start Meeting
           </h3>
-          <p className="text-gray-400 text-sm mb-6 max-w-sm">{error}</p>
+          <p className="text-zinc-400 text-sm mb-6 max-w-sm">{error}</p>
           {onRetry && (
             <button
               onClick={onRetry}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+              className="px-6 py-2 bg-zinc-700 text-white rounded-lg hover:bg-zinc-700 transition font-medium"
             >
               Try Again
             </button>
@@ -81,7 +81,7 @@ export function JitsiMeetingContainer({
       <div className={`w-full flex items-center justify-center ${bgColor}`} style={{ height }}>
         <div className="px-4 text-center">
           <Loader />
-          <p className="mt-4 text-sm text-gray-300 sm:text-base">Setting up your meeting...</p>
+          <p className="mt-4 text-sm text-zinc-300 sm:text-base">Setting up your meeting...</p>
         </div>
       </div>
     );

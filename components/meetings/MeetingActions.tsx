@@ -46,19 +46,14 @@ export function MeetingActions() {
 
   return (
     <>
-      <section id="live-sessions" className="meeting-actions scroll-mt-24 grid overflow-hidden rounded-lg border border-[#2a3039] bg-[#12151a] lg:grid-cols-[0.72fr_1.28fr]">
-        <div className="meeting-actions__intro border-b border-[#2a3039] bg-[#101319] p-5 lg:border-b-0 lg:border-r">
-          <Video className="h-5 w-5 text-[#37d7ff]" />
-          <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-[#37d7ff]">Meetings</p>
-          <h3 className="mt-2 font-display text-xl font-semibold text-[#f4f7fa]">Start a conversation</h3>
-          {error ? <p role="alert" className="mt-4 border border-[#ef6b73] bg-[#27171b] px-3 py-2 text-sm text-[#efb2b7]">{error}</p> : null}
-        </div>
-        <div className="grid gap-px bg-[#2a3039] sm:grid-cols-3">
+      <section id="live-sessions" aria-label="Start or join a meeting" className="scroll-mt-28">
+        {error ? <p role="alert" className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p> : null}
+        <div className="grid gap-4 sm:grid-cols-3">
           {actions.map(({ title, icon: Icon, button }) => (
-            <div key={title} className="meeting-action flex min-h-[170px] flex-col justify-between bg-[#12151a] p-5">
+            <div key={title} className="template-card template-feature flex min-h-[220px] flex-col justify-between">
               <div>
-                <Icon className="h-5 w-5 text-[#37d7ff]" />
-                <h4 className="mt-8 text-base font-semibold text-[#f4f7fa]">{title}</h4>
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-800"><Icon className="h-5 w-5 text-zinc-300" /></span>
+                <h2 className="mt-5 text-lg font-semibold text-white">{title}</h2>
               </div>
               <div className="mt-5">{button}</div>
             </div>

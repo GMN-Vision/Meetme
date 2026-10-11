@@ -1,65 +1,21 @@
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { Brand } from '@/components/Brand';
 
-const footerSections = [
-  {
-    title: 'Product',
-    links: [
-      { label: 'Workspace', href: '/meetings' },
-      { label: 'Membership', href: '/pricing' },
-      { label: 'Roadmap', href: '/roadmap' },
-    ],
-  },
-  {
-    title: 'Support',
-    links: [
-      { label: 'Documentation', href: '/documentation' },
-      { label: 'Help Center', href: '/help-center' },
-      { label: 'Status', href: '/status' },
-      { label: 'Security', href: '/security' },
-    ],
-  },
-  {
-    title: 'Company',
-    links: [
-      { label: 'About', href: '/about' },
-      { label: 'Privacy', href: '/privacy' },
-      { label: 'Terms', href: '/terms' },
-    ],
-  },
+const sections = [
+  { title: 'Product', links: [['Features', '/#features'], ['Pricing', '/pricing'], ['Compare', '/#compare'], ['Meetings', '/meetings']] },
+  { title: 'Resources', links: [['Documentation', '/documentation'], ['Help center', '/help-center'], ['Status', '/status'], ['Roadmap', '/roadmap']] },
+  { title: 'Company', links: [['About Melanam', '/about'], ['Security', '/security'], ['Admin', '/admin/login']] },
+  { title: 'Legal', links: [['Privacy policy', '/privacy'], ['Terms of service', '/terms']] },
 ];
 
 export function Footer() {
-  return (
-    <footer className="border-t border-[#2a3039] bg-[#0b0d10]">
-      <div className="mx-auto grid max-w-[80rem] gap-8 px-4 py-10 sm:px-5 sm:grid-cols-2 lg:grid-cols-[1.6fr_repeat(3,1fr)]">
-        <div>
-          <p className="font-display text-base font-semibold text-[#f4f7fa]">Melanam</p>
-          <p className="mt-3 max-w-sm text-sm leading-6 text-[#8f9aa8]">Video meetings, recordings, shared files and AI notes in one place.</p>
-          <Link href="/sign-in" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#ff6b7d] hover:text-[#ff4056]">
-            Get started
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-        {footerSections.map((section) => (
-          <div key={section.title}>
-            <h3 className="text-sm font-bold uppercase tracking-[0.12em] text-[#aeb4bf]">{section.title}</h3>
-            <ul className="mt-4 space-y-2.5 text-sm">
-              {section.links.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="text-[#c7d0d9] hover:text-[#ff6b7d]">{link.label}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+  return <footer className="border-t border-zinc-800 bg-zinc-950 px-4 py-16 sm:px-6">
+    <div className="mx-auto max-w-6xl">
+      <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-6">
+        <div className="sm:col-span-2"><Brand /><p className="mt-4 max-w-xs text-sm leading-6 text-zinc-400">A simpler way to meet, share ideas, and stay connected. Built around your conversations.</p></div>
+        {sections.map(section => <div key={section.title}><h3 className="text-sm font-semibold text-white">{section.title}</h3><ul className="mt-4 space-y-3">{section.links.map(([label,href]) => <li key={href}><Link href={href} className="text-sm text-zinc-400 transition hover:text-white">{label}</Link></li>)}</ul></div>)}
       </div>
-      <div className="border-t border-[#2a3039]">
-        <div className="mx-auto flex max-w-[80rem] flex-col gap-2 px-4 py-5 text-xs text-[#aeb4bf] sm:flex-row sm:items-center sm:justify-between sm:px-5">
-          <span>Copyright 2036 Global Development Networks Ltd.</span>
-          <span>Private by design</span>
-        </div>
-      </div>
-    </footer>
-  );
+      <div className="mt-12 flex flex-col justify-between gap-3 border-t border-zinc-800 pt-8 text-xs text-zinc-500 sm:flex-row"><p>© {new Date().getFullYear()} Global Development Networks Ltd. All rights reserved.</p><p>Melanam. Make every conversation count.</p></div>
+    </div>
+  </footer>;
 }

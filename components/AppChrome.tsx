@@ -2,23 +2,14 @@
 
 import { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
-import { BackgroundGradientAnimation } from './BackgroundGradientAnimation';
 import { Navbar } from './Navbar';
+import { SiteNavbar } from './SiteNavbar';
 
 export function AppChrome() {
   const pathname = usePathname();
-  const isAuthRoute = pathname?.startsWith('/sign-in') || pathname?.startsWith('/sign-up');
-
-  if (isAuthRoute) {
-    return null;
-  }
-
   return (
-    <>
-      <BackgroundGradientAnimation />
-      <Suspense fallback={null}>
-        <Navbar />
-      </Suspense>
-    </>
+    <Suspense fallback={null}>
+      {pathname?.startsWith('/room/') ? <Navbar /> : <SiteNavbar />}
+    </Suspense>
   );
 }

@@ -595,13 +595,13 @@ export function JitsiMeeting({
       >
         <div className="text-center px-4">
           <h3 className="text-lg font-semibold text-red-400 mb-2">Unable to Load Video Call</h3>
-          <p className="text-gray-400 text-sm mb-4">{error}</p>
-          <details className="text-left text-xs text-gray-500 bg-slate-800 rounded p-3 inline-block">
+          <p className="text-zinc-400 text-sm mb-4">{error}</p>
+          <details className="text-left text-xs text-zinc-400 bg-zinc-800 rounded p-3 inline-block">
             <summary className="cursor-pointer font-semibold mb-2">Technical Details</summary>
-            <p className="mb-1"><span className="text-gray-400">Domain:</span> {cleanDomain}</p>
-            <p className="mb-1"><span className="text-gray-400">Protocol:</span> https://</p>
-            <p className="mb-1"><span className="text-gray-400">Room:</span> {roomName}</p>
-            <p className="mt-2 text-gray-600">Attempting: https://{cleanDomain}/external_api.js</p>
+            <p className="mb-1"><span className="text-zinc-400">Domain:</span> {cleanDomain}</p>
+            <p className="mb-1"><span className="text-zinc-400">Protocol:</span> https://</p>
+            <p className="mb-1"><span className="text-zinc-400">Room:</span> {roomName}</p>
+            <p className="mt-2 text-zinc-400">Attempting: https://{cleanDomain}/external_api.js</p>
           </details>
         </div>
       </div>
@@ -617,16 +617,16 @@ export function JitsiMeeting({
         <div className="max-w-md px-6 text-center">
           <div className="mb-3 text-3xl" aria-hidden="true">📷</div>
           <h3 className="mb-2 text-lg font-semibold text-white">Camera access is blocked</h3>
-          <p className="mb-4 text-sm text-gray-300">
+          <p className="mb-4 text-sm text-zinc-300">
             Camera or microphone access was previously denied for Melanam.
           </p>
-          <p className="mb-5 text-sm text-gray-400">
+          <p className="mb-5 text-sm text-zinc-400">
             Open your browser menu or Website Settings, set Camera to Allow, then reload the meeting.
           </p>
           <button
             type="button"
             onClick={() => setCameraPermissionRetry((attempt) => attempt + 1)}
-            className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+            className="rounded-lg bg-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-700"
           >
             Try Again
           </button>
@@ -648,7 +648,7 @@ export function JitsiMeeting({
             <div className="inline-block">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
             </div>
-            <p className="text-gray-300">
+            <p className="text-zinc-300">
               {scriptLoading ? 'Loading video service...' : !cameraPermissionChecked ? 'Checking camera access...' : 'Joining meeting...'}
             </p>
           </div>

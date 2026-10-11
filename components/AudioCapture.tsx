@@ -438,12 +438,12 @@ export function AudioCapture({
     <div className={wrapperClassName}>
       <button
         onClick={isListening ? stopListening : startListening}
-        className={buttonClassName || `flex h-9 items-center gap-2 whitespace-nowrap rounded-xl px-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] transition-all ${ isListening ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600' }`}
+        className={buttonClassName || `flex h-9 items-center gap-2 whitespace-nowrap rounded-xl px-3 text-sm font-semibold text-white shadow-xl transition-all ${ isListening ? 'bg-red-500 hover:bg-red-600' : 'bg-zinc-700 hover:bg-zinc-700' }`}
         aria-label={isListening ? 'Stop captions' : 'Start captions'}
         title={isListening ? 'Stop captions' : 'Start captions'}
       >
         <div
-          className={`h-2.5 w-2.5 rounded-full ${ isListening ? 'animate-pulse bg-red-500' : 'bg-sky-500' }`}
+          className={`h-2.5 w-2.5 rounded-full ${ isListening ? 'animate-pulse bg-red-500' : 'bg-zinc-700' }`}
         />
         <span className={labelClassName}>{isListening ? 'Stop captions' : 'Start captions'}</span>
       </button>
@@ -455,7 +455,7 @@ export function AudioCapture({
       )}
 
       {isListening && (
-        <div className={`${statusClassName} bg-blue-900/90 text-blue-100`}>
+        <div className={`${statusClassName} bg-zinc-700/90 text-zinc-300`}>
           Listening...
         </div>
       )}

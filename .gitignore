@@ -1,5 +1,6 @@
 node_modules
 .next
+.next-theme-check
 .next-recording-check
 .next-conferencing-check
 .env.local

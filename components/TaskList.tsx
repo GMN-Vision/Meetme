@@ -52,19 +52,19 @@ export default function TaskList({ meetingId }: { meetingId?: string }) {
     }
   };
 
-  if (loading) return <div className="text-sm text-slate-500">Loading tasks…</div>;
-  if (!tasks.length) return <div className="text-sm text-slate-500">No tasks yet.</div>;
+  if (loading) return <div className="text-sm text-zinc-400">Loading tasks…</div>;
+  if (!tasks.length) return <div className="text-sm text-zinc-400">No tasks yet.</div>;
 
   return (
     <div className="space-y-2">
       {tasks.map((t) => (
-        <div key={t._id} className="p-3 bg-white/60 dark:bg-slate-800 border rounded-lg">
+        <div key={t._id} className="p-3 bg-zinc-900/60 dark:bg-zinc-800 border rounded-lg">
           <div className="flex justify-between items-start">
             <div>
               <div className="font-medium">{t.title}</div>
-              <div className="text-xs text-slate-500">{t.ownerName || t.ownerEmail || 'Unassigned'}</div>
+              <div className="text-xs text-zinc-400">{t.ownerName || t.ownerEmail || 'Unassigned'}</div>
             </div>
-            <div className="text-sm text-slate-600">{t.status}</div>
+            <div className="text-sm text-zinc-400">{t.status}</div>
           </div>
           <div className="mt-2 flex gap-2">
             {t.status !== 'done' && (
