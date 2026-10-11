@@ -25,7 +25,7 @@ export async function GET() {
     ]);
     let syncPending = false;
     if (getRecordingAvailability().available) {
-      // Reconcile missed callbacks when the host returns to the LMS. A worker
+      // Reconcile missed callbacks when the host returns to meetings. A worker
       // outage must not hide already persisted recordings or broaden access.
       await Promise.all(recordings.map(async (recording, index) => {
         if (recording.hostEmail !== email || !ACTIVE_RECORDING_STATES.includes(recording.status)) return;

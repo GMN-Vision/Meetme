@@ -8,6 +8,16 @@ const nextConfig = {
   distDir: process.env.NEXT_BUILD_DIR || '.next',
   reactStrictMode: true,
   swcMinify: true,
+  async redirects() {
+    return [
+      { source: '/lms/:role/recordings', destination: '/meetings/recordings', permanent: true },
+      { source: '/lms/:role/notes', destination: '/meetings/notes', permanent: true },
+      { source: '/lms/admin', destination: '/admin', permanent: true },
+      { source: '/lms/:path*', destination: '/meetings', permanent: true },
+      { source: '/studio', destination: '/meetings', permanent: true },
+      { source: '/enterprise', destination: '/meetings', permanent: true },
+    ];
+  },
   images: {
     remotePatterns: [
       {

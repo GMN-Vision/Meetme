@@ -1,11 +1,10 @@
-import { LmsRole } from '@/lib/lms-role';
-
+import 'next-auth';
+import 'next-auth/jwt';
 declare module 'next-auth' {
   interface Session {
     user?: {
       id?: string;
       role?: string;
-      lmsRole?: LmsRole;
       organizationId?: string | null;
       status?: string;
       email?: string | null;
@@ -19,7 +18,6 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id?: string;
     role?: string;
-    lmsRole?: LmsRole;
     organizationId?: string | null;
     status?: string;
   }

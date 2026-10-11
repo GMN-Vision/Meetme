@@ -85,7 +85,7 @@ export function ClassroomMeeting() {
   return (
     <JitsiMeeting
       roomName="classroom-101"
-      displayName="Instructor"
+      displayName="Host"
       {...CONFIG_PRESETS.classroom}
       toolbarButtons={TOOLBAR_PRESETS.host}
     />
@@ -136,7 +136,7 @@ export default function RoomPage() {
       roomName={params.id as string}
       displayName={user?.firstName || 'Guest'}
       userEmail={user?.emailAddresses[0]?.emailAddress}
-      onReadyToClose={() => router.push('/lms')}
+      onReadyToClose={() => router.push('/meetings')}
     />
   );
 }

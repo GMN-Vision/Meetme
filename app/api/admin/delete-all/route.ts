@@ -2,16 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { Model } from 'mongoose';
 import dbConnect from '../../../../lib/db';
 import { getAdminAuthorization } from '../../../../lib/admin-auth';
-import Assignment from '../../../../models/Assignment';
-import Course from '../../../../models/Course';
-import CourseSession from '../../../../models/CourseSession';
 import Feedback from '../../../../models/Feedback';
 import Meeting from '../../../../models/Meeting';
 import MeetingActivity from '../../../../models/MeetingActivity';
 import MeetingMessage from '../../../../models/MeetingMessage';
 import Organization from '../../../../models/Organization';
 import Poll from '../../../../models/Poll';
-import Submission from '../../../../models/Submission';
 import Subscription from '../../../../models/Subscription';
 import Task from '../../../../models/Task';
 import User from '../../../../models/User';
@@ -20,16 +16,12 @@ import Whiteboard from '../../../../models/Whiteboard';
 const DELETION_CONFIRMATION = 'DELETE';
 
 const applicationModels: Array<{ name: string; model: Model<any> }> = [
-  { name: 'assignments', model: Assignment },
-  { name: 'courses', model: Course },
-  { name: 'courseSessions', model: CourseSession },
   { name: 'feedback', model: Feedback },
   { name: 'meetingActivities', model: MeetingActivity },
   { name: 'meetingMessages', model: MeetingMessage },
   { name: 'meetings', model: Meeting },
   { name: 'organizations', model: Organization },
   { name: 'polls', model: Poll },
-  { name: 'submissions', model: Submission },
   { name: 'subscriptions', model: Subscription },
   { name: 'tasks', model: Task },
   { name: 'users', model: User },

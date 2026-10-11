@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '../../../../lib/supabaseServer'
-import { LMS_STORAGE_BUCKET, buildLmsStoragePath } from '../../../../lib/lms-storage'
+import { MEETING_FILES_BUCKET, buildMeetingStoragePath } from '../../../../lib/meeting-storage'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../../lib/auth-options'
 import { assertStorageCapacity, getWorkspaceQuota } from '../../../../lib/workspace-usage'
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     const formData = await req.formData()
-    const scopeType = String(formData.get('scopeType') || 'meeting') === 'course' ? 'course' : 'meeting'
+    const scopeType = 'meeting' as const
     const scopeId = String(formData.get('scopeId') || formData.get('meetingId') || '')
     const file = formData.get('file') as File | null
 
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: storageCheck.error, code: 'STORAGE_LIMIT_REACHED' }, { status: 402 })
     }
 
-    const path = buildLmsStoragePath(scopeType, scopeId, file.name)
+    const path = buildMeetingStoragePath(scopeType, scopeId, file.name)
 
     console.log('[API/files/upload] Uploading to Supabase:', { path, contentType: file.type, size: file.size })
 
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     const fileBuffer = Buffer.from(arrayBuffer)
 
     const { data, error } = await supabaseServer.storage
-      .from(LMS_STORAGE_BUCKET)
+      .from(MEETING_FILES_BUCKET)
       .upload(path, fileBuffer, {
         contentType: file.type || 'application/octet-stream',
         upsert: false,

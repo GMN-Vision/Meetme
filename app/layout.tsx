@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(getPublicSiteUrl()),
   applicationName: SITE_NAME,
   title: {
-    default: 'Melanam - Video Meetings, LMS, AI Notes, and Recordings',
+    default: 'Melanam - Video Meetings, AI Notes, and Recordings',
     template: '%s | Melanam',
   },
   description: SITE_DESCRIPTION,
@@ -30,12 +30,12 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: '/',
     siteName: SITE_NAME,
-    title: 'Melanam - Video Meetings, LMS, AI Notes, and Recordings',
+    title: 'Melanam - Video Meetings, AI Notes, and Recordings',
     description: SITE_DESCRIPTION,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Melanam - Video Meetings, LMS, AI Notes, and Recordings',
+    title: 'Melanam - Video Meetings, AI Notes, and Recordings',
     description: SITE_DESCRIPTION,
   },
   robots: {

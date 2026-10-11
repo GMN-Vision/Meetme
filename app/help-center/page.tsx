@@ -8,7 +8,7 @@ export default function HelpCenterPage() {
       description="Find support topics for the most common Melanam meeting, collaboration, AI, and admin workflows."
       sections={[
         { title: 'Getting Started', body: 'Create an account, sign in, and open your workspace dashboard to begin using Melanam.' },
-        { title: 'Creating Meetings', body: 'Start a new room from the workspace or course session flow, then invite participants with the generated meeting link.' },
+        { title: 'Creating Meetings', body: 'Start a new room from the Meetings page, then invite participants with the generated meeting link.' },
         { title: 'Joining Meetings', body: 'Use the shared meeting link and grant required browser permissions for camera, microphone, and screen sharing.' },
         { title: 'Sharing Files', body: 'Upload meeting resources and keep shared files connected to the active room context.' },
         { title: 'Whiteboard', body: 'Collaborate visually during a meeting with shared whiteboard tools and saved board state.' },

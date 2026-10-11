@@ -14,7 +14,7 @@ interface UserItem {
   _id: string;
   name: string;
   email: string;
-  role: 'user' | 'admin' | 'enterprise_admin';
+  role: 'user' | 'admin';
   status: 'active' | 'disabled';
   organizationId: string | null;
   organizationName?: string | null;
@@ -52,7 +52,6 @@ interface AdminStats {
   activeMeetings: number;
   roles: {
     admin: number;
-    enterprise_admin: number;
     user: number;
   };
 }
@@ -95,7 +94,7 @@ export default function AdminDashboard() {
         if (status === 'authenticated') {
           const userRole = (session?.user as any)?.role;
           if (userRole !== 'admin') {
-            router.push('/lms');
+            router.push('/meetings');
             return;
           }
           await fetchAllData();
@@ -397,7 +396,6 @@ export default function AdminDashboard() {
         activeMeetings: 0,
         roles: {
           admin: 0,
-          enterprise_admin: 0,
           user: 0,
         },
       });
@@ -484,7 +482,7 @@ export default function AdminDashboard() {
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Total Users</p>
                 <p className="mt-3 font-display text-3xl font-semibold text-slate-950">{stats.totalUsers}</p>
                 <p className="mt-1 text-sm text-slate-500">
-                  Admins: {stats.roles.admin} | Enterprise: {stats.roles.enterprise_admin}
+                  Admins: {stats.roles.admin}
                 </p>
               </GlowCard>
               <GlowCard className="p-5">
@@ -609,7 +607,6 @@ export default function AdminDashboard() {
                                 className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-cyan-500"
                               >
                                 <option value="user">User</option>
-                                <option value="enterprise_admin">Enterprise Admin</option>
                                 <option value="admin">System Admin</option>
                               </select>
                             </td>

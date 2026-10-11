@@ -51,9 +51,9 @@ export function Navbar() {
   const roomMatch = pathname?.match(/^\/room\/([^/]+)$/);
   const roomMeetingId = roomMatch?.[1] ? decodeURIComponent(roomMatch[1]) : '';
   const isRoomPage = Boolean(roomMatch);
-  const isLmsPage = pathname?.startsWith('/lms');
+  const isMeetingsPage = pathname?.startsWith('/meetings');
   const currentUrl = pathname ? `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}` : '/';
-  const signInHref = status === 'authenticated' ? '/lms' : `/sign-in?callbackUrl=${encodeURIComponent(currentUrl)}`;
+  const signInHref = status === 'authenticated' ? '/meetings' : `/sign-in?callbackUrl=${encodeURIComponent(currentUrl)}`;
 
   // Initialize recording and livestream hooks
   const {
@@ -201,7 +201,7 @@ export function Navbar() {
   };
 
   const handleLeave = () => {
-    router.push(isLoggedIn ? '/lms' : '/');
+    router.push(isLoggedIn ? '/meetings' : '/');
   };
 
   const userEmail = session?.user?.email || '';
@@ -243,7 +243,7 @@ export function Navbar() {
   const productLinks = [
     {
       name: 'Meetings',
-      href: '/lms',
+      href: '/meetings',
       tag: 'Live',
       description: 'Create rooms and start calls fast.',
       hoverClass: 'hover:-translate-y-0.5 hover:border-cyan-300 hover:bg-cyan-100 hover:shadow-[0_14px_30px_rgba(6,182,212,0.2)]',
@@ -251,7 +251,7 @@ export function Navbar() {
     },
     {
       name: 'Live Captions',
-      href: '/lms',
+      href: '/meetings',
       tag: 'AI',
       description: 'Stream captions in real time.',
       hoverClass: 'hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-100 hover:shadow-[0_14px_30px_rgba(139,92,246,0.2)]',
@@ -259,7 +259,7 @@ export function Navbar() {
     },
     {
       name: 'File Share',
-      href: '/lms',
+      href: '/meetings',
       tag: 'Now',
       description: 'Keep room uploads in one place.',
       hoverClass: 'hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-100 hover:shadow-[0_14px_30px_rgba(16,185,129,0.2)]',
@@ -452,8 +452,8 @@ export function Navbar() {
                     Pricing
                   </Link>
                 )}
-                {!isRoomPage && !isLmsPage && (
-                  <Link href="/lms" className="noir-shimmer-button font-display inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 active:scale-[0.97]">
+                {!isRoomPage && !isMeetingsPage && (
+                  <Link href="/meetings" className="noir-shimmer-button font-display inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 active:scale-[0.97]">
                     <span>Continue</span>
                   </Link>
                 )}
@@ -478,17 +478,10 @@ export function Navbar() {
                   {isDropdownOpen && (
                     <div className="absolute right-0 z-[1010] mt-3 w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl sm:w-52">
                       <Link
-                        href="/studio"
-                        className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-800"
-                      >
-                        <Sparkles className="h-4 w-4 text-cyan-600" />
-                        Course Builder
-                      </Link>
-                      <Link
-                        href="/lms"
+                        href="/meetings"
                         className="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition"
                       >
-                        LMS Dashboard
+                        My meetings
                       </Link>
                       {!isRoomPage && (
                         <Link
@@ -500,7 +493,7 @@ export function Navbar() {
                       )}
                       {(session?.user as any)?.role === 'admin' && (
                         <Link
-                          href="/lms/admin"
+                          href="/admin"
                           className="block px-4 py-3 text-sm text-cyan-700 hover:bg-slate-50 transition font-medium"
                         >
                           System Console
@@ -521,6 +514,7 @@ export function Navbar() {
                 {pathname === '/' && (
                   <Link
                     href="/admin/login"
+                    aria-label="Admin login"
                     className="font-display inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-zinc-300 transition hover:border-[#ef233c]/60 hover:bg-white/10 hover:text-white"
                   >
                     <ShieldCheck className="h-4 w-4" />
@@ -630,4 +624,3 @@ export function Navbar() {
     </nav>
   );
 }
-

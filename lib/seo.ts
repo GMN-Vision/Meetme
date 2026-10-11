@@ -2,19 +2,19 @@ const DEFAULT_PUBLIC_URL = 'https://melanam.com';
 
 export const SITE_NAME = 'Melanam';
 export const SITE_DESCRIPTION =
-  'Melanam is a video meeting and LMS workspace for live classes, team calls, AI notes, recordings, captions, whiteboards, files, and follow-up tasks.';
+  'Melanam is a video conferencing app for team calls, AI notes, recordings, captions, whiteboards, files, and follow-up tasks.';
 
 export const SEO_KEYWORDS = [
   'Melanam',
   'melanam meeting app',
   'video meetings',
-  'online classes',
-  'LMS platform',
+  'screen sharing',
+  'web conferencing',
   'AI meeting notes',
   'meeting recordings',
   'live captions',
   'Jitsi meeting platform',
-  'virtual classroom',
+  'online collaboration',
 ];
 
 export function getPublicSiteUrl() {

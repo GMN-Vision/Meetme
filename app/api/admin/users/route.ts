@@ -53,6 +53,7 @@ export async function GET(req: NextRequest) {
       const userObj = user.toObject();
       return {
         ...userObj,
+        role: userObj.role === 'admin' ? 'admin' : 'user',
         organizationName: userObj.organizationId ? orgMap.get(userObj.organizationId.toString()) || 'Unknown Org' : null,
       };
     });
@@ -76,6 +77,10 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
     const { userId, role, status, organizationId } = body;
 
+    if (role !== undefined && !['user', 'admin'].includes(role)) {
+      return NextResponse.json({ error: 'Invalid account role' }, { status: 400 });
+    }
+
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
@@ -93,7 +98,7 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    if (role !== undefined) user.role = role;
+    user.role = role ?? (user.role === 'admin' ? 'admin' : 'user');
     if (status !== undefined) user.status = status;
     if (organizationId !== undefined) user.organizationId = organizationId || null;
 

@@ -63,7 +63,6 @@ const comparisonRows = [
   ['Concurrent server recordings per workspace', '1', '1', '1'],
   ['Excalidraw whiteboard', '1 board / meeting', 'Unlimited boards', 'Boards and templates'],
   ['YouTube livestreaming', 'Not included', 'Not included', 'Included'],
-  ['LMS workspace', 'Student and instructor basics', 'Full LMS', 'LMS and organization controls'],
   ['Admin controls', 'Not included', 'Basic member controls', 'Full plan and policy controls'],
 ];
 
@@ -299,8 +298,8 @@ export default function PricingPage() {
                 <span>Current workspace</span>
                 <strong>{BILLING_PLANS.find((plan) => plan.key === membership.plan)?.title || membership.plan}</strong>
                 <p>Active until {membership.currentPeriodEnd ? new Date(membership.currentPeriodEnd).toLocaleDateString() : 'manual renewal'} · {membership.creditBalance == null ? 'Custom credits' : `${Math.round(membership.creditBalance)} credits left`}</p>
-                <GradientBorderLink href="/lms" variant="dark" className="mt-1 w-fit">
-                  Continue to LMS <ArrowRight className="h-4 w-4" />
+                <GradientBorderLink href="/meetings" variant="dark" className="mt-1 w-fit">
+                  Go to meetings <ArrowRight className="h-4 w-4" />
                 </GradientBorderLink>
               </div>
             ) : (

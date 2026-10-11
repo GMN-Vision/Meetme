@@ -42,14 +42,11 @@ export async function GET() {
 
     const rolesMap = {
       admin: 0,
-      enterprise_admin: 0,
       user: 0,
     };
 
     usersByRole.forEach((item) => {
-      if (item._id in rolesMap) {
-        rolesMap[item._id as keyof typeof rolesMap] = item.count;
-      }
+      rolesMap[item._id === 'admin' ? 'admin' : 'user'] += item.count;
     });
 
     return NextResponse.json({

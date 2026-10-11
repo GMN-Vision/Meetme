@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     return {
       ...(serializeMembership(subscription) || buildUnselectedMembershipRow(user)),
       userName: user.name || '',
-      userRole: user.role || 'student',
+      userRole: user.role === 'admin' ? 'admin' : 'user',
       userStatus: user.status || 'active',
     };
   });

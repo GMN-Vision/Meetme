@@ -36,7 +36,7 @@ export default function HeroAceternity() {
             <Link href="/sign-in" className="button-primary inline-flex items-center">
               Get started free
             </Link>
-            <Link href="/lms" className="button-secondary inline-flex items-center">
+            <Link href="/meetings" className="button-secondary inline-flex items-center">
               View demo
             </Link>
           </motion.div>

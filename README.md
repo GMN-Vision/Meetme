@@ -1,10 +1,14 @@
 ﻿# Melanam - SaaS-Grade Video Conferencing Platform
 
-A complete, production-ready video conferencing application built with Next.js 14, TypeScript, Tailwind CSS, Clerk Authentication, MongoDB, and Jitsi Meet.
+A video conferencing application built with Next.js 14, TypeScript, Tailwind CSS, NextAuth email authentication, MongoDB, and Jitsi Meet.
+
+Everyone uses the same email sign-in and account type. New users are registered through the same form. Open `/meetings` to start or join a call, `/meetings/recordings` for private and shared recordings, and `/meetings/notes` for AI summaries and transcripts. Recording, file sharing, captions, screen sharing, chat, whiteboards, and polls remain available under the existing plan limits.
+
+The former learning dashboards, course builder, courses, enrollment, assignments, and grading have been removed. Existing dashboard bookmarks redirect to Meetings. Existing non-admin account roles normalize to `user` on their next session refresh; internal platform administration remains separate. This source change does not delete stored meeting files, recordings, or database collections.
 
 ## ðŸš€ Features
 
-- âœ… User authentication with Clerk (Email/Password + Google OAuth)
+- âœ… One email sign-in for new and existing accounts
 - âœ… Create and manage video meetings
 - âœ… Join meetings via ID
 - âœ… HD video conferencing with Jitsi
@@ -23,7 +27,7 @@ A complete, production-ready video conferencing application built with Next.js 1
 - **TypeScript** (strict mode)
 - **Tailwind CSS** (styling)
 - **Zustand** (state management)
-- **Clerk** (authentication)
+- **NextAuth** (email magic links)
 
 ### Backend
 - **Next.js API Routes**
@@ -42,7 +46,7 @@ melanam/
 â”‚   â”‚   â””â”€â”€ get-meetings/route.ts
 â”‚   â”œâ”€â”€ room/
 â”‚   â”‚   â””â”€â”€ [id]/page.tsx
-â”‚   â”œâ”€â”€ dashboard/page.tsx
+â”‚   â”œâ”€â”€ meetings/page.tsx
 â”‚   â”œâ”€â”€ sign-in/page.tsx
 â”‚   â”œâ”€â”€ sign-up/page.tsx
 â”‚   â”œâ”€â”€ page.tsx
@@ -57,7 +61,7 @@ melanam/
 â”œâ”€â”€ hooks/
 â”‚   â””â”€â”€ useScript.ts
 â”œâ”€â”€ lib/
-â”‚   â”œâ”€â”€ clerk.ts
+â”‚   â”œâ”€â”€ auth-options.ts
 â”‚   â”œâ”€â”€ auth.ts
 â”‚   â””â”€â”€ db.ts
 â”œâ”€â”€ models/
@@ -80,7 +84,7 @@ melanam/
 ### Prerequisites
 - Node.js 18+
 - MongoDB (local or Atlas)
-- Clerk account (https://clerk.com)
+- SMTP credentials for sign-in emails
 - Jitsi domain (or use meet.jit.si for testing)
 
 ### Step 1: Clone & Install Dependencies
@@ -98,9 +102,15 @@ npm install
 Create `.env.local` file in the root directory:
 
 ```env
-# Clerk Authentication
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxx
-CLERK_SECRET_KEY=sk_test_xxx
+# Email Authentication
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=replace-with-a-random-secret
+EMAIL_TRANSPORT=smtp
+EMAIL_SERVER_HOST=smtp.example.com
+EMAIL_SERVER_PORT=587
+EMAIL_USER=your-smtp-user
+EMAIL_PASS=your-smtp-password
+EMAIL_FROM=meetings@example.com
 
 # Jitsi Configuration
 NEXT_PUBLIC_JITSI_DOMAIN=meet.myapp.com
@@ -109,12 +119,8 @@ NEXT_PUBLIC_JITSI_DOMAIN=meet.myapp.com
 MONGODB_URI=mongodb://localhost:27017/melanam
 ```
 
-#### Get Clerk API Keys:
-1. Go to https://dashboard.clerk.com
-2. Create a new application
-3. Navigate to **API Keys** section
-4. Copy **Publishable Key** and **Secret Key**
-5. Paste them in `.env.local`
+#### Configure sign-in email:
+Use your SMTP provider settings above. For local development only, `EMAIL_TRANSPORT=console` logs the magic link on the server instead of sending email.
 
 #### MongoDB Setup:
 **Option A: Local MongoDB**
@@ -155,27 +161,18 @@ The application will be available at `http://localhost:3000`
 
 ## ðŸ” Authentication Flow
 
-### Signup
-1. Navigate to `http://localhost:3000/sign-up`
-2. Enter email and password (or use Google OAuth)
-3. Clerk creates the account
-4. Redirected to `/dashboard`
+### Sign in or create an account
+1. Open `/sign-in` and enter your email address.
+2. Open the secure, single-use link sent to your inbox.
+3. Continue to `/meetings`, or back to the invite you were opening.
 
-### Login
-1. Navigate to `http://localhost:3000/sign-in`
-2. Enter credentials
-3. Redirected to `/dashboard`
-
-### Protected Routes
-- `/dashboard` - requires authentication
-- `/room/[id]` - requires authentication
-- `/` - public landing page
+`/sign-up` redirects to this same flow. No account-role selection is required. Meetings, recordings, and notes require sign-in; invitees can join eligible rooms as guests.
 
 ## ðŸŽ¥ How to Use
 
 ### Create a Meeting
 1. Sign in or sign up
-2. Go to Dashboard (`/dashboard`)
+2. Go to Dashboard (`/meetings`)
 3. Click "Create New Meeting"
 4. Enter meeting title and description
 5. Click "Create & Join"
@@ -328,13 +325,8 @@ curl -I https://meet.jit.si/external_api.js
 # Should return 200 status
 ```
 
-### Issue: Clerk authentication fails
-**Solution:** Verify Clerk keys in `.env.local`
-```bash
-# Ensure both keys are present and correct
-echo $NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-echo $CLERK_SECRET_KEY
-```
+### Issue: Sign-in email does not arrive
+**Solution:** Check the SMTP settings, `NEXTAUTH_URL`, and `NEXTAUTH_SECRET` in `.env.local`. Check your spam folder and server logs for delivery errors.
 
 ### Issue: "Cannot find module '@clerk/nextjs'"
 **Solution:** Reinstall dependencies
@@ -368,8 +360,8 @@ vercel
 
 ### 4. Environment Variables on Production
 Set these in your hosting platform (Vercel, Heroku, etc.):
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-- `CLERK_SECRET_KEY`
+- `NEXTAUTH_URL` and `NEXTAUTH_SECRET`
+- SMTP settings: `EMAIL_TRANSPORT`, `EMAIL_SERVER_HOST`, `EMAIL_USER`, `EMAIL_PASS`, and `EMAIL_FROM`
 - `NEXT_PUBLIC_JITSI_DOMAIN`
 - `MONGODB_URI`
 
@@ -384,7 +376,7 @@ Set these in your hosting platform (Vercel, Heroku, etc.):
 
 ## ðŸ” Security Features
 
-- âœ… Clerk-managed authentication
+- âœ… NextAuth email authentication
 - âœ… Middleware route protection
 - âœ… Environment variable encryption
 - âœ… CORS configured
@@ -402,7 +394,7 @@ Contributions are welcome! Feel free to submit issues and pull requests.
 
 For issues and questions:
 1. Check troubleshooting section above
-2. Review Clerk docs: https://clerk.com/docs
+2. Review the email authentication setup above
 3. Review Jitsi docs: https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-start
 4. Check MongoDB docs: https://docs.mongodb.com/
 

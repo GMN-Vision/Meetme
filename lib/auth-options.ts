@@ -6,7 +6,6 @@ import clientPromise from './mongodb-adapter';
 import dbConnect from './db';
 import User from '../models/User';
 import Organization from '../models/Organization';
-import { normalizeLmsRole } from './lms-role';
 import { canAddOrganizationSeat } from './workspace-usage';
 
 const emailFrom = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'no-reply@localhost';
@@ -160,22 +159,12 @@ export const authOptions: NextAuthOptions = {
         if (dbUser) {
           let updated = false;
           
-          // Auto-promote admin@example.com or enterprise@example.com
-          if (dbUser.email === 'admin@example.com' && dbUser.role !== 'admin') {
-            dbUser.role = 'admin';
+          // Existing non-admin accounts use the same conferencing account type.
+          if (dbUser.role !== 'admin' && dbUser.role !== 'user') {
+            dbUser.role = 'user';
             updated = true;
-          } else if (dbUser.email === 'enterprise@example.com' && dbUser.role !== 'instructor') {
-            dbUser.role = 'instructor';
-            updated = true;
-          } else {
-            // Promote first user ever to admin
-            const totalUsers = await User.countDocuments();
-            if (totalUsers === 1 && dbUser.role !== 'admin') {
-              dbUser.role = 'admin';
-              updated = true;
-            }
           }
-          
+
           // Domain auto-joining
           if (!dbUser.organizationId) {
             const domain = dbUser.email.split('@')[1];
@@ -198,7 +187,6 @@ export const authOptions: NextAuthOptions = {
           
           token.id = dbUser._id.toString();
           token.role = dbUser.role;
-          token.lmsRole = normalizeLmsRole(dbUser.role);
           token.organizationId = dbUser.organizationId ? dbUser.organizationId.toString() : null;
           token.status = dbUser.status;
         }
@@ -208,8 +196,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.id;
-        (session.user as any).role = token.role || 'student';
-        (session.user as any).lmsRole = token.lmsRole || normalizeLmsRole(token.role as string | undefined);
+        (session.user as any).role = token.role === 'admin' ? 'admin' : 'user';
         (session.user as any).organizationId = token.organizationId || null;
         (session.user as any).status = token.status || 'active';
       }

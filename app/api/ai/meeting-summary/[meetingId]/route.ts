@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import dbConnect from '@/lib/db';
 import { authOptions } from '@/lib/auth-options';
-import { normalizeLmsRole } from '@/lib/lms-role';
 import Meeting from '@/models/Meeting';
-import User from '@/models/User';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,24 +24,18 @@ export async function DELETE(
 
     await dbConnect();
 
-    const [meeting, dbUser] = await Promise.all([
-      Meeting.findOne({ meetingId }),
-      User.findOne({ email: userEmail }),
-    ]);
+    const meeting = await Meeting.findOne({ meetingId });
 
     if (!meeting) {
       return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
     }
 
-    const role = normalizeLmsRole(
-      String((dbUser as any)?.role || (session.user as any)?.lmsRole || (session.user as any)?.role || '')
-    );
     const isHost = String(meeting.hostEmail || '').toLowerCase() === userEmail;
-    const canDelete = isHost || role === 'instructor' || role === 'admin';
+    const canDelete = isHost;
 
     if (!canDelete) {
       return NextResponse.json(
-        { error: 'Only meeting hosts and instructors can delete meeting summaries.' },
+        { error: 'Only the meeting host can delete meeting summaries.' },
         { status: 403 }
       );
     }

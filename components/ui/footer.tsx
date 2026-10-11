@@ -5,8 +5,7 @@ const footerSections = [
   {
     title: 'Product',
     links: [
-      { label: 'Workspace', href: '/lms' },
-      { label: 'Course Builder', href: '/studio' },
+      { label: 'Workspace', href: '/meetings' },
       { label: 'Membership', href: '/pricing' },
       { label: 'Roadmap', href: '/roadmap' },
     ],
@@ -36,7 +35,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-[80rem] gap-8 px-4 py-10 sm:px-5 sm:grid-cols-2 lg:grid-cols-[1.6fr_repeat(3,1fr)]">
         <div>
           <p className="font-display text-base font-semibold text-[#f4f7fa]">Melanam</p>
-          <p className="mt-3 max-w-sm text-sm leading-6 text-[#8f9aa8]">Secure video rooms, learning workspaces and AI meeting context in one place.</p>
+          <p className="mt-3 max-w-sm text-sm leading-6 text-[#8f9aa8]">Video meetings, recordings, shared files and AI notes in one place.</p>
           <Link href="/sign-in" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#ff6b7d] hover:text-[#ff4056]">
             Get started
             <ArrowRight className="h-4 w-4" />

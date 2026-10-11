@@ -73,7 +73,7 @@ export default function RoomPage() {
   const displayRoomName = meeting?.title?.trim() || meetingId;
   const userDisplayName = session?.user?.email || guestName || 'Guest';
   const userEmail = session?.user?.email || undefined;
-  const fallbackRoute = session?.user?.email ? '/lms' : '/';
+  const fallbackRoute = session?.user?.email ? '/meetings' : '/';
 
   useEffect(() => {
     // Each tab owns its presence. Shared display names/accounts must not let
@@ -552,7 +552,7 @@ export default function RoomPage() {
       // Server admission checks remain the fallback on older Jitsi deployments.
       await new Promise(resolve => window.setTimeout(resolve, 750));
       apiRef.current?.executeCommand?.('hangup');
-      router.push('/lms');
+      router.push('/meetings');
     } catch (error: any) { setDurationNotice(error.message); }
     finally { setEndingMeeting(false); }
   };
@@ -635,10 +635,10 @@ export default function RoomPage() {
 
   return (
     <div className="mx-auto w-full max-w-[64rem] overflow-hidden px-3 pt-6 text-slate-950 sm:px-5">
-      {!userEmail && <p className="mb-3 text-sm text-slate-300">To receive shared recordings in your LMS, <a className="text-cyan-300 underline" href={`/sign-in?callbackUrl=${encodeURIComponent(`/room/${meetingId}`)}`}>sign in and rejoin</a> before the host ends the meeting.</p>}
+      {!userEmail && <p className="mb-3 text-sm text-slate-300">To receive shared recordings in your recordings, <a className="text-cyan-300 underline" href={`/sign-in?callbackUrl=${encodeURIComponent(`/room/${meetingId}`)}`}>sign in and rejoin</a> before the host ends the meeting.</p>}
       {meeting?.hostEmail?.toLowerCase() === userEmail?.toLowerCase() && (
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-300">
-          <span>Recordings stay private until you share them from your LMS.</span>
+          <span>Recordings stay private until you share them from your recordings.</span>
           <button type="button" disabled={endingMeeting} onClick={endMeetingForEveryone}
             className="rounded-lg bg-red-700 px-4 py-2 font-semibold text-white disabled:opacity-50">
             {endingMeeting ? 'Ending meeting...' : 'End meeting for everyone'}

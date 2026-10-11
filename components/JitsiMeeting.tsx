@@ -113,7 +113,7 @@ export interface JitsiMeetingProps {
  *   displayName="John Doe"
  *   userEmail="john@example.com"
  *   domain="meet.melanam.com"
- *   onReadyToClose={() => router.push('/lms')}
+ *   onReadyToClose={() => router.push('/meetings')}
  * />
  * ```
  */

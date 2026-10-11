@@ -508,23 +508,6 @@ nav [class*='backdrop-'] {
   }
 }
 
-/* Clearer LMS navigation and touch targets on desktop and mobile. */
-.lms-sidebar__link {
-  min-height: 2.75rem;
-  padding: .62rem .72rem;
-  font-size: .875rem;
-}
-
-.lms-sidebar__footer {
-  font-size: .875rem;
-}
-
-.lms-mobile-nav__link {
-  min-height: 2.45rem;
-  padding: .62rem .8rem;
-  font-size: .875rem;
-}
-
 /* Red noir landing system */
 .app-background {
   position: fixed;
@@ -589,15 +572,8 @@ nav [class*='backdrop-'] {
 @keyframes noir-button-border-spin { to { --noir-button-angle: 360deg; } }
 @media (prefers-reduced-motion: reduce) { .noir-shimmer-button { animation: none !important; } }
 
-/* Red-noir LMS workspace */
-.lms-workspace { position: relative; align-items: start; }.lms-sidebar { position: sticky; top: 6.1rem; flex-direction: column; min-height: calc(100vh - 8rem); padding: 1.1rem; overflow: hidden; border: 1px solid rgba(255,255,255,.10); border-radius: 18px; background: linear-gradient(170deg, rgba(255,255,255,.055), rgba(255,255,255,.012)); box-shadow: 0 20px 50px rgba(0,0,0,.26); }.lms-sidebar::before { position: absolute; inset: 0; content: ''; pointer-events: none; background: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px); background-size: 32px 32px; mask-image: linear-gradient(black, transparent 45%); }.lms-sidebar > * { position: relative; z-index: 1; }.lms-sidebar__brand { padding: .6rem .6rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,.08); }.lms-sidebar__brand .font-display { display: inline-flex; align-items: center; gap: .55rem; }.lms-sidebar__brand .font-display::before { width: .75rem; height: .75rem; content: ''; border-radius: 2px; background: #ef233c; transform: rotate(45deg); box-shadow: 0 0 16px rgba(239,35,60,.42); }.lms-sidebar__nav { display: grid; gap: .25rem; padding: 1rem 0; }.lms-sidebar__link { display: flex; align-items: center; gap: .65rem; min-height: 2.55rem; padding: .55rem .65rem; border: 1px solid transparent; border-radius: 9px; color: #a1a1aa; font-size: .875rem; font-weight: 600; transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease; }.lms-sidebar__link:hover { border-color: rgba(255,255,255,.1); background: rgba(255,255,255,.045); color: #f4f4f5; transform: translateX(3px); }.lms-sidebar__link--active { border-color: rgba(239,35,60,.4); background: linear-gradient(90deg, rgba(239,35,60,.16), rgba(239,35,60,.035)); color: #fff; box-shadow: inset 2px 0 0 #ef233c; }.lms-sidebar__link--active svg { color: #ff6b7d; }.lms-sidebar__footer { display: flex; gap: .6rem; align-items: flex-start; margin-top: auto; padding: .8rem .6rem .25rem; border-top: 1px solid rgba(255,255,255,.08); color: #aeb4bf; font-size: .875rem; line-height: 1.55; }.lms-sidebar__footer svg { color: #ff6b7d !important; }
-.lms-mobile-nav { scrollbar-width: none; }.lms-mobile-nav::-webkit-scrollbar { display: none; }.lms-mobile-nav__link { display: inline-flex; flex: none; align-items: center; gap: .45rem; padding: .55rem .7rem; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; background: rgba(255,255,255,.025); color: #a1a1aa; font-size: .875rem; font-weight: 600; }.lms-mobile-nav__link--active { border-color: rgba(239,35,60,.5); background: rgba(239,35,60,.12); color: #fff; }.lms-mobile-nav__link--active svg { color: #ff6b7d; }
-.lms-shell-header { min-height: 13rem; padding: 2rem; border: 1px solid rgba(255,255,255,.1) !important; border-radius: 18px; background: linear-gradient(140deg, rgba(239,35,60,.12), rgba(255,255,255,.025) 42%, rgba(255,255,255,.012)); box-shadow: 0 20px 55px rgba(0,0,0,.22); }.lms-shell-header > .min-w-0 { position: relative; z-index: 1; }.lms-shell-header__grid { position: absolute; inset: 0; opacity: .55; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px); background-size: 32px 32px; mask-image: radial-gradient(circle at 10% 0, black, transparent 70%); }.lms-shell-header__glow { position: absolute; top: -11rem; right: -9rem; width: 30rem; height: 30rem; border-radius: 50%; background: rgba(239,35,60,.18); filter: blur(75px); animation: lms-glow-breathe 7s ease-in-out infinite; }.lms-shell-eyebrow { color: #fecdd3 !important; }.lms-shell-eyebrow__signal { width: .42rem; height: .42rem; border-radius: 50%; background: #ef233c; box-shadow: 0 0 0 0 rgba(239,35,60,.75); animation: noir-status 2s infinite; }.lms-shell-title { letter-spacing: -.035em; }.lms-shell-stats { border-color: rgba(255,255,255,.10) !important; background: rgba(255,255,255,.08) !important; border-radius: 12px !important; }.lms-shell-stat { position: relative; overflow: hidden; background: rgba(10,10,12,.7) !important; transition: background-color 180ms ease, transform 180ms ease; }.lms-shell-stat::before { position: absolute; inset: 0 auto 0 0; width: 2px; content: ''; background: #ef233c; opacity: .7; }.lms-shell-stat:hover { background: rgba(239,35,60,.10) !important; transform: translateY(-2px); }.lms-shell-stat p:nth-child(2) { color: #fff !important; }
-.lms-shell-body { gap: 1rem !important; }.lms-shell-body > * { animation: noir-reveal .48s both; }.lms-shell-body > *:nth-child(2) { animation-delay: .06s; }.lms-shell-body > *:nth-child(3) { animation-delay: .12s; }.lms-shell-body .rounded-2xl, .lms-shell-body .rounded-xl { border-color: rgba(255,255,255,.10) !important; background: rgba(255,255,255,.025) !important; }.lms-shell-body .rounded-full.bg-emerald-100 { border: 1px solid rgba(239,35,60,.32); background: rgba(239,35,60,.13) !important; color: #fecdd3 !important; }.lms-shell-body [class*='bg-sky-'], .lms-shell-body [class*='bg-cyan-'] { background-color: #ef233c !important; }.lms-shell-body [class*='text-sky-'], .lms-shell-body [class*='text-cyan-'] { color: #ff6b7d !important; }
-.lms-meeting-actions { position: relative; border-color: rgba(255,255,255,.1) !important; border-radius: 16px !important; background: rgba(255,255,255,.04) !important; box-shadow: 0 18px 45px rgba(0,0,0,.22); }.lms-meeting-actions__intro { position: relative; overflow: hidden; border-color: rgba(255,255,255,.09) !important; background: radial-gradient(circle at 18% 14%, rgba(239,35,60,.22), transparent 43%), #0d0d0f !important; }.lms-meeting-actions__intro::after { position: absolute; inset: 0; content: ''; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px); background-size: 32px 32px; mask-image: linear-gradient(130deg, black, transparent 70%); }.lms-meeting-actions__intro > * { position: relative; z-index: 1; }.lms-meeting-actions svg, .lms-meeting-actions [class*='text-[#37d7ff]'] { color: #ff6b7d !important; }.lms-meeting-action { position: relative; overflow: hidden; background: rgba(12,12,14,.78) !important; transition: background-color 180ms ease, transform 180ms ease; }.lms-meeting-action:hover { background: rgba(239,35,60,.08) !important; transform: translateY(-2px); }.lms-meeting-action::before { position: absolute; top: 0; left: 0; width: 0; height: 2px; content: ''; background: #ef233c; transition: width 240ms ease; }.lms-meeting-action:hover::before { width: 100%; }
-@keyframes lms-glow-breathe { 50% { transform: scale(1.08); opacity: .7; } }
-@media (max-width: 1023px) { .lms-shell-header { padding: 1.4rem; }.lms-workspace { padding-top: 1rem !important; } }
-@media (prefers-reduced-motion: reduce) { .lms-shell-header__glow, .lms-shell-eyebrow__signal, .lms-shell-body > * { animation: none !important; } }
+/* Meeting actions */
+.meeting-actions { position: relative; border-color: rgba(255,255,255,.1) !important; border-radius: 16px !important; background: rgba(255,255,255,.04) !important; box-shadow: 0 18px 45px rgba(0,0,0,.22); }.meeting-actions__intro { position: relative; overflow: hidden; border-color: rgba(255,255,255,.09) !important; background: radial-gradient(circle at 18% 14%, rgba(239,35,60,.22), transparent 43%), #0d0d0f !important; }.meeting-actions__intro::after { position: absolute; inset: 0; content: ''; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px); background-size: 32px 32px; mask-image: linear-gradient(130deg, black, transparent 70%); }.meeting-actions__intro > * { position: relative; z-index: 1; }.meeting-actions svg, .meeting-actions [class*='text-[#37d7ff]'] { color: #ff6b7d !important; }.meeting-action { position: relative; overflow: hidden; background: rgba(12,12,14,.78) !important; transition: background-color 180ms ease, transform 180ms ease; }.meeting-action:hover { background: rgba(239,35,60,.08) !important; transform: translateY(-2px); }.meeting-action::before { position: absolute; top: 0; left: 0; width: 0; height: 2px; content: ''; background: #ef233c; transition: width 240ms ease; }.meeting-action:hover::before { width: 100%; }
 
 /* Pricing — approved four-tier red-noir matrix. */
 .pricing-noir { min-width: 0; color: #f4f4f5; }
@@ -769,39 +745,6 @@ nav [class*='backdrop-'] {
   .app-background__vortex { animation-duration: 84s !important; }
   .app-background__vortex-sweep--one { animation-duration: 36s !important; }
   .app-background__vortex-sweep--two { animation-duration: 58s !important; }
-}
-
-/* Readable LMS labels and comfortable touch targets. These rules are kept at
-   the end so they deliberately override the compact dashboard defaults. */
-.lms-sidebar__brand > span:last-child {
-  font-size: .875rem !important;
-  letter-spacing: .1em !important;
-}
-
-.lms-sidebar__link {
-  min-height: 2.9rem;
-  padding: .7rem .78rem;
-  font-size: .94rem;
-}
-
-.lms-sidebar__link svg {
-  width: 1.1rem;
-  height: 1.1rem;
-}
-
-.lms-sidebar__footer {
-  font-size: .875rem;
-}
-
-.lms-mobile-nav__link {
-  min-height: 2.65rem;
-  padding: .68rem .88rem;
-  font-size: .9rem;
-}
-
-.lms-mobile-nav__link svg {
-  width: 1rem;
-  height: 1rem;
 }
 
 /* Readability for application-owned surfaces; embedded editors keep their theme. */

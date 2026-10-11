@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 export const metadata: Metadata = {
   title: 'Pricing - Free, Pro, and Business Plans',
   description:
-    'Compare Melanam Free, Pro, Business, and Enterprise plans for video meetings, LMS workflows, AI notes, recordings, captions, credits, and workspace seats.',
+    'Compare Melanam Free, Pro, Business, and Enterprise plans for video meetings, AI notes, recordings, captions, credits, and workspace seats.',
   alternates: {
     canonical: '/pricing',
   },
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Melanam Pricing - Free, Pro, and Business Plans',
     description:
-      'Compare Melanam plans for live classes, team meetings, LMS workflows, AI notes, recordings, captions, and extra credits.',
+      'Compare Melanam plans for team meetings, AI notes, recordings, captions, and extra credits.',
   },
 };
 

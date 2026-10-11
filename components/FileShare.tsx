@@ -11,7 +11,7 @@ export default function FileShare({
 }: {
   meetingId?: string
   scopeId?: string
-  scopeType?: 'meeting' | 'course'
+  scopeType?: 'meeting'
   title?: string
   className?: string
 }) {

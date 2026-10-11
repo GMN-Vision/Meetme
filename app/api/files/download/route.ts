@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '../../../../lib/supabaseServer'
-import { LMS_STORAGE_BUCKET } from '../../../../lib/lms-storage'
+import { MEETING_FILES_BUCKET } from '../../../../lib/meeting-storage'
 
 function getFileNameFromPath(path: string) {
   const parts = path.split('/').filter(Boolean)
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
     }
 
     const { data, error } = await supabaseServer.storage
-      .from(LMS_STORAGE_BUCKET)
+      .from(MEETING_FILES_BUCKET)
       .download(path)
 
     if (error || !data) {

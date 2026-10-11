@@ -1,9 +1,8 @@
 import { BILLING_PLAN_MAP, type BillingPlan, type PlanKey } from '@/lib/billing-plans';
 import dbConnect from '@/lib/db';
 import { findMembershipByEmail, isSubscriptionActive } from '@/lib/membership';
-import { LMS_STORAGE_BUCKET } from '@/lib/lms-storage';
+import { MEETING_FILES_BUCKET } from '@/lib/meeting-storage';
 import { supabaseServer } from '@/lib/supabaseServer';
-import Course from '@/models/Course';
 import Meeting from '@/models/Meeting';
 import Organization from '@/models/Organization';
 import User from '@/models/User';
@@ -80,7 +79,7 @@ export async function getWorkspaceQuota(userEmail: string, allowAdmin = false): 
 
 async function getFolderSizeBytes(folder: string) {
   const { data, error } = await supabaseServer.storage
-    .from(LMS_STORAGE_BUCKET)
+    .from(MEETING_FILES_BUCKET)
     .list(folder, { limit: 1000 });
 
   if (error) {
@@ -95,17 +94,8 @@ async function getFolderSizeBytes(folder: string) {
 
 export async function getWorkspaceStorageUsageBytes(quota: WorkspaceQuota) {
   await dbConnect();
-  const [meetings, courses] = await Promise.all([
-    Meeting.find({ hostEmail: { $in: quota.ownerEmails } }).select('meetingId').lean(),
-    quota.scope === 'organization'
-      ? Course.find({ organizationId: quota.scopeId }).select('_id').lean()
-      : Course.find({ instructorEmail: quota.ownerEmails[0] }).select('_id').lean(),
-  ]);
-
-  const folders = [
-    ...meetings.map((meeting) => String(meeting.meetingId)),
-    ...courses.map((course) => `courses/${String(course._id)}`),
-  ];
+  const meetings = await Meeting.find({ hostEmail: { $in: quota.ownerEmails } }).select('meetingId').lean();
+  const folders = meetings.map((meeting) => String(meeting.meetingId));
 
   const sizes = await Promise.all(folders.map(getFolderSizeBytes));
   return sizes.reduce((total, size) => total + size, 0);

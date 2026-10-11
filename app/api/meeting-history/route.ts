@@ -4,7 +4,6 @@ import Meeting from '../../../models/Meeting';
 import MeetingActivity from '../../../models/MeetingActivity';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth-options';
-import { normalizeLmsRole } from '../../../lib/lms-role';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,18 +19,9 @@ export async function GET() {
     await dbConnect();
 
     const userEmailMatcher = new RegExp(`^${escapeRegex(userEmail)}$`, 'i');
-    const role = normalizeLmsRole(
-      String((session.user as any)?.lmsRole || (session.user as any)?.role || '')
-    );
-    const meetingFilter =
-      role === 'admin'
-        ? {}
-        : {
-            $or: [
-              { hostEmail: userEmailMatcher },
-              { recordedByEmail: userEmailMatcher },
-            ],
-          };
+    const meetingFilter = {
+      $or: [{ hostEmail: userEmailMatcher }, { recordedByEmail: userEmailMatcher }],
+    };
 
     const [meetings, activity] = await Promise.all([
       Meeting.find(meetingFilter)

@@ -6,7 +6,6 @@ import User from '../../../models/User';
 import Organization from '../../../models/Organization';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth-options';
-import { normalizeLmsRole } from '../../../lib/lms-role';
 import { checkRoomCreationLimit } from '../../../lib/membership';
 import { getWorkspaceQuota } from '../../../lib/workspace-usage';
 
@@ -27,7 +26,7 @@ export async function POST(req: NextRequest) {
     // Check if user belongs to an organization and fetch its policies
     let orgPolicies = null;
     const dbUser = await User.findOne({ email: userEmail.toLowerCase() });
-    const role = normalizeLmsRole(String((dbUser as any)?.role || (session.user as any)?.lmsRole || (session.user as any)?.role || ''));
+    const role = dbUser?.role === 'admin' ? 'admin' : 'user';
     const workspaceQuota = await getWorkspaceQuota(userEmail, role === 'admin');
     if (!workspaceQuota) {
       return NextResponse.json({ error: 'Active workspace plan required' }, { status: 402 });

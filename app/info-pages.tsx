@@ -15,7 +15,7 @@ type InfoPageProps = {
   ctaLabel?: string;
 };
 
-export function InfoPage({ eyebrow, title, description, sections, ctaHref = '/lms', ctaLabel = 'Open workspace' }: InfoPageProps) {
+export function InfoPage({ eyebrow, title, description, sections, ctaHref = '/meetings', ctaLabel = 'Open workspace' }: InfoPageProps) {
   return (
     <>
       <div className="page-shell-wide pb-14">

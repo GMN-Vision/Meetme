@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
@@ -14,7 +13,8 @@ export default function Page() {
   const [email, setEmail] = useState(searchParams.get('email') || '');
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<Notice>(null);
-  const callbackUrl = searchParams.get('callbackUrl') || '/lms';
+  const requestedCallback = searchParams.get('callbackUrl') || '';
+  const callbackUrl = requestedCallback.startsWith('/') && !requestedCallback.startsWith('//') && !requestedCallback.includes('\\') ? requestedCallback : '/meetings';
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -34,7 +34,7 @@ export default function Page() {
       const registration = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: normalizedEmail, role: 'student' }),
+        body: JSON.stringify({ email: normalizedEmail }),
       });
       const registrationBody = await registration.json().catch(() => ({}));
 
@@ -78,7 +78,7 @@ export default function Page() {
             No passwords and no separate sign-up form. New accounts are created automatically when you request your first secure link.
           </p>
           <p className="max-w-xl text-sm leading-6 text-slate-500">
-            After you sign in, this device stays signed in for 7 days. Admins should use the separate <Link href="/admin/login" className="font-semibold text-slate-900 underline">admin login</Link>.
+            After you sign in, this device stays signed in for 7 days.
           </p>
         </div>
 

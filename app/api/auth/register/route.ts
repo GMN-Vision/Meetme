@@ -4,27 +4,20 @@ import User from '../../../../models/User';
 import Organization from '../../../../models/Organization';
 import { canAddOrganizationSeat } from '../../../../lib/workspace-usage';
 
-type SignupRole = 'student' | 'instructor' | 'admin';
-
-function normalizeSignupRole(role: string | undefined | null): SignupRole {
-  const normalized = String(role || '').toLowerCase();
-
-  if (normalized === 'admin') return 'admin';
-  if (normalized === 'instructor' || normalized === 'enterprise_admin') return 'instructor';
-  return 'student';
-}
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, role, companyName, companyDomain } = body || {};
+    const { email } = body || {};
 
     if (!email || typeof email !== 'string') {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-  const normalizedRole = normalizeSignupRole(role);
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 });
+    }
 
     await dbConnect();
 
@@ -39,12 +32,6 @@ export async function POST(request: Request) {
         },
         { status: 409 }
       );
-    }
-
-    // Disallow creating admin accounts via this public endpoint.
-    // Admins must be provisioned via the admin panel credentials (env vars).
-    if (normalizedRole === 'admin') {
-      return NextResponse.json({ error: 'Admin accounts cannot be created via this endpoint' }, { status: 403 });
     }
 
     let orgId: string | null = null;
@@ -64,7 +51,7 @@ export async function POST(request: Request) {
     // Create user record
     const user = new User({
       email: normalizedEmail,
-      role: normalizedRole,
+      role: 'user',
       organizationId: orgId,
     });
 

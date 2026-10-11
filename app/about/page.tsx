@@ -23,7 +23,7 @@ export default function AboutPage() {
         },
         {
           title: 'Why Melanam',
-          body: 'Melanam brings meetings, learning workflows, shared artifacts, and AI outputs into one controlled workspace instead of scattering collaboration across disconnected tools.',
+          body: 'Melanam brings meetings, shared files, recordings, and AI notes into one controlled workspace instead of scattering collaboration across disconnected tools.',
         },
         {
           title: 'Core Features',

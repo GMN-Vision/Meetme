@@ -1,6 +1,7 @@
 node_modules
 .next
 .next-recording-check
+.next-conferencing-check
 .env.local
 .env
 dist

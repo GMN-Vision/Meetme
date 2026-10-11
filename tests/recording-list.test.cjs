@@ -70,7 +70,7 @@ test('unauthenticated list requests never reach MongoDB', async () => {
   assert.equal(handler.pipeline(), undefined);
 });
 
-test('LMS polling replaces processing with playable ready output, preserving participant permissions', async t => {
+test('Recordings polling replaces processing with playable ready output, preserving participant permissions', async t => {
   const React = require('react');
   const { create, act } = require('react-test-renderer');
   let poll, focus, status = 'processing';
@@ -83,7 +83,7 @@ test('LMS polling replaces processing with playable ready output, preserving par
   t.mock.method(global, 'fetch', async url => new Response(JSON.stringify(url.endsWith('/quota') ? {} : {
     recordings: [{ recordingId: 'capture', meetingId: 'room', title: 'Recorded class', status, createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 60000).toISOString(), durationSeconds: 60, isHost: false }],
   }), { status: url.endsWith('/quota') ? 503 : 200 }));
-  const { MeetingRecordings } = load('components/lms/MeetingRecordings.tsx');
+  const { MeetingRecordings } = load('components/meetings/MeetingRecordings.tsx');
   await act(async () => { view = create(React.createElement(MeetingRecordings)); });
   assert.equal(view.root.findAllByType('video').length, 0);
   status = 'ready';

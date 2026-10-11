@@ -10,7 +10,6 @@ export type PlanFeatureKey =
   | 'files'
   | 'livestream'
   | 'whiteboard'
-  | 'lms'
   | 'adminControls';
 
 export type BillingPlan = {
@@ -44,7 +43,6 @@ export type BillingPlan = {
     fileSharing: string;
     livestreams: string;
     whiteboards: string;
-    lms: string;
     adminControls: string;
   };
   profit: {
@@ -124,7 +122,7 @@ export const BILLING_PLANS: BillingPlan[] = [
     title: 'Free',
     badge: 'Start',
     description: 'A generous no-cost workspace for classes, catch-ups, and trying Melanam.',
-    audience: 'For students, first meetings, and teams getting started.',
+    audience: 'For personal calls and teams getting started.',
     monthlyInr: 0,
     annualInr: 0,
     includedCredits: freeCredits,
@@ -142,7 +140,6 @@ export const BILLING_PLANS: BillingPlan[] = [
       files: true,
       livestream: false,
       whiteboard: true,
-      lms: true,
       adminControls: false,
     },
     highlights: ['3-hour meetings at no cost', '120 people can join each meeting', '5 hours of server recording each month', 'File, media, and document sharing'],
@@ -159,7 +156,6 @@ export const BILLING_PLANS: BillingPlan[] = [
       fileSharing: '100 MB per file, media, or document upload',
       livestreams: 'Not included',
       whiteboards: '1 Excalidraw board per meeting',
-      lms: 'Student and instructor basics',
       adminControls: 'Not included',
     },
     profit: calculateProfit(0, freeCredits, 'free'),
@@ -169,7 +165,7 @@ export const BILLING_PLANS: BillingPlan[] = [
     title: 'Pro',
     badge: 'Most teams',
     description: 'The core paid plan for serious meetings, AI notes, recordings, and follow-up work.',
-    audience: 'For creators, instructors, coaches, and small teams.',
+    audience: 'For professionals, creators, and small teams.',
     monthlyInr: 799,
     annualInr: 8590,
     includedCredits: proCredits,
@@ -188,7 +184,6 @@ export const BILLING_PLANS: BillingPlan[] = [
       files: true,
       livestream: false,
       whiteboard: true,
-      lms: true,
       adminControls: false,
     },
     highlights: ['24-hour meetings', 'AI summaries and action items', '30 hours of server recording each month', '1 GB file, media, and document uploads'],
@@ -205,7 +200,6 @@ export const BILLING_PLANS: BillingPlan[] = [
       fileSharing: '1 GB per file, media, or document upload',
       livestreams: 'Upgrade to Business',
       whiteboards: 'Unlimited Excalidraw boards',
-      lms: 'Full student and instructor LMS',
       adminControls: 'Basic member controls',
     },
     profit: calculateProfit(799, proCredits, 'pro'),
@@ -233,7 +227,6 @@ export const BILLING_PLANS: BillingPlan[] = [
       files: true,
       livestream: true,
       whiteboard: true,
-      lms: true,
       adminControls: true,
     },
     highlights: ['48-hour meetings', 'YouTube livestreaming', '100 hours of server recording each month', '5 GB file, media, and document uploads'],
@@ -250,7 +243,6 @@ export const BILLING_PLANS: BillingPlan[] = [
       fileSharing: '5 GB per file, media, or document upload',
       livestreams: 'YouTube livestreaming included',
       whiteboards: 'Unlimited Excalidraw boards and templates',
-      lms: 'Full LMS plus organization controls',
       adminControls: 'Plan, member, and policy controls',
     },
     profit: calculateProfit(2499, businessCredits, 'business'),
@@ -278,7 +270,6 @@ export const BILLING_PLANS: BillingPlan[] = [
       files: true,
       livestream: true,
       whiteboard: true,
-      lms: true,
       adminControls: true,
     },
     highlights: ['Custom credits', 'SSO and audit support', 'Dedicated onboarding', 'Private deployment options'],
@@ -295,7 +286,6 @@ export const BILLING_PLANS: BillingPlan[] = [
       fileSharing: 'Custom',
       livestreams: 'Custom',
       whiteboards: 'Custom',
-      lms: 'Custom',
       adminControls: 'Custom',
     },
     profit: calculateProfit(null, null),
