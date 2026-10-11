@@ -48,6 +48,8 @@ export function Navbar() {
   const [membershipResolved, setMembershipResolved] = useState(false);
   const [upgradePrompt, setUpgradePrompt] = useState<UpgradePrompt>(null);
   const filesPopoverRef = useRef<HTMLDivElement | null>(null);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
+  const profileButtonRef = useRef<HTMLButtonElement | null>(null);
   const roomMatch = pathname?.match(/^\/room\/([^/]+)$/);
   const roomMeetingId = roomMatch?.[1] ? decodeURIComponent(roomMatch[1]) : '';
   const isRoomPage = Boolean(roomMatch);
@@ -175,7 +177,28 @@ export function Navbar() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isWhiteboardOpen, requestWhiteboardClose]);
 
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+
+    const handleOutside = (event: PointerEvent) => {
+      if (!profileMenuRef.current?.contains(event.target as Node)) setIsDropdownOpen(false);
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsDropdownOpen(false);
+        profileButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', handleOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('pointerdown', handleOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isDropdownOpen]);
+
   const handleLogout = async () => {
+    setIsDropdownOpen(false);
     await signOut({ redirect: false });
     router.replace('/');
   };
@@ -268,7 +291,7 @@ export function Navbar() {
   ];
 
   const navActionButtonClass =
-    'inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-[#27272a] bg-[#27272a] px-0 text-base font-semibold text-[#fafafa] transition-colors hover:bg-[#3f3f46] lg:w-auto lg:px-4';
+    'inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-transparent bg-transparent px-0 text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white lg:w-auto lg:px-3';
   const copyInviteHoverClass =
     'hover:border-[#d4d4d8] hover:text-[#d4d4d8]';
   const uploadMediaHoverClass =
@@ -281,11 +304,11 @@ export function Navbar() {
     'hover:border-[#ef6b73] hover:text-[#ef6b73]';
 
   return (
-    <nav className="fixed inset-x-0 top-0 z-[1000] px-3 pt-3 sm:px-5 sm:pt-5">
+    <nav aria-label="Meeting navigation" className={isRoomPage ? 'fixed left-1/2 top-4 z-[1000] w-[calc(100%-2rem)] max-w-4xl -translate-x-1/2' : 'fixed inset-x-0 top-0 z-[1000] px-3 pt-3 sm:px-5 sm:pt-5'}>
       <div className={`app-navbar-shell mx-auto max-w-[80rem] rounded-2xl border border-white/10 bg-black/70 shadow-xl backdrop-blur-xl ${pathname === '/' ? 'app-navbar-shell--landing' : ''} ${isRoomPage ? 'app-navbar-shell--room' : ''}`}>
         <div className="flex h-14 items-center justify-between gap-3">
           <div className="flex items-center gap-3 sm:gap-4">
-            <Link href="/" className="app-navbar-brand flex items-center gap-2.5" aria-label="Melanam home">
+            <Link href="/" className={`app-navbar-brand ${isRoomPage ? 'hidden md:flex' : 'flex'} items-center gap-2.5`} aria-label="Melanam home">
               <span className="app-brand-mark" aria-hidden="true">
                 <i />
                 <i />
@@ -444,7 +467,7 @@ export function Navbar() {
             )}
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-2.5">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
             {isLoggedIn ? (
               <div className="flex items-center gap-2 sm:gap-2.5">
                 {!isRoomPage && (
@@ -457,26 +480,32 @@ export function Navbar() {
                     <span>Continue</span>
                   </Link>
                 )}
-                <button
+                {!isRoomPage && <button
                   type="button"
                   onClick={handleLogout}
                   className="font-display inline-flex items-center gap-2 rounded-full border border-[#3f3f46]/35 bg-[#3f3f46]/10 px-4 py-2 text-sm font-semibold text-[#fda4af] transition hover:border-[#3f3f46]/60 hover:bg-[#3f3f46]/18 hover:text-white"
                 >
                   Logout
-                </button>
-                <span className="hidden h-8 items-center whitespace-nowrap px-1 text-sm leading-none text-zinc-400 lg:inline-flex">
+                </button>}
+                <span className={`${isRoomPage ? 'hidden' : 'hidden lg:inline-flex'} h-8 items-center whitespace-nowrap px-1 text-sm leading-none text-zinc-400`}>
                   {userEmail}
                 </span>
-                <div className="relative">
+                <div ref={profileMenuRef} className="relative">
                   <button
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-950 text-sm font-semibold leading-none text-white shadow-sm"
+                    ref={profileButtonRef}
+                    type="button"
+                    aria-label="Profile menu"
+                    aria-expanded={isDropdownOpen}
+                    aria-controls="profile-menu"
+                    onClick={() => setIsDropdownOpen(open => !open)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-50 text-sm font-semibold leading-none text-zinc-950 transition hover:bg-zinc-200"
                   >
                     {userInitial}
                   </button>
 
                   {isDropdownOpen && (
-                    <div className="absolute right-0 z-[1010] mt-3 w-48 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 shadow-xl sm:w-52">
+                    <div id="profile-menu" className="absolute right-0 z-[1010] mt-3 w-56 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/95 p-1 shadow-xl backdrop-blur-md">
+                      <p className="truncate border-b border-zinc-800 px-3 py-3 text-xs text-zinc-400" title={userEmail}>{userEmail}</p>
                       <Link
                         href="/meetings"
                         className="block px-4 py-3 text-sm text-zinc-100 hover:bg-zinc-900 transition"
@@ -500,8 +529,9 @@ export function Navbar() {
                         </Link>
                       )}
                       <button
+                        type="button"
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-3 text-sm text-zinc-100 hover:bg-zinc-900 transition border-t border-zinc-800"
+                        className="w-full rounded-xl px-4 py-3 text-left text-sm text-zinc-300 transition hover:bg-zinc-800 hover:text-white"
                       >
                         Logout
                       </button>

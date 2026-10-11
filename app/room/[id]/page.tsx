@@ -55,7 +55,6 @@ export default function RoomPage() {
   const [sessionEndsAt, setSessionEndsAt] = useState<string | null>(null);
   const [accessGranted, setAccessGranted] = useState(false);
   const [durationNotice, setDurationNotice] = useState('');
-  const [endingMeeting, setEndingMeeting] = useState(false);
   const [showAiResults, setShowAiResults] = useState(false);
   const [aiResults, setAiResults] = useState<any | null>(null);
   const [captionPortalTarget, setCaptionPortalTarget] = useState<HTMLElement | null>(null);
@@ -539,24 +538,6 @@ export default function RoomPage() {
     return () => window.removeEventListener('open-ai-summary', handler as EventListener);
   }, [meetingId]);
 
-  const endMeetingForEveryone = async () => {
-    setEndingMeeting(true);
-    try {
-      const response = await fetch('/api/meeting-end', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ meetingId }),
-      });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error || 'Could not end meeting. Please retry.');
-      apiRef.current?.executeCommand?.('endConference');
-      // Give the moderator command time to reach the iframe before disposing it.
-      // Server admission checks remain the fallback on older Jitsi deployments.
-      await new Promise(resolve => window.setTimeout(resolve, 750));
-      apiRef.current?.executeCommand?.('hangup');
-      router.push('/meetings');
-    } catch (error: any) { setDurationNotice(error.message); }
-    finally { setEndingMeeting(false); }
-  };
-
   const handleApiReady = useCallback((api: any) => {
     apiRef.current = api;
 
@@ -636,15 +617,6 @@ export default function RoomPage() {
   return (
     <div className="mx-auto w-full max-w-[64rem] overflow-hidden px-3 pt-6 text-zinc-100 sm:px-5">
       {!userEmail && <p className="mb-3 text-sm text-zinc-300">To receive shared recordings in your recordings, <a className="text-zinc-300 underline" href={`/sign-in?callbackUrl=${encodeURIComponent(`/room/${meetingId}`)}`}>sign in and rejoin</a> before the host ends the meeting.</p>}
-      {meeting?.hostEmail?.toLowerCase() === userEmail?.toLowerCase() && (
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm text-zinc-300">
-          <span>Recordings stay private until you share them from your recordings.</span>
-          <button type="button" disabled={endingMeeting} onClick={endMeetingForEveryone}
-            className="rounded-lg bg-red-700 px-4 py-2 font-semibold text-white disabled:opacity-50">
-            {endingMeeting ? 'Ending meeting...' : 'End meeting for everyone'}
-          </button>
-        </div>
-      )}
       <div className="relative min-h-[24rem] overflow-hidden rounded-lg border border-[#27272a] bg-zinc-950">
         <div
           ref={handleVideoStageRef}

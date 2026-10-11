@@ -73,7 +73,9 @@
 .comparison-table tr:hover td, .comparison-table tr:hover th { background-color: rgba(255,255,255,.025); }
 /* Meeting tools keep their media lifecycle while sharing the template's chrome. */
 .app-navbar-shell { padding: .5rem .75rem; border-radius: 1.5rem; background: rgba(24,24,27,.85); border: 1px solid #27272a; backdrop-filter: blur(16px); }
-.app-navbar-shell--room { max-width: 1440px; }
+.app-navbar-shell--room { max-width: 896px; padding: .75rem 1rem; border-radius: 9999px; background: rgba(24,24,27,.6); backdrop-filter: blur(12px); box-shadow: none; }
+.app-navbar-shell--room > div { height: 40px; }
+.app-navbar-shell--room > div > div:first-child { min-width: 0; }
 .app-brand-mark { display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 32px; height: 32px; border-radius: 8px; background: #fafafa; }
 .app-brand-mark i { width: 3px; height: 12px; background: #09090b; border-radius: 4px; }
 .app-brand-mark i:first-child { height: 8px; }.app-brand-mark i:last-child { height: 16px; }
@@ -83,10 +85,9 @@
 @media (max-width: 767px) {
   .app-main { padding-top: 88px; }
   .page-shell, .page-shell-wide { padding-block: 24px; }
-  .app-navbar-shell--room > div { height: auto; flex-wrap: wrap; }
-  .app-navbar-shell--room > div > div:first-child { width: 100%; overflow-x: auto; padding-bottom: .3rem; }
+  .app-navbar-shell--room > div > div:first-child { overflow-x: auto; }
   .app-navbar-shell--room button { flex-shrink: 0; }
-  body:has(.app-navbar-shell--room) .app-main { padding-top: 150px; }
+  body:has(.app-navbar-shell--room) .app-main { padding-top: 96px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
