@@ -1,8 +1,10 @@
 'use client';
 
+import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, LogIn, Plus, Video } from 'lucide-react';
+import { ArrowRight, CalendarDays, LogIn, Plus, Video } from 'lucide-react';
 import { CreateMeetingModal } from '@/components/CreateMeetingModal';
 import { JoinModal } from '@/components/JoinModal';
 
@@ -55,10 +57,14 @@ export function MeetingActions({ onScheduled }: { onScheduled?: () => void }) {
             <p className="mb-2 text-xs font-medium uppercase tracking-[.15em] text-zinc-400">A conversation away</p>
             <h2 className="max-w-sm text-2xl font-semibold tracking-tight text-white sm:text-3xl">Bring your people together.</h2>
             <p className="mt-3 max-w-sm text-sm leading-6 text-zinc-400">Open a room in one click. Share the link and let the conversation begin.</p>
-            <button type="button" onClick={handleStartMeeting} disabled={isStarting} className="button-primary mt-7 w-full gap-3 sm:w-auto">{isStarting ? 'Starting...' : 'Start meeting'}<ArrowRight aria-hidden="true" size={16} /></button>
+            <HoverBorderGradient type="button" onClick={handleStartMeeting} disabled={isStarting} className="button-primary mt-7 w-full gap-3 sm:w-auto">{isStarting ? 'Starting...' : 'Start meeting'}<ArrowRight aria-hidden="true" size={16} /></HoverBorderGradient>
           </div>
           <div className="grid gap-3 lg:gap-4">
-            <button type="button" onClick={() => setIsScheduleOpen(true)} className="button-secondary !rounded-3xl !justify-start !px-6 !py-5">Schedule meeting <span className="ml-auto text-xs text-zinc-400">Choose a date and time</span></button>
+            <button type="button" onClick={() => setIsScheduleOpen(true)} className="group flex items-center gap-4 rounded-3xl border border-zinc-800 bg-zinc-900/50 p-5 text-left transition hover:border-zinc-600 hover:bg-zinc-900 sm:p-6">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-zinc-800"><CalendarDays size={21} /></span>
+              <span className="min-w-0 flex-1"><span className="block text-base font-semibold text-white">Schedule meeting</span><span className="mt-1 block text-sm leading-6 text-zinc-400">Choose a date and time for your next conversation.</span></span>
+              <ArrowRight size={18} className="shrink-0 text-zinc-500 transition group-hover:text-white" aria-hidden="true" />
+            </button>
             <button type="button" onClick={() => setIsJoinModalOpen(true)} className="group flex items-center gap-4 rounded-3xl border border-zinc-800 bg-zinc-900/50 p-5 text-left transition hover:border-zinc-600 hover:bg-zinc-900 sm:p-6">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-zinc-800"><LogIn size={21} /></span>
               <span className="min-w-0 flex-1"><span className="block text-base font-semibold text-white">Join meeting</span><span className="mt-1 block text-sm leading-6 text-zinc-400">Have an invite? Enter a link or room code.</span></span>

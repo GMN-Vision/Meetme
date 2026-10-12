@@ -79,7 +79,12 @@ test('create meeting persists schedule without starting a session and rejects pa
 
 test('scheduling form submits UTC, refreshes the list, and stays out of the room', async t => {
  const React = require('react'); const { create, act } = require('react-test-renderer');
- const { CreateMeetingModal } = load('components/CreateMeetingModal.tsx');
+ const previousDocument = global.document;
+ global.document = { body: { style: { overflow: '' } }, activeElement: null };
+ t.after(() => { global.document = previousDocument; });
+ const { CreateMeetingModal } = load('components/CreateMeetingModal.tsx', {
+  'react-dom': { createPortal: children => children },
+ });
  const navigations = []; const requests = []; let refreshed = 0; let fail = true;
  t.mock.method(global, 'fetch', async (_url, options) => {
    requests.push(JSON.parse(options.body));
@@ -93,7 +98,7 @@ test('scheduling form submits UTC, refreshes the list, and stays out of the room
  let tree;
  await act(async () => { tree = create(React.createElement(MeetingActions, { onScheduled: () => refreshed++ })); });
  t.after(() => act(() => tree.unmount()));
- await act(async () => tree.root.findAllByType('button').find(button => button.children.includes('Schedule meeting ')).props.onClick());
+ await act(async () => tree.root.findByProps({ children: 'Schedule meeting' }).parent.parent.props.onClick());
  await act(async () => tree.root.findByProps({ id: 'meeting-title' }).props.onChange({ target: { value: 'Team planning' } }));
  const future = new Date(Date.now() + 86400000); const pad = n => String(n).padStart(2, '0');
  const local = `${future.getFullYear()}-${pad(future.getMonth()+1)}-${pad(future.getDate())}T${pad(future.getHours())}:${pad(future.getMinutes())}`;

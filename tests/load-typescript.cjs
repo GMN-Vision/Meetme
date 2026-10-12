@@ -9,7 +9,18 @@ module.exports = function loadTypeScript(relativePath, mocks = {}) {
   loaded.filename = filename;
   loaded.paths = Module._nodeModulePaths(path.dirname(filename));
   const originalRequire = loaded.require.bind(loaded);
-  loaded.require = (name) => Object.hasOwn(mocks, name) ? mocks[name] : originalRequire(name);
+  loaded.require = (name) => {
+    if (Object.hasOwn(mocks, name)) return mocks[name];
+    if (name.startsWith('@/')) {
+      const relative = name.slice(2);
+      for (const extension of ['.ts', '.tsx']) {
+        if (fs.existsSync(path.resolve(__dirname, '..', relative + extension))) {
+          return module.exports(relative + extension, mocks);
+        }
+      }
+    }
+    return originalRequire(name);
+  };
   const source = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,

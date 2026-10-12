@@ -1,5 +1,7 @@
 'use client';
 
+import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
+
 import Link from 'next/link';
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
@@ -33,7 +35,7 @@ export function LandingPage() {
         <Reveal delay={.1}><h1 className="design-blue mb-6 text-5xl font-bold leading-[1.1] tracking-[-.045em] text-white sm:text-6xl lg:text-7xl">Connect. Converse.<br /><span className="text-zinc-500">Collaborate. Create.</span></h1></Reveal>
         <Reveal delay={.2}><p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-zinc-400 sm:text-xl">Video meetings, recordings, and everything in between. Bring your people together with Melanam, right in your browser.</p></Reveal>
         <Reveal delay={.3} className="mb-14 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <Link href={startHref} className="button-primary shimmer-btn h-12 w-full !px-8 !text-base sm:w-auto">{status === 'authenticated' ? 'Open my meetings' : 'Start meeting free'}<ArrowRight className="h-4 w-4" /></Link>
+          <HoverBorderGradient as={Link} href={startHref} className="button-primary shimmer-btn h-12 w-full !px-8 !text-base sm:w-auto">{status === 'authenticated' ? 'Open my meetings' : 'Start meeting free'}<ArrowRight className="h-4 w-4" /></HoverBorderGradient>
           <button onClick={() => setJoinOpen(true)} className="button-secondary h-12 w-full !px-8 !text-base sm:w-auto">Join a meeting</button>
         </Reveal>
         <Reveal delay={.4} className="flex flex-col items-center gap-4">
@@ -68,7 +70,7 @@ export function LandingPage() {
       <p className="mt-8 text-center text-sm text-zinc-400"><Link href="/pricing" className="inline-flex items-center gap-2 hover:text-white">Explore all plan details <ArrowRight className="h-4 w-4" /></Link></p>
     </section>
     <ComparisonTable />
-    <section className="landing-cta px-4 py-24 sm:py-32"><Reveal className="mx-auto max-w-4xl text-center"><h2 className="design-blue text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">Ready for a better meeting?</h2><p className="mx-auto mb-10 mt-6 max-w-xl text-lg text-zinc-400">Your people. Your ideas. One place to connect.<br />Start with Melanam for free.</p><div className="flex flex-col items-center justify-center gap-4 sm:flex-row"><Link href={startHref} className="button-primary shimmer-btn h-14 !px-8">Get started for free <ArrowRight className="h-5 w-5" /></Link><Link href="/pricing" className="button-secondary h-14 !px-8">Explore plans</Link></div><p className="mt-8 inline-flex items-center gap-2 text-sm text-zinc-500"><ShieldCheck className="h-4 w-4" />No credit card required. Just your email.</p></Reveal></section>
+    <section className="landing-cta px-4 py-24 sm:py-32"><Reveal className="mx-auto max-w-4xl text-center"><h2 className="design-blue text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">Ready for a better meeting?</h2><p className="mx-auto mb-10 mt-6 max-w-xl text-lg text-zinc-400">Your people. Your ideas. One place to connect.<br />Start with Melanam for free.</p><div className="flex flex-col items-center justify-center gap-4 sm:flex-row"><HoverBorderGradient as={Link} href={startHref} className="button-primary shimmer-btn h-14 !px-8">Get started for free <ArrowRight className="h-5 w-5" /></HoverBorderGradient><Link href="/pricing" className="button-secondary h-14 !px-8">Explore plans</Link></div><p className="mt-8 inline-flex items-center gap-2 text-sm text-zinc-500"><ShieldCheck className="h-4 w-4" />No credit card required. Just your email.</p></Reveal></section>
     <Footer />
     <JoinModal isOpen={joinOpen} onClose={() => setJoinOpen(false)} />
   </>;
