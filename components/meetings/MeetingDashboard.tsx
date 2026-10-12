@@ -7,6 +7,7 @@ import { MeetingActions } from './MeetingActions';
 import { AIMeetingNotesPanel } from './AIMeetingNotesPanel';
 
 type SavedMeeting = {
+  scheduledAt?: string;
   meetingId: string; title: string; hostEmail: string; createdAt: string;
   summary?: string; keyNotes?: string[]; keyDecisions?: string[];
   actionItems?: Array<{ item?: string; owner?: string }>;
@@ -14,6 +15,7 @@ type SavedMeeting = {
 };
 
 export function MeetingDashboard({ view = 'meetings' }: { view?: 'meetings' | 'notes' }) {
+  const [upcomingMeetings, setUpcomingMeetings] = useState<SavedMeeting[]>([]);
   const [meetings, setMeetings] = useState<SavedMeeting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,7 +27,7 @@ export function MeetingDashboard({ view = 'meetings' }: { view?: 'meetings' | 'n
       const response = await fetch('/api/get-meetings', { cache: 'no-store', signal });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || 'Unable to load meetings.');
-      if (!signal?.aborted) setMeetings(body.meetings || []);
+      if (!signal?.aborted) { setMeetings(body.meetings || []); setUpcomingMeetings(body.upcomingMeetings || []); }
     } catch (err) {
       if (!signal?.aborted) setError(err instanceof Error ? err.message : 'Unable to load meetings.');
     } finally {
@@ -46,7 +48,11 @@ export function MeetingDashboard({ view = 'meetings' }: { view?: 'meetings' | 'n
   });
 
   return <div className="space-y-9 sm:space-y-12">
-    {view === 'meetings' && <MeetingActions />}
+    {view === 'meetings' && <MeetingActions onScheduled={() => void refresh()} />}
+    {view === 'meetings' && upcomingMeetings.length > 0 && <section aria-labelledby="upcoming-meetings-title" className="space-y-5">
+      <h2 id="upcoming-meetings-title" className="text-xl font-semibold text-white">Upcoming meetings</h2>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{upcomingMeetings.map(meeting => <MeetingCard key={meeting.meetingId} {...meeting} />)}</div>
+    </section>}
     {view === 'meetings' && <section aria-labelledby="recent-meetings-title" className="space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div><h2 id="recent-meetings-title" className="text-xl font-semibold tracking-tight text-white">Recent meetings</h2><p className="mt-1 text-sm text-zinc-400">Your latest rooms, ready to return to.</p></div>

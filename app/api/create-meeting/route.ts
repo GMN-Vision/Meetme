@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { parseScheduledAt } from '@/lib/meeting-schedule';
 import { nanoid } from 'nanoid';
 import dbConnect from '../../../lib/db';
 import Meeting from '../../../models/Meeting';
@@ -21,6 +22,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+    let scheduledAt: Date | null;
+    try { scheduledAt = parseScheduledAt(body.scheduledAt); }
+    catch (error) { return NextResponse.json({ error: (error as Error).message }, { status: 400 }); }
     await dbConnect();
 
     // Check if user belongs to an organization and fetch its policies
@@ -49,7 +55,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const body = await req.json();
+
     let {
       title,
       description,
@@ -85,6 +91,7 @@ export async function POST(req: NextRequest) {
 
     const meeting = new Meeting({
       meetingId,
+      scheduledAt,
       hostId: userEmail,
       hostEmail: userEmail,
       title,

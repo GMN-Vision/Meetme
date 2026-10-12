@@ -61,6 +61,7 @@ export default function AdminDashboard() {
   
   // Search states
   const [userSearch, setUserSearch] = useState('');
+  const [selectedMeetings, setSelectedMeetings] = useState<string[]>([]);
   const [meetingSearch, setMeetingSearch] = useState('');
   
   const [loading, setLoading] = useState(true);
@@ -128,6 +129,7 @@ export default function AdminDashboard() {
       if (meetingsRes.ok) {
         const d = await meetingsRes.json();
         setMeetings(d.meetings || []);
+        setSelectedMeetings([]);
       }
 
     } catch (err) {
@@ -212,6 +214,7 @@ export default function AdminDashboard() {
 
       showToast('Meeting deleted successfully');
       setMeetings((prev) => prev.filter((m) => m.meetingId !== meetingId));
+      setSelectedMeetings(ids => ids.filter(id => id !== meetingId));
       
       // Refresh stats
       void fetch('/api/admin/stats', { credentials: 'include' }).then((res) => {
@@ -222,6 +225,23 @@ export default function AdminDashboard() {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleBulkDelete = async () => {
+    if (actionLoading || !selectedMeetings.length || !confirm(`Delete ${selectedMeetings.length} selected meeting rooms? This cannot be undone.`)) return;
+    const ids = [...selectedMeetings];
+    setActionLoading('meeting-bulk-delete');
+    try {
+      const response = await fetch('/api/admin/meetings', { method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ meetingIds: ids }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Could not delete selected rooms.');
+      setMeetings(previous => previous.filter(meeting => !ids.includes(meeting.meetingId)));
+      setSelectedMeetings([]);
+      showToast(`Deleted ${data.deletedCount} meeting rooms.`);
+      const statsResponse = await fetch('/api/admin/stats', { credentials: 'include' });
+      if (statsResponse.ok) setStats((await statsResponse.json()).stats);
+    } catch (error) { showToast(error instanceof Error ? error.message : 'Could not delete selected rooms.', 'error'); }
+    finally { setActionLoading(null); }
   };
 
   const filteredUsers = users.filter((u) => {
@@ -333,7 +353,8 @@ export default function AdminDashboard() {
                     aria-label="Search rooms"
                     placeholder="Search title, room ID, or host email"
                     value={meetingSearch}
-                    onChange={(e) => setMeetingSearch(e.target.value)}
+                    onChange={(e) => { setMeetingSearch(e.target.value); setSelectedMeetings([]); }}
+                    disabled={Boolean(actionLoading)}
                     className="input-modern max-w-md w-full"
                   />
                   <div className="flex flex-wrap items-center gap-3">
@@ -344,10 +365,16 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
+                <div className="flex flex-wrap items-center gap-3">
+                  <span role="status" className="text-sm text-zinc-300">{selectedMeetings.length} selected (up to 100)</span>
+                  <button type="button" className="button-secondary" disabled={!selectedMeetings.length || Boolean(actionLoading)} onClick={() => void handleBulkDelete()}>{actionLoading === 'meeting-bulk-delete' ? 'Deleting...' : 'Delete selected'}</button>
+                  {selectedMeetings.length > 0 && <button type="button" disabled={Boolean(actionLoading)} onClick={() => setSelectedMeetings([])} className="text-sm text-zinc-400">Clear selection</button>}
+                </div>
                 <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900">
                   <table className="min-w-full divide-y divide-zinc-800 text-left text-sm text-zinc-400">
                     <thead className="bg-zinc-900 text-zinc-100 font-semibold">
                       <tr>
+                        <th className="px-4 py-4"><input type="checkbox" aria-label="Select first 100 matching rooms" disabled={!filteredMeetings.length || Boolean(actionLoading)} checked={filteredMeetings.length > 0 && filteredMeetings.slice(0, 100).every(m => selectedMeetings.includes(m.meetingId))} ref={node => { if (node) node.indeterminate = selectedMeetings.length > 0 && !filteredMeetings.slice(0, 100).every(m => selectedMeetings.includes(m.meetingId)); }} onChange={e => setSelectedMeetings(e.target.checked ? filteredMeetings.slice(0, 100).map(m => m.meetingId) : [])} /></th>
                         <th className="px-6 py-4">Room Title</th>
                         <th className="px-6 py-4">Room ID</th>
                         <th className="px-6 py-4">Host Email</th>
@@ -359,13 +386,14 @@ export default function AdminDashboard() {
                     <tbody className="divide-y divide-zinc-800">
                       {filteredMeetings.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="px-6 py-8 text-center text-zinc-400">
+                          <td colSpan={7} className="px-6 py-8 text-center text-zinc-400">
                             No active or logged rooms found
                           </td>
                         </tr>
                       ) : (
                         filteredMeetings.map((meeting) => (
                           <tr key={meeting._id} className="hover:bg-zinc-900/50 transition">
+                            <td className="px-4 py-4"><input type="checkbox" aria-label={`Select ${meeting.title}`} checked={selectedMeetings.includes(meeting.meetingId)} disabled={Boolean(actionLoading) || (selectedMeetings.length >= 100 && !selectedMeetings.includes(meeting.meetingId))} onChange={e => setSelectedMeetings(ids => e.target.checked ? [...ids, meeting.meetingId] : ids.filter(id => id !== meeting.meetingId))} /></td>
                             <td className="px-6 py-4 font-semibold text-zinc-100">
                               {meeting.title}
                             </td>
@@ -383,7 +411,7 @@ export default function AdminDashboard() {
                             </td>
                             <td className="px-6 py-4 text-right">
                               <button
-                                disabled={actionLoading === `meeting-delete-${meeting.meetingId}`}
+                                disabled={Boolean(actionLoading)}
                                 onClick={() => handleDeleteMeeting(meeting.meetingId)}
                                 className="text-red-500 hover:text-red-700 font-semibold text-xs disabled:opacity-50 transition"
                               >

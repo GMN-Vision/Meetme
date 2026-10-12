@@ -9,10 +9,11 @@ interface MeetingCardProps {
   title: string;
   hostEmail: string;
   createdAt: string;
+  scheduledAt?: string;
   activityText?: string;
 }
 
-export function MeetingCard({ meetingId, title, hostEmail, createdAt, activityText }: MeetingCardProps) {
+export function MeetingCard({ meetingId, title, hostEmail, createdAt, activityText, scheduledAt }: MeetingCardProps) {
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
   const roomHref = `/room/${encodeURIComponent(meetingId)}`;
   const date = new Date(createdAt);
@@ -34,6 +35,7 @@ export function MeetingCard({ meetingId, title, hostEmail, createdAt, activityTe
       </div>
       <h3 className="line-clamp-2 break-words text-base font-semibold leading-6 text-zinc-100"><Link href={roomHref} className="hover:underline">{title || 'Untitled meeting'}</Link></h3>
       <p className="mt-2 truncate text-xs text-zinc-400" title={hostEmail}>Hosted by {hostEmail}</p>
+      {scheduledAt && <p className="mt-3 text-sm font-medium text-sky-300">Scheduled: <time dateTime={scheduledAt}>{new Date(scheduledAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</time><span className="block text-xs text-zinc-400">{Intl.DateTimeFormat().resolvedOptions().timeZone}</span></p>}
       {activityText && <p className="mt-3 line-clamp-2 text-sm leading-6 text-zinc-400">{activityText}</p>}
       <div className="mt-auto pt-5">
         <div className="flex items-center justify-between gap-2 border-t border-zinc-800 pt-3">

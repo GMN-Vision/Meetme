@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getGuideAnswer, GUIDE_FALLBACK } from '@/lib/guide-answers';
 
 const GUIDE_INSTRUCTIONS = `You are Melanam Guide, the in-app product helper for Melanam. Your job is to help users learn and use this app, not to act on their account. Answer in a friendly, calm tone using plain, short sentences. For how-to questions, give 2â€“5 numbered steps and name the page/button where known. Keep most answers under 100 words. If useful, finish with one relevant next step. Understand follow-up questions using the conversation history.
 
@@ -19,6 +20,7 @@ NAVIGATION
 MEETINGS
 - Start an instant room: open /meetings, click Start meeting, then wait for the room to open.
 - Create a named room: open /meetings, click Create meeting, enter a Meeting title, optionally add an agenda/Description, and click Create room. The room opens after creation.
+- Schedule a room: open /meetings, click Schedule meeting, add a title and future date/time in the displayed timezone, then save. The room appears in Upcoming meetings. Copy its link to invite participants; invitations are not automatically sent.
 - Join a room: open /meetings, click Join meeting, paste a complete invite URL or enter the room code in Meeting ID, then click Join. A participant can also open the invite link directly. If access fails, check the link and signed-in account.
 - Invite: in a room, use Copy link in the meeting toolbar. From /meetings, a recent meeting card also has Copy link. Share invite links only with intended participants.
 - Recent rooms: /meetings lists recent rooms. Search accepts meeting title, host, or room code. Use the sort control for newest/oldest, the refresh button to reload, Open room to return, or Copy link to invite.
@@ -39,7 +41,7 @@ ACCOUNT, ACCESS, AND PRIVACY
 
 const PAGE_CONTEXT: Record<string, string> = {
   '/': 'Home page: public product landing page. Main navigation offers Features, Pricing, Compare, Sign in/Get started, and Help Center in the mobile menu.',
-  '/meetings': 'Meeting workspace: Meetings tab with Start meeting, Join meeting, Create meeting, and recent rooms.',
+  '/meetings': 'Meeting workspace: Meetings tab with Start meeting, Join meeting, Create meeting, Schedule meeting, Upcoming meetings, and recent rooms.',
   '/meetings/recordings': 'Recordings tab: watch/download ready recordings, share with meeting group as host, or delete as host.',
   '/meetings/notes': 'Meeting notes tab: processed summaries, decisions, action items, and transcripts.',
   '/pricing': 'Pricing page: use this page for current plan names, prices, and included features.',
@@ -57,7 +59,8 @@ function getPageContext(path: unknown) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Send a valid question.' }, { status: 400 });
     const messages = Array.isArray(body.messages) ? body.messages.slice(-10) : [];
     if (!messages.length || messages.some((message: any) =>
       !message || !['user', 'assistant'].includes(message.role) ||
@@ -66,8 +69,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Send a question of up to 1,000 characters.' }, { status: 400 });
     }
 
+    if (messages[messages.length - 1].role !== 'user') return NextResponse.json({ error: 'Send a user question.' }, { status: 400 });
+    const localAnswer = getGuideAnswer(messages[messages.length - 1].content);
+    if (localAnswer) return NextResponse.json({ answer: localAnswer });
     const apiKey = process.env.GEMINI_GUIDE_API_KEY?.trim();
-    if (!apiKey) return NextResponse.json({ error: 'The app guide is temporarily unavailable. Please try again later.' }, { status: 503 });
+    if (!apiKey) return NextResponse.json({ answer: GUIDE_FALLBACK });
 
     const model = process.env.GEMINI_GUIDE_MODEL?.trim() || 'gemini-2.5-flash';
     const pageContext = getPageContext(body.page);
@@ -85,26 +91,15 @@ export async function POST(request: Request) {
       signal: AbortSignal.timeout(20000),
     });
     if (!result.ok) {
-      const providerError = await result.json().catch(() => null);
-      const providerMessage = String(providerError?.error?.message || '');
-      console.error('Guide chat Gemini request failed:', result.status, providerMessage.slice(0, 300));
-      if (result.status === 401 || result.status === 403) {
-        return NextResponse.json({ error: 'The bot API key was rejected. Check GEMINI_GUIDE_API_KEY in .env.local and restart the app.' }, { status: 502 });
-      }
-      if (result.status === 404) {
-        return NextResponse.json({ error: 'The bot model was not found. Check GEMINI_GUIDE_MODEL in .env.local.' }, { status: 502 });
-      }
-      if (result.status === 429) {
-        return NextResponse.json({ error: 'The bot API quota or rate limit was reached. Check your Gemini API usage and try again later.' }, { status: 502 });
-      }
-      return NextResponse.json({ error: 'The guide couldnâ€™t answer right now. Please try again.' }, { status: 502 });
+      console.error('Guide provider unavailable:', result.status);
+      return NextResponse.json({ answer: GUIDE_FALLBACK });
     }
     const data = await result.json();
     const answer = data.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || '').join('').trim();
-    if (!answer) return NextResponse.json({ error: 'The guide couldnâ€™t answer right now. Please try again.' }, { status: 502 });
+    if (!answer) return NextResponse.json({ answer: GUIDE_FALLBACK });
     return NextResponse.json({ answer });
   } catch (error) {
     console.error('Guide chat error:', error instanceof Error ? error.message : 'Unknown error');
-    return NextResponse.json({ error: 'The guide couldnâ€™t answer right now. Please try again.' }, { status: 500 });
+    return NextResponse.json({ answer: GUIDE_FALLBACK });
   }
 }

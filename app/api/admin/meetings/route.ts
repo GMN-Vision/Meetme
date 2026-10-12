@@ -70,7 +70,13 @@ export async function DELETE(req: NextRequest) {
     }
 
     if (!meetingId) {
-      return NextResponse.json({ error: 'Meeting ID is required' }, { status: 400 });
+      const body = await req.json().catch(() => null);
+      const ids = body?.meetingIds;
+      if (Array.isArray(ids) && ids.length > 0 && ids.length <= 100 && ids.every(id => typeof id === 'string' && /^[a-zA-Z0-9_-]{1,128}$/.test(id))) {
+        const result = await Meeting.deleteMany({ meetingId: { $in: [...new Set(ids)] } });
+        return NextResponse.json({ success: true, deletedCount: result.deletedCount });
+      }
+      return NextResponse.json({ error: 'Select between 1 and 100 valid meeting rooms.' }, { status: 400 });
     }
 
     const meeting = await Meeting.findOne({ meetingId });

@@ -31,6 +31,7 @@ interface IMeeting extends Document {
   hostEmail: string;
   title: string;
   description?: string;
+  scheduledAt?: Date | null;
   isPrivate: boolean;
   chatEnabled: boolean;
   recordingEnabled: boolean;
@@ -88,6 +89,7 @@ const MeetingSchema = new Schema<IMeeting>(
       type: String,
       default: '',
     },
+    scheduledAt: { type: Date, default: null, index: true },
     isPrivate: {
       type: Boolean,
       default: false,

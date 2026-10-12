@@ -20,14 +20,18 @@ export async function GET(req: NextRequest) {
 
     await dbConnect();
 
-    const meetings = await Meeting.find({ hostEmail: userEmail })
-      .sort({ createdAt: -1 })
-      .limit(12);
+    const hostEmail = userEmail.toLowerCase();
+    const now = new Date();
+    const [upcomingMeetings, meetings] = await Promise.all([
+      Meeting.find({ hostEmail, scheduledAt: { $gt: now } }).sort({ scheduledAt: 1 }),
+      Meeting.find({ hostEmail, $or: [{ scheduledAt: null }, { scheduledAt: { $lte: now } }] }).sort({ createdAt: -1 }).limit(12),
+    ]);
 
     return NextResponse.json(
       {
         success: true,
         meetings,
+        upcomingMeetings,
       },
       { status: 200 }
     );
