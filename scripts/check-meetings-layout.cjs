@@ -27,15 +27,15 @@ const { MeetingWorkspace } = load('components/meetings/MeetingWorkspace.tsx', {
 });
 (async () => {
   const html = renderToStaticMarkup(React.createElement(MeetingWorkspace, null, React.createElement(MeetingDashboard)));
-  const css = fs.readFileSync(path.join(os.tmpdir(), 'melanam-meetings-preview.css'), 'utf8');
+  const css = fs.readFileSync(path.join(os.tmpdir(), 'melanam-meetings-preview.css'), 'utf8') + fs.readFileSync(path.join(__dirname, '../app/design-magenta.css'), 'utf8');
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
-    for (const width of [1440, 768, 375, 320]) {
+    for (const theme of ['current', 'magenta']) for (const width of [1440, 768, 375, 320]) {
       await page.setViewportSize({ width, height: 1000 });
-      await page.setContent(`<html><head><style>${css}</style></head><body>${html}</body></html>`);
+      await page.setContent(`<html data-design="${theme}"><head><style>${css}</style></head><body>${html}</body></html>`);
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Overflow at ${width}px`);
-      assert.equal(await page.getByRole('article').count(), 3);
+      assert.equal(await page.getByRole('article').count(), 6);
       assert.ok(await page.getByRole('button', { name: 'Start meeting', exact: true }).isVisible());
       await page.screenshot({ path: path.join(os.tmpdir(), `melanam-meetings-${width}.png`), fullPage: true });
     }

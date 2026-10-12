@@ -7,14 +7,8 @@
 .design-switcher button { min-height: 34px; padding: 5px 10px; border-radius: 999px; color: #d4d4d8; font-size: 11px; font-weight: 700; white-space: nowrap; }
 .design-switcher button[aria-pressed='true'] { background: #fafafa; color: #18181b; }
 .design-switcher button:hover { box-shadow: inset 0 0 0 1px #a1a1aa; }
-html[data-design='magenta'] .template-hero { background: radial-gradient(ellipse at 50% 35%, #57144966, transparent 65%), linear-gradient(#120914, #211023); }
-html[data-design='magenta'] .design-switcher button[aria-pressed='true'] { background: #a71c83; color: #fff; }
-html[data-design='magenta'] :focus-visible { outline-color: #7dd3fc; }
-html[data-design='magenta'] :is(.design-blue, .design-blue span) { color: #7dd3fc; }
-html[data-design='magenta'] .design-copyright { color: #eee0ee; }
 @property --light-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
 @keyframes rotating-label-light { to { --light-angle: 360deg; } }
-html[data-design='magenta'] .rotating-light { position: relative; isolation: isolate; border: 1px solid transparent; border-radius: 999px; color: #fff1fc; background: linear-gradient(#211023, #211023) padding-box, conic-gradient(from var(--light-angle), #592650 0%, #592650 60%, #e879f9 77%, #7dd3fc 87%, #592650 100%) border-box; box-shadow: 0 0 22px #d946ef20; animation: rotating-label-light 5s linear infinite; }
 @media (max-width: 380px) { .site-brand { gap: .35rem; } .site-brand > span:first-child { width: 24px; height: 24px; } .design-switcher button { padding-inline: 7px; font-size: 10px; } }
 
 /* The v0 reference's charcoal / white system, shared by every app surface. */
@@ -158,3 +152,19 @@ html[data-design='magenta'] .rotating-light { position: relative; isolation: iso
 .site-navigation { height: 66px; }
 .site-navigation .design-switcher button { min-height: 30px; padding-block: 3px; }
 input[type='datetime-local'] { min-width: 0; max-width: 100%; }
+
+/* Animate the border itself, not four cross-fading light positions. */
+.hover-border-gradient__light {
+  inset: -1px;
+  z-index: -2;
+  filter: none;
+  background: conic-gradient(from var(--light-angle), #ffffff08 0deg, #ffffff10 235deg, #a5bfff 280deg, #fff 310deg, #ffffff08 345deg);
+  animation: rotating-label-light var(--border-duration, 4s) linear infinite var(--border-direction, normal);
+}
+.hover-border-gradient__surface { inset: 2px; background: var(--button-surface, #09090b); }
+.hover-border-gradient__glow { position: absolute; inset: -2px; z-index: -3; border-radius: inherit; background: #3275f8; opacity: 0; filter: blur(7px); pointer-events: none; transition: opacity .25s; }
+.hover-border-gradient:is(:hover, :focus-visible) .hover-border-gradient__glow { opacity: .55; }
+.hover-border-gradient:disabled .hover-border-gradient__light { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .hover-border-gradient__light { animation: none; --light-angle: 35deg; }
+}

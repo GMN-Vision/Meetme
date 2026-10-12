@@ -51,7 +51,7 @@ export function MeetingActions({ onScheduled }: { onScheduled?: () => void }) {
         {scheduledMessage && <p role="status" className="mb-4 text-sm text-sky-300">{scheduledMessage}</p>}
         {error ? <p role="alert" className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p> : null}
         <div className="grid gap-3 lg:grid-cols-[1.35fr_1fr] lg:gap-4">
-          <div className="relative isolate overflow-hidden rounded-3xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 p-6 sm:p-8">
+          <div className="meeting-start-card relative isolate overflow-hidden rounded-3xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 p-6 sm:p-8">
             <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 -z-10 h-80 w-80 rounded-full border border-white/5 p-10"><div className="h-full w-full rounded-full border border-white/5 p-10"><div className="h-full w-full rounded-full border border-white/10" /></div></div>
             <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5"><Video className="h-6 w-6 text-zinc-100" /></div>
             <p className="mb-2 text-xs font-medium uppercase tracking-[.15em] text-zinc-400">A conversation away</p>

@@ -597,7 +597,7 @@ export default function RoomPage() {
 
   if (meetingError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#09090b]">
+      <div className="meeting-room min-h-screen flex items-center justify-center bg-[var(--app-bg)]">
         <div className="text-center">
           <p className="text-red-400 text-lg mb-2">{meetingError}</p>
           <p className="text-zinc-400 text-sm mb-4">
@@ -615,9 +615,9 @@ export default function RoomPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[64rem] overflow-hidden px-3 pt-6 text-zinc-100 sm:px-5">
+    <div className="meeting-room mx-auto w-full max-w-[64rem] overflow-hidden px-3 pt-6 text-zinc-100 sm:px-5">
       {!userEmail && <p className="mb-3 text-sm text-zinc-300">To receive shared recordings in your recordings, <a className="text-zinc-300 underline" href={`/sign-in?callbackUrl=${encodeURIComponent(`/room/${meetingId}`)}`}>sign in and rejoin</a> before the host ends the meeting.</p>}
-      <div className="relative min-h-[24rem] overflow-hidden rounded-lg border border-[#27272a] bg-zinc-950">
+      <div className="meeting-stage relative min-h-[24rem] overflow-hidden rounded-lg border border-[#27272a] bg-zinc-950">
         <div
           ref={handleVideoStageRef}
           className="relative h-[min(68dvh,40rem)] min-h-[24rem] w-full overflow-hidden bg-zinc-950"

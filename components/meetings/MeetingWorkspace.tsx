@@ -45,7 +45,7 @@ export function MeetingWorkspace({ children }: { children: React.ReactNode }) {
   }, [attempt]);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
+    <div className="meeting-workspace mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
       <header className="mb-7 flex items-start justify-between gap-3">
         <div>
           <p className="section-kicker mb-2 !text-[10px] sm:!text-xs">Your workspace</p>

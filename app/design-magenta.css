@@ -1,74 +1,116 @@
-/* UI 2 finishing. Keep every rule scoped so UI 1 retains its original styling. */
+/* UI 2: graphite surfaces, soft white type, and restrained ice-blue accents.
+   Keep the persisted theme key for existing users. Navbar sizing is shared. */
 html[data-design='magenta'] {
-  --design-accent: #e879cf;
-  --design-blue: #7dd3fc;
-  --design-line: #66325b;
+  --design-accent: #a5bfff;
+  --design-blue: #a5bfff;
+  --design-line: #303747;
+  --design-surface: #14171e;
+  --design-muted: #a7afbd;
 }
 
-html[data-design='magenta'] .design-switcher { border-color: #66325b; background: #12091480; }
-html[data-design='magenta'] .design-switcher button[aria-pressed='true'] {
-  background: linear-gradient(135deg, #a71c83, #802269);
-  box-shadow: 0 2px 8px #08040a40, inset 0 1px 0 #ffffff24;
-}
+html[data-design='magenta'] .design-switcher { border-color: #363b46; background: #14161b; }
+html[data-design='magenta'] .design-switcher button[aria-pressed='true'] { background: #dce6ff; color: #17243f; box-shadow: 0 1px 4px #0003; }
+html[data-design='magenta'] :focus-visible { outline-color: var(--design-accent); }
+html[data-design='magenta'] .design-blue { color: #f4f6fb; }
+html[data-design='magenta'] .design-blue span { color: #a5bfff; }
+html[data-design='magenta'] .design-copyright { color: var(--design-muted); }
 
 html[data-design='magenta'] .template-hero {
-  background: radial-gradient(ellipse at 25% 30%, #7b1d5f26, transparent 55%), radial-gradient(ellipse at 80% 65%, #225c7820, transparent 45%), linear-gradient(#120914, #1b0d1d);
+  background: radial-gradient(ellipse at 50% 32%, #537bc51a, transparent 62%), linear-gradient(#09090b, #0e1118 65%, #09090b);
 }
-html[data-design='magenta'] .hero-glow { background: #b92b9226; }
-html[data-design='magenta'] .template-hero h1 { text-shadow: 0 0 64px #38bdf814; }
-html[data-design='magenta'] .template-hero .rotating-light { font-weight: 600; box-shadow: 0 0 30px #d946ef18, inset 0 0 12px #d946ef08; }
-html[data-design='magenta'] .section-kicker { color: var(--design-accent); }
+html[data-design='magenta'] .hero-glow { background: #6488d00d; }
+html[data-design='magenta'] .template-hero h1 { text-shadow: none; }
+html[data-design='magenta'] .rotating-light {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: #c4cddd;
+  background: linear-gradient(#11151d, #11151d) padding-box,
+    conic-gradient(from var(--light-angle), #303747 0%, #303747 65%, #a5bfff 82%, #303747 100%) border-box;
+  animation: rotating-label-light 5s linear infinite;
+}
+html[data-design='magenta'] .essentials-label { background: transparent; border-color: transparent; color: #929cab; animation: none; }
+html[data-design='magenta'] .section-kicker { color: var(--design-muted); }
 
-html[data-design='magenta'] .button-secondary { background: #21102366; border-color: #754266; }
-html[data-design='magenta'] :is(.hover\:bg-zinc-800, .hover\:bg-zinc-900):hover { background-color: var(--app-raised); }
-html[data-design='magenta'] :is(.hover\:border-zinc-600, .hover\:border-zinc-700):hover { border-color: #ad6197; }
-html[data-design='magenta'] :is(.bg-zinc-900\/50, .bg-zinc-900\/20, .bg-zinc-800\/60) { background-color: #211023b3; }
-
-html[data-design='magenta'] .plan-card { background: linear-gradient(160deg, #27132a, #1b0e1e); border-color: #66325b80; }
-html[data-design='magenta'] .plan-card--recommended { border-color: #d958b9; box-shadow: 0 0 36px #a71c831a, inset 0 1px 0 #e879cf26; }
-html[data-design='magenta'] .plan-popular { background: #f0a5de; color: #301026; }
-html[data-design='magenta'] .plan-card .border-beam { background: #e879cf40; }
-html[data-design='magenta'] .billing-toggle button[aria-pressed='true'] { background: #6e245c; color: #fff; box-shadow: inset 0 1px 0 #ffffff14; }
-html[data-design='magenta'] .comparison-table :is(th, td) { border-color: #66325b66; }
-html[data-design='magenta'] .comparison-table thead th { background: #29132b; }
-html[data-design='magenta'] .comparison-table td { color: #c4afc5; }
-html[data-design='magenta'] .comparison-table .comparison-highlight { background: #a71c8314; color: #f9e9f5; }
-html[data-design='magenta'] .comparison-table thead .comparison-highlight { background: #512044; color: var(--design-blue); }
-html[data-design='magenta'] .comparison-table tr:hover :is(th, td) { background-color: #e879cf0a; }
+html[data-design='magenta'] .button-secondary { background: #ffffff03; border-color: #3b4352; color: #dde2ec; }
+html[data-design='magenta'] .button-secondary:hover { background: #ffffff09; border-color: #7183a5; color: #fff; }
+html[data-design='magenta'] .plan-card { background: linear-gradient(160deg, #171b24, #111318); border-color: #303747; }
+html[data-design='magenta'] .plan-card--recommended { border-color: #7895cd; box-shadow: 0 0 32px #7297e50a, inset 0 1px 0 #ffffff08; }
+html[data-design='magenta'] .plan-popular { background: #dce6ff; color: #17243f; }
+html[data-design='magenta'] .plan-card .border-beam { background: #a5bfff50; }
+html[data-design='magenta'] .billing-toggle button[aria-pressed='true'] { background: #dce6ff; color: #17243f; }
+html[data-design='magenta'] .comparison-table :is(th, td) { border-color: #303747; }
+html[data-design='magenta'] .comparison-table thead th { background: #171b24; }
+html[data-design='magenta'] .comparison-table td { color: #afb8c8; }
+html[data-design='magenta'] .comparison-table .comparison-highlight { background: #a5bfff08; color: #edf2fc; }
+html[data-design='magenta'] .comparison-table thead .comparison-highlight { background: #202b40; color: #c9d9ff; }
+html[data-design='magenta'] .comparison-table tr:hover :is(th, td) { background-color: #a5bfff0a; }
 
 html[data-design='magenta'] .landing-cta { padding-inline: max(1rem, calc((100% - 1152px) / 2)); }
 html[data-design='magenta'] .landing-cta > div {
   max-width: none;
   padding: clamp(2rem, 6vw, 5rem) 1.5rem;
-  border: 1px solid #98528766;
+  border: 1px solid #303747;
   border-radius: 28px;
-  background: radial-gradient(ellipse at 50% 0, #a71c8333, transparent 70%), #211023;
-  box-shadow: inset 0 1px 0 #ffffff08;
+  background: radial-gradient(ellipse at 50% 0, #7297e514, transparent 70%), #111318;
+  box-shadow: inset 0 1px 0 #ffffff05;
 }
-html[data-design='magenta'] .site-footer { background: #0e0710; border-color: #66325b66; }
-html[data-design='magenta'] .site-footer a:hover { color: var(--design-blue); }
+html[data-design='magenta'] .site-footer { background: #09090b; border-color: #272b34; }
+html[data-design='magenta'] .site-footer a:hover { color: var(--design-accent); }
 
 html[data-design='magenta'] :is(input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']), textarea, select) {
-  color: #f8edf6;
-  background-color: #160c19;
-  border-color: #754266;
+  color: #edf2fc;
+  background-color: #101319;
+  border-color: #3b4352;
 }
-html[data-design='magenta'] :is(input, textarea)::placeholder { color: #b39ab1; }
-html[data-design='magenta'] :is(input, textarea, select):focus-visible { outline: 2px solid var(--design-blue); outline-offset: 3px; border-color: var(--design-blue); }
-html[data-design='magenta'] :is(input[type='checkbox'], input[type='radio']) { accent-color: #e879cf; }
-html[data-design='magenta'] option { background: #211023; }
-html[data-design='magenta'] ::selection { color: #fff; background: #892271; }
-html[data-design='magenta'] .ai-notes-card { background: #160c19; border-color: #66325b; }
-html[data-design='magenta'] :is(.ai-notes-panel__header, .app-guide-chat__header, .app-guide-chat__form) { border-color: #66325b; }
-html[data-design='magenta'] .app-guide-chat__avatar { background: #4b1e40; color: #f0a5de; }
-html[data-design='magenta'] .app-guide-chat__suggestions button { border-color: #754266; color: #e9d5e5; }
-html[data-design='magenta'] .app-guide-chat__suggestions button:hover { background: #351735; border-color: #d958b9; }
-html[data-design='magenta'] .app-guide-chat__message--user { background: #77245f; color: #fff; }
-html[data-design='magenta'] .app-guide-chat__message--assistant { background: #29132b; border-color: #66325b; color: #f2e4ef; }
-html[data-design='magenta'] :is(.app-guide-chat__header small, .app-guide-chat__thinking) { color: #c4afc5; }
+html[data-design='magenta'] :is(input, textarea)::placeholder { color: #929cab; }
+html[data-design='magenta'] :is(input, textarea, select):focus-visible { outline: 2px solid var(--design-accent); outline-offset: 3px; border-color: var(--design-accent); }
+html[data-design='magenta'] :is(input[type='checkbox'], input[type='radio']) { accent-color: var(--design-accent); }
+html[data-design='magenta'] option { background: #14171e; }
+html[data-design='magenta'] ::selection { color: #f4f6fb; background: #344d78; }
+html[data-design='magenta'] .ai-notes-card { background: #101319; border-color: #303747; }
+html[data-design='magenta'] :is(.ai-notes-panel__header, .app-guide-chat__header, .app-guide-chat__form) { border-color: #303747; }
+html[data-design='magenta'] .app-guide-chat__avatar { background: #202b40; color: #c9d9ff; }
+html[data-design='magenta'] .app-guide-chat__suggestions button { border-color: #3b4352; color: #dde2ec; }
+html[data-design='magenta'] .app-guide-chat__suggestions button:hover { background: #202b40; border-color: #7895cd; }
+html[data-design='magenta'] .app-guide-chat__message--user { background: #273c60; color: #f4f6fb; }
+html[data-design='magenta'] .app-guide-chat__message--assistant { background: #171b24; border-color: #303747; color: #dde2ec; }
+html[data-design='magenta'] :is(.app-guide-chat__header small, .app-guide-chat__thinking) { color: #a7afbd; }
 
 @media (max-width: 639px) {
   html[data-design='magenta'] .template-hero h1 { font-size: clamp(2.5rem, 10.5vw, 3.75rem); }
   html[data-design='magenta'] .essentials-label { letter-spacing: .1em; line-height: 1.8; }
   html[data-design='magenta'] .landing-cta > div { border-radius: 20px; padding-inline: 1rem; }
 }
+
+/* One backdrop runs behind the header, landing page, workspace and room. */
+html[data-design='magenta'] {
+  --app-bg: #0e1118;
+  --app-elevated: #171d29;
+  --app-raised: #242e40;
+  --app-border: #303d53;
+  --button-surface: #151d2b;
+  background: var(--app-bg);
+}
+html[data-design='magenta'] body {
+  background: radial-gradient(ellipse at 50% 0, #537bc521, transparent 65%), #0e1118;
+  background-attachment: fixed;
+}
+html[data-design='magenta'] .template-hero { background: transparent; }
+html[data-design='magenta'] :is(.site-navigation, .app-navbar-shell, #mobile-navigation) {
+  background: #171f2fe8;
+  border-color: #35435c;
+  box-shadow: 0 8px 28px #060a1226, inset 0 1px 0 #c2d4ff08;
+}
+html[data-design='magenta'] :is(.surface, .surface-strong, .app-guide-chat__panel) { background: var(--app-elevated); border-color: var(--app-border); }
+html[data-design='magenta'] .hover-border-gradient__surface,
+html[data-design='magenta'] .hover-border-gradient:hover .hover-border-gradient__surface { background: var(--button-surface); }
+html[data-design='magenta'] :is(.meeting-workspace, .meeting-room, .app-navbar-shell) :is(.bg-zinc-900, .bg-zinc-900\/50, .bg-zinc-900\/95, .bg-zinc-900\/20) { background-color: var(--app-elevated); }
+html[data-design='magenta'] :is(.meeting-workspace, .meeting-room, .app-navbar-shell) :is(.bg-zinc-800, .bg-zinc-800\/60) { background-color: var(--app-raised); }
+html[data-design='magenta'] :is(.meeting-workspace, .meeting-room) .bg-zinc-950 { background-color: #101722; }
+html[data-design='magenta'] :is(.meeting-workspace, .meeting-room, .app-navbar-shell) :is(.border-zinc-800, .border-zinc-700) { border-color: var(--app-border); }
+html[data-design='magenta'] .meeting-start-card { background: radial-gradient(ellipse at 100% 0, #6e99e51c, transparent 65%), linear-gradient(135deg, #1f2b40, #151c29); border-color: #3a4c69; }
+html[data-design='magenta'] .meeting-workspace nav a[aria-current='page'] { background: #dce6ff; color: #17243f; }
+html[data-design='magenta'] .meeting-stage { background: #101722; border-color: #3a4c69; box-shadow: 0 16px 50px #050a1833; }
+html[data-design='magenta'] .app-navbar-shell button[aria-expanded='true'] { border-color: #a5bfff; }
