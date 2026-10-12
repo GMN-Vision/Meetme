@@ -130,7 +130,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  *:not(.hover-border-gradient), *:not(.hover-border-gradient)::before, *:not(.hover-border-gradient)::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .animate-marquee { animation: none; }
 }
 
@@ -140,10 +140,12 @@
   position: relative;
   isolation: isolate;
   overflow: visible;
-  border: 1px solid #ffffff26;
-  background: #ffffff1a;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--button-surface, #09090b), var(--button-surface, #09090b)) padding-box,
+    conic-gradient(from var(--light-angle), #ffffff08 0deg, #ffffff10 235deg, #a5bfff 280deg, #fff 310deg, #ffffff08 345deg) border-box;
   color: #fafafa;
-  animation: none;
+  animation: rotating-label-light var(--border-duration, 4s) linear infinite var(--border-direction, normal);
 }
 .hover-border-gradient__light { position: absolute; inset: 0; z-index: -2; border-radius: inherit; pointer-events: none; filter: blur(2px); }
 .hover-border-gradient__surface { position: absolute; inset: 2px; z-index: -1; border-radius: inherit; background: #09090b; pointer-events: none; }
@@ -155,16 +157,12 @@ input[type='datetime-local'] { min-width: 0; max-width: 100%; }
 
 /* Animate the border itself, not four cross-fading light positions. */
 .hover-border-gradient__light {
-  inset: -1px;
-  z-index: -2;
-  filter: none;
-  background: conic-gradient(from var(--light-angle), #ffffff08 0deg, #ffffff10 235deg, #a5bfff 280deg, #fff 310deg, #ffffff08 345deg);
-  animation: rotating-label-light var(--border-duration, 4s) linear infinite var(--border-direction, normal);
+  display: none;
 }
-.hover-border-gradient__surface { inset: 2px; background: var(--button-surface, #09090b); }
+.hover-border-gradient__surface { display: none; }
 .hover-border-gradient__glow { position: absolute; inset: -2px; z-index: -3; border-radius: inherit; background: #3275f8; opacity: 0; filter: blur(7px); pointer-events: none; transition: opacity .25s; }
 .hover-border-gradient:is(:hover, :focus-visible) .hover-border-gradient__glow { opacity: .55; }
-.hover-border-gradient:disabled .hover-border-gradient__light { animation-play-state: paused; }
+.hover-border-gradient:disabled { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) {
-  .hover-border-gradient__light { animation: none; --light-angle: 35deg; }
+  .hover-border-gradient { --light-angle: 35deg; }
 }
