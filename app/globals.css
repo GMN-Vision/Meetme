@@ -2,6 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Both designs share layout and behavior; UI 2 is the default for new visitors. */
+.design-switcher { display: inline-flex; flex-shrink: 0; gap: 2px; padding: 3px; border: 1px solid #52525b; border-radius: 999px; background: #18181b; }
+.design-switcher button { min-height: 34px; padding: 5px 10px; border-radius: 999px; color: #d4d4d8; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.design-switcher button[aria-pressed='true'] { background: #fafafa; color: #18181b; }
+.design-switcher button:hover { box-shadow: inset 0 0 0 1px #a1a1aa; }
+html[data-design='magenta'] { --app-bg: #120914; --app-elevated: #211023; --app-raised: #351735; --app-hover: #50234b; --app-border: #592650; --app-muted: #c4afc5; }
+html[data-design='magenta'] body { background: var(--app-bg); }
+html[data-design='magenta'] .template-hero { background: radial-gradient(ellipse at 50% 35%, #57144966, transparent 65%), linear-gradient(#120914, #211023); }
+html[data-design='magenta'] :is(.template-card, .surface, .surface-strong, .app-navbar-shell, .app-guide-chat__panel) { background: var(--app-elevated); border-color: var(--app-border); }
+html[data-design='magenta'] .template-feature:hover { border-color: #e879ca; box-shadow: 0 8px 40px #d946ef14; }
+html[data-design='magenta'] :is(.bg-zinc-950, .bg-zinc-900, .bg-zinc-900\/95, .bg-zinc-900\/60) { background-color: var(--app-elevated); }
+html[data-design='magenta'] :is(.bg-zinc-800, .bg-zinc-800\/80) { background-color: var(--app-raised); }
+html[data-design='magenta'] :is(.border-zinc-800, .border-zinc-800\/70, .border-zinc-700) { border-color: var(--app-border); }
+html[data-design='magenta'] :is(.text-zinc-400, .text-zinc-500) { color: var(--app-muted); }
+html[data-design='magenta'] :is(.button-primary, .app-guide-chat__toggle, .app-guide-chat__form button:not(:disabled)) { color: #fff; background: #a71c83; border-color: #d958b9; }
+html[data-design='magenta'] :is(.button-primary:hover, .app-guide-chat__toggle:hover) { background: #be258f; }
+html[data-design='magenta'] .button-secondary { border-color: #985287; color: #f8eaf5; }
+html[data-design='magenta'] .button-secondary:hover { background: #351735; }
+html[data-design='magenta'] .design-switcher { background: #211023; border-color: #985287; }
+html[data-design='magenta'] .design-switcher button[aria-pressed='true'] { background: #a71c83; color: #fff; }
+html[data-design='magenta'] :focus-visible { outline-color: #7dd3fc; }
+html[data-design='magenta'] :is(.design-blue, .design-blue span) { color: #7dd3fc; }
+html[data-design='magenta'] .design-copyright { color: #eee0ee; }
+/* Reserve the logo space until the client supplies the new artwork. */
+html[data-design='magenta'] .site-brand > span:first-child,
+html[data-design='magenta'] .app-brand-mark { visibility: hidden; }
+html[data-design='magenta'] :is(.site-brand, .app-navbar-brand > span:last-child) { color: #7dd3fc; }
+@property --light-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes rotating-label-light { to { --light-angle: 360deg; } }
+html[data-design='magenta'] .rotating-light { position: relative; isolation: isolate; border: 1px solid transparent; border-radius: 999px; color: #fff1fc; background: linear-gradient(#211023, #211023) padding-box, conic-gradient(from var(--light-angle), #592650 0%, #592650 60%, #e879f9 77%, #7dd3fc 87%, #592650 100%) border-box; box-shadow: 0 0 22px #d946ef20; animation: rotating-label-light 5s linear infinite; }
+html[data-design='magenta'] .essentials-label { max-width: calc(100% - 2rem); padding: .75rem 1.25rem; animation-delay: -2.5s; }
+@media (max-width: 380px) { .site-brand { gap: .35rem; } .site-brand > span:first-child { width: 24px; height: 24px; } .design-switcher button { padding-inline: 7px; font-size: 10px; } }
+
 /* The v0 reference's charcoal / white system, shared by every app surface. */
 :root {
   color-scheme: dark;

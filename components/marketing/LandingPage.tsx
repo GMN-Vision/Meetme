@@ -27,10 +27,10 @@ export function LandingPage() {
 
   return <>
     <section className="template-hero relative flex flex-col items-center justify-center overflow-hidden px-4 pb-20 pt-12 sm:pt-16">
-      <div className="pointer-events-none absolute left-1/2 top-1/4 h-[500px] w-[min(800px,100%)] -translate-x-1/2 rounded-full bg-zinc-800/20 blur-3xl" aria-hidden="true" />
+      <div className="hero-glow pointer-events-none absolute left-1/2 top-1/4 h-[500px] w-[min(800px,100%)] -translate-x-1/2 rounded-full bg-zinc-800/20 blur-3xl" aria-hidden="true" />
       <div className="relative mx-auto max-w-5xl text-center">
-        <Reveal><span className="mb-8 inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-zinc-400"><span className="pulse-glow h-2 w-2 rounded-full bg-emerald-500 text-emerald-500" />Your next conversation starts here</span></Reveal>
-        <Reveal delay={.1}><h1 className="mb-6 text-5xl font-bold leading-[1.1] tracking-[-.045em] text-white sm:text-6xl lg:text-7xl">Connect. Converse.<br /><span className="text-zinc-500">Collaborate. Create.</span></h1></Reveal>
+        <Reveal><span className="rotating-light mb-8 inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-zinc-400"><span className="pulse-glow h-2 w-2 rounded-full bg-emerald-500 text-emerald-500" />Your next conversation starts here</span></Reveal>
+        <Reveal delay={.1}><h1 className="design-blue mb-6 text-5xl font-bold leading-[1.1] tracking-[-.045em] text-white sm:text-6xl lg:text-7xl">Connect. Converse.<br /><span className="text-zinc-500">Collaborate. Create.</span></h1></Reveal>
         <Reveal delay={.2}><p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-zinc-400 sm:text-xl">Video meetings, recordings, and everything in between. Bring your people together with Melanam, right in your browser.</p></Reveal>
         <Reveal delay={.3} className="mb-14 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link href={startHref} className="button-primary shimmer-btn h-12 w-full !px-8 !text-base sm:w-auto">{status === 'authenticated' ? 'Open my meetings' : 'Start meeting free'}<ArrowRight className="h-4 w-4" /></Link>
@@ -43,13 +43,13 @@ export function LandingPage() {
       </div>
     </section>
 
-    <section className="border-y border-zinc-800/70 py-10" aria-label="Melanam meeting tools">
-      <p className="mb-7 text-center text-xs uppercase tracking-[.18em] text-zinc-500">Your meeting essentials. All together.</p>
+    <section className="meeting-essentials border-y border-zinc-800/70 py-10" aria-label="Melanam meeting tools">
+      <div className="mb-7 text-center"><p className="rotating-light essentials-label inline-flex text-xs uppercase tracking-[.18em] text-zinc-500">Your meeting essentials. All together.</p></div>
       <div className="feature-marquee mx-auto max-w-6xl overflow-hidden"><div className="animate-marquee flex w-max">{[0, 1].map(copy => <div key={copy} className="flex shrink-0 items-center gap-12 px-6 sm:gap-16" aria-hidden={copy === 1}>{tools.map((Icon, index) => <span key={index} className="flex items-center gap-3 whitespace-nowrap text-base font-semibold text-zinc-400"><Icon className="h-5 w-5" strokeWidth={1.5} />{labels[index]}</span>)}</div>)}</div></div>
     </section>
 
     <section id="features" className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
-      <Reveal className="mb-16 text-center"><h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Everything you need to connect.</h2><p className="mx-auto mt-4 max-w-2xl text-zinc-400">From the first hello to the next step. A simpler space for conversations, collaboration, and the moments worth keeping.</p></Reveal>
+      <Reveal className="mb-16 text-center"><h2 className="design-blue text-3xl font-bold tracking-tight text-white sm:text-4xl">Everything you need to connect.</h2><p className="mx-auto mt-4 max-w-2xl text-zinc-400">From the first hello to the next step. A simpler space for conversations, collaboration, and the moments worth keeping.</p></Reveal>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Reveal className="template-feature template-card overflow-hidden md:col-span-2">
           <div className="mb-6 flex items-start justify-between"><div><span className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800"><Video className="h-5 w-5 text-zinc-400" /></span><h3 className="text-xl font-semibold text-white">More room for conversation.</h3><p className="mt-2 max-w-lg text-sm text-zinc-400">Meet face to face, share your screen, and keep everyone in the loop. Send an invite link and you’re ready.</p></div><span className="hidden gap-1.5 sm:flex" aria-hidden="true">{[1,2,3,4,5].map(i => <span key={i} className="h-2 w-2 rounded-full bg-emerald-500/80" />)}</span></div>
@@ -68,7 +68,7 @@ export function LandingPage() {
       <p className="mt-8 text-center text-sm text-zinc-400"><Link href="/pricing" className="inline-flex items-center gap-2 hover:text-white">Explore all plan details <ArrowRight className="h-4 w-4" /></Link></p>
     </section>
     <ComparisonTable />
-    <section className="px-4 py-24 sm:py-32"><Reveal className="mx-auto max-w-4xl text-center"><h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">Ready for a better meeting?</h2><p className="mx-auto mb-10 mt-6 max-w-xl text-lg text-zinc-400">Your people. Your ideas. One place to connect.<br />Start with Melanam for free.</p><div className="flex flex-col items-center justify-center gap-4 sm:flex-row"><Link href={startHref} className="button-primary shimmer-btn h-14 !px-8">Get started for free <ArrowRight className="h-5 w-5" /></Link><Link href="/pricing" className="button-secondary h-14 !px-8">Explore plans</Link></div><p className="mt-8 inline-flex items-center gap-2 text-sm text-zinc-500"><ShieldCheck className="h-4 w-4" />No credit card required. Just your email.</p></Reveal></section>
+    <section className="landing-cta px-4 py-24 sm:py-32"><Reveal className="mx-auto max-w-4xl text-center"><h2 className="design-blue text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">Ready for a better meeting?</h2><p className="mx-auto mb-10 mt-6 max-w-xl text-lg text-zinc-400">Your people. Your ideas. One place to connect.<br />Start with Melanam for free.</p><div className="flex flex-col items-center justify-center gap-4 sm:flex-row"><Link href={startHref} className="button-primary shimmer-btn h-14 !px-8">Get started for free <ArrowRight className="h-5 w-5" /></Link><Link href="/pricing" className="button-secondary h-14 !px-8">Explore plans</Link></div><p className="mt-8 inline-flex items-center gap-2 text-sm text-zinc-500"><ShieldCheck className="h-4 w-4" />No credit card required. Just your email.</p></Reveal></section>
     <Footer />
     <JoinModal isOpen={joinOpen} onClose={() => setJoinOpen(false)} />
   </>;

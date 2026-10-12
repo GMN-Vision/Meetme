@@ -1,0 +1,106 @@
+/* UI 2 finishing. Keep every rule scoped so UI 1 retains its original styling. */
+html[data-design='magenta'] {
+  --design-accent: #e879cf;
+  --design-blue: #7dd3fc;
+  --design-line: #66325b;
+}
+
+html[data-design='magenta'] .site-header { max-width: 1120px; }
+html[data-design='magenta'] .site-navigation {
+  background: #211023d9;
+  border-color: #79416b80;
+  box-shadow: 0 12px 40px #08040a50, inset 0 1px 0 #ffffff08;
+  backdrop-filter: blur(24px);
+}
+html[data-design='magenta'] .site-navigation a:not(.button-primary):hover { color: var(--design-blue); }
+html[data-design='magenta'] .design-switcher { border-color: #66325b; background: #12091480; }
+html[data-design='magenta'] .design-switcher button { min-height: 36px; padding-inline: 14px; }
+html[data-design='magenta'] .design-switcher button[aria-pressed='true'] {
+  background: linear-gradient(135deg, #a71c83, #802269);
+  box-shadow: 0 2px 8px #08040a40, inset 0 1px 0 #ffffff24;
+}
+
+html[data-design='magenta'] .template-hero {
+  background: radial-gradient(ellipse at 25% 30%, #7b1d5f26, transparent 55%), radial-gradient(ellipse at 80% 65%, #225c7820, transparent 45%), linear-gradient(#120914, #1b0d1d);
+}
+html[data-design='magenta'] .hero-glow { background: #b92b9226; }
+html[data-design='magenta'] .template-hero h1 { text-shadow: 0 0 64px #38bdf814; }
+html[data-design='magenta'] .template-hero .rotating-light { font-weight: 600; box-shadow: 0 0 30px #d946ef18, inset 0 0 12px #d946ef08; }
+html[data-design='magenta'] .meeting-essentials { background: #21102366; border-color: #66325b66; }
+html[data-design='magenta'] .feature-marquee svg { color: var(--design-accent); }
+html[data-design='magenta'] .section-kicker { color: var(--design-accent); }
+html[data-design='magenta'] .template-card {
+  background: linear-gradient(145deg, #2b152d, #1c101f);
+  border-color: #66325b80;
+  border-radius: 20px;
+  box-shadow: inset 0 1px 0 #ffffff05;
+}
+html[data-design='magenta'] .template-feature > span:first-child,
+html[data-design='magenta'] .template-feature > div:first-child > div > span:first-child {
+  background: #e879cf12;
+  border: 1px solid #e879cf26;
+}
+html[data-design='magenta'] .template-feature > span:first-child svg,
+html[data-design='magenta'] .template-feature > div:first-child > div > span:first-child svg { color: var(--design-accent); }
+
+html[data-design='magenta'] .button-primary {
+  background: linear-gradient(135deg, #ab1e86, #892271);
+  border-color: #e879cf80;
+  box-shadow: 0 4px 18px #a71c8326, inset 0 1px 0 #ffffff14;
+}
+html[data-design='magenta'] .button-primary:hover { background: linear-gradient(135deg, #bd2595, #a12885); box-shadow: 0 6px 24px #a71c8340; }
+html[data-design='magenta'] .button-secondary { background: #21102366; border-color: #754266; }
+html[data-design='magenta'] :is(.hover\:bg-zinc-800, .hover\:bg-zinc-900):hover { background-color: var(--app-raised); }
+html[data-design='magenta'] :is(.hover\:border-zinc-600, .hover\:border-zinc-700):hover { border-color: #ad6197; }
+html[data-design='magenta'] :is(.bg-zinc-900\/50, .bg-zinc-900\/20, .bg-zinc-800\/60) { background-color: #211023b3; }
+
+html[data-design='magenta'] .plan-card { background: linear-gradient(160deg, #27132a, #1b0e1e); border-color: #66325b80; }
+html[data-design='magenta'] .plan-card--recommended { border-color: #d958b9; box-shadow: 0 0 36px #a71c831a, inset 0 1px 0 #e879cf26; }
+html[data-design='magenta'] .plan-popular { background: #f0a5de; color: #301026; }
+html[data-design='magenta'] .plan-card .border-beam { background: #e879cf40; }
+html[data-design='magenta'] .billing-toggle button[aria-pressed='true'] { background: #6e245c; color: #fff; box-shadow: inset 0 1px 0 #ffffff14; }
+html[data-design='magenta'] .comparison-table :is(th, td) { border-color: #66325b66; }
+html[data-design='magenta'] .comparison-table thead th { background: #29132b; }
+html[data-design='magenta'] .comparison-table td { color: #c4afc5; }
+html[data-design='magenta'] .comparison-table .comparison-highlight { background: #a71c8314; color: #f9e9f5; }
+html[data-design='magenta'] .comparison-table thead .comparison-highlight { background: #512044; color: var(--design-blue); }
+html[data-design='magenta'] .comparison-table tr:hover :is(th, td) { background-color: #e879cf0a; }
+
+html[data-design='magenta'] .landing-cta { padding-inline: max(1rem, calc((100% - 1152px) / 2)); }
+html[data-design='magenta'] .landing-cta > div {
+  max-width: none;
+  padding: clamp(2rem, 6vw, 5rem) 1.5rem;
+  border: 1px solid #98528766;
+  border-radius: 28px;
+  background: radial-gradient(ellipse at 50% 0, #a71c8333, transparent 70%), #211023;
+  box-shadow: inset 0 1px 0 #ffffff08;
+}
+html[data-design='magenta'] .site-footer { background: #0e0710; border-color: #66325b66; }
+html[data-design='magenta'] .site-footer a:hover { color: var(--design-blue); }
+
+html[data-design='magenta'] :is(input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']), textarea, select) {
+  color: #f8edf6;
+  background-color: #160c19;
+  border-color: #754266;
+}
+html[data-design='magenta'] :is(input, textarea)::placeholder { color: #b39ab1; }
+html[data-design='magenta'] :is(input, textarea, select):focus-visible { outline: 2px solid var(--design-blue); outline-offset: 3px; border-color: var(--design-blue); }
+html[data-design='magenta'] :is(input[type='checkbox'], input[type='radio']) { accent-color: #e879cf; }
+html[data-design='magenta'] option { background: #211023; }
+html[data-design='magenta'] ::selection { color: #fff; background: #892271; }
+html[data-design='magenta'] .ai-notes-card { background: #160c19; border-color: #66325b; }
+html[data-design='magenta'] :is(.ai-notes-panel__header, .app-guide-chat__header, .app-guide-chat__form) { border-color: #66325b; }
+html[data-design='magenta'] .app-guide-chat__avatar { background: #4b1e40; color: #f0a5de; }
+html[data-design='magenta'] .app-guide-chat__suggestions button { border-color: #754266; color: #e9d5e5; }
+html[data-design='magenta'] .app-guide-chat__suggestions button:hover { background: #351735; border-color: #d958b9; }
+html[data-design='magenta'] .app-guide-chat__message--user { background: #77245f; color: #fff; }
+html[data-design='magenta'] .app-guide-chat__message--assistant { background: #29132b; border-color: #66325b; color: #f2e4ef; }
+html[data-design='magenta'] :is(.app-guide-chat__header small, .app-guide-chat__thinking) { color: #c4afc5; }
+
+@media (max-width: 639px) {
+  html[data-design='magenta'] .site-navigation { gap: 8px; padding-inline: 12px; }
+  html[data-design='magenta'] .design-switcher button { min-height: 38px; padding-inline: 10px; }
+  html[data-design='magenta'] .template-hero h1 { font-size: clamp(2.5rem, 10.5vw, 3.75rem); }
+  html[data-design='magenta'] .essentials-label { letter-spacing: .1em; line-height: 1.8; }
+  html[data-design='magenta'] .landing-cta > div { border-radius: 20px; padding-inline: 1rem; }
+}

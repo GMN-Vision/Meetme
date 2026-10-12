@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Copy, LockKeyhole, PencilLine, Radio, ShieldCheck, Sparkles, Square, Upload, Video } from 'lucide-react';
 import FileShare from './FileShare';
+import { DesignSwitcher } from './DesignTheme';
 import { AudioCapture } from './AudioCapture';
 import Whiteboard from './Whiteboard';
 import { YouTubeStreamModal } from './YouTubeStreamModal';
@@ -319,6 +320,7 @@ export function Navbar() {
               </span>
             </Link>
 
+            <DesignSwitcher />
             {pathname === '/' && (
               <div className="app-navbar-links hidden items-center gap-1 md:flex">
                 <Link href="#features">Features</Link>

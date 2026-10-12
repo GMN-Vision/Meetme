@@ -37,7 +37,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next-theme-check/types/**/*.ts"
+    ".next-theme-check/types/**/*.ts",
+    ".next-theme-preview/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
