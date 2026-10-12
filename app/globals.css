@@ -92,11 +92,11 @@
 .ai-notes-card { padding: 1.25rem; border: 1px solid #3f3f46; border-radius: .875rem; background: #09090b; }
 .ai-notes-panel__header { padding-bottom: 1rem; border-bottom: 1px solid #27272a; }
 .app-guide-chat { position: fixed; right: max(14px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom)); z-index: 100; font-family: inherit; }
-.app-guide-chat__toggle { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 50px; padding: 0 18px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; color: #09090b; background: #fafafa; box-shadow: 0 8px 30px rgba(0,0,0,.35); font-size: 14px; font-weight: 600; transition: transform .2s, background .2s; }
+.app-guide-chat__toggle { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 0 13px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; color: #09090b; background: #fafafa; box-shadow: 0 6px 20px rgba(0,0,0,.32); font-size: 13px; font-weight: 600; transition: transform .2s, background .2s; }
 .app-guide-chat__toggle:hover { transform: translateY(-2px); background: #e4e4e7; }
-.app-guide-chat__panel { position: absolute; right: 0; bottom: 62px; display: flex; flex-direction: column; width: min(360px, calc(100vw - 28px)); height: min(480px, calc(100dvh - 100px)); overflow: hidden; border: 1px solid #3f3f46; border-radius: 18px; background: #111113; color: #fafafa; box-shadow: 0 18px 60px rgba(0,0,0,.55); }
-.app-guide-chat__header { display: flex; flex: 0 0 auto; align-items: center; gap: 11px; min-width: 0; padding: 15px; border-bottom: 1px solid #27272a; }
-.app-guide-chat__avatar { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 12px; background: #27272a; color: white; }
+.app-guide-chat__panel { position: absolute; right: 0; bottom: 50px; display: flex; flex-direction: column; width: min(320px, calc(100vw - 28px)); height: min(420px, calc(100dvh - 88px)); overflow: hidden; border: 1px solid #3f3f46; border-radius: 16px; background: #111113; color: #fafafa; box-shadow: 0 14px 44px rgba(0,0,0,.5); }
+.app-guide-chat__header { display: flex; flex: 0 0 auto; align-items: center; gap: 9px; min-width: 0; padding: 12px; border-bottom: 1px solid #27272a; }
+.app-guide-chat__avatar { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 10px; background: #27272a; color: white; }
 .app-guide-chat__header strong, .app-guide-chat__header small { display: block; }
 .app-guide-chat__header strong { font-size: 14px; }
 .app-guide-chat__header small { margin-top: 2px; color: #a1a1aa; font-size: 11px; }
@@ -121,7 +121,7 @@
 .app-guide-chat__form button { display: grid; width: 40px; flex: 0 0 40px; place-items: center; border-radius: 11px; background: #fafafa; color: #18181b; }
 .app-guide-chat__form button:disabled { cursor: not-allowed; background: #3f3f46; color: #71717a; }
 @media (max-width: 767px) {
-  .app-guide-chat__panel { width: min(380px, calc(100vw - 28px)); height: min(520px, calc(100dvh - 96px)); }
+  .app-guide-chat__panel { width: min(320px, calc(100vw - 28px)); height: min(420px, calc(100dvh - 80px)); }
   .app-main { padding-top: 88px; }
   .page-shell, .page-shell-wide { padding-block: 24px; }
   .app-navbar-shell--room > div > div:first-child { overflow-x: auto; }
