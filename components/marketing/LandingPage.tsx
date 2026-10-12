@@ -28,6 +28,10 @@ export function LandingPage() {
   const labels = ['Video meetings', 'Screen sharing', 'Live captions', 'Shared files', 'Whiteboards', 'AI meeting notes'];
 
   return <>
+    <div className="ui3-announcement" role="status">
+      <span>Meet, teach and collaborate in one connected workspace.</span>
+      <Link href="/pricing">Explore Melanam <ArrowRight className="h-4 w-4" /></Link>
+    </div>
     <section className="template-hero relative flex flex-col items-center justify-center overflow-hidden px-4 pb-20 pt-12 sm:pt-16">
       <div className="hero-glow pointer-events-none absolute left-1/2 top-1/4 h-[500px] w-[min(800px,100%)] -translate-x-1/2 rounded-full bg-zinc-800/20 blur-3xl" aria-hidden="true" />
       <div className="relative mx-auto max-w-5xl text-center">

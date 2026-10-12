@@ -1,0 +1,64 @@
+/* UI 3: an animated marketing hero. App navigation, workspace, and rooms use the shared interface. */
+html[data-design='zoom'] {
+  color-scheme: dark;
+  --app-bg: #09090b;
+  --app-elevated: #18181b;
+  --app-raised: #27272a;
+  --app-hover: #3f3f46;
+  --app-border: #27272a;
+  --app-muted: #a1a1aa;
+  --app-text: #fafafa;
+  --design-accent: #5288ff;
+}
+
+/* Keep the established navigation, including its dimensions and dark glass surface. */
+html[data-design='zoom'] .design-switcher button[aria-pressed='true'] { background: #5288ff; color: #fff; }
+
+/* These styles only apply when the landing hero exists on the page. */
+html[data-design='zoom']:has(.template-hero),
+html[data-design='zoom'] body:has(.template-hero),
+html[data-design='zoom'] .app-main:has(.template-hero) { background: #08133a; }
+html[data-design='zoom'] .app-main:has(.template-hero) { padding-top: 0; }
+html[data-design='zoom'] .app-main:has(.template-hero) .ui3-announcement { display: flex; position: relative; z-index: 1; align-items: center; justify-content: center; gap: 1rem; min-height: 62px; margin-top: 96px; padding: .75rem 1rem; background: #102967; color: #fff; font-size: 15px; font-weight: 600; text-align: center; }
+html[data-design='zoom'] .ui3-announcement a { display: inline-flex; align-items: center; gap: .35rem; border-radius: .75rem; padding: .45rem .9rem; background: linear-gradient(100deg, #2879ff, #bd54ef); color: #fff; }
+
+html[data-design='zoom'] .template-hero { isolation: isolate; min-height: 590px; background: linear-gradient(160deg, #08133a 0%, #142e77 28%, #365bb9 49%, #927be8 68%, #f7f7ff 88%, #fff 100%); background-size: 220% 220%; animation: ui3-gradient-shift 10s ease-in-out infinite alternate !important; animation-duration: 10s !important; animation-iteration-count: infinite !important; will-change: background-position; }
+html[data-design='zoom'] .template-hero::before,
+html[data-design='zoom'] .template-hero::after { content: ''; position: absolute; z-index: 0; pointer-events: none; border-radius: 999px; filter: blur(60px); opacity: .75; animation: ui3-aurora 11s ease-in-out infinite alternate !important; animation-duration: 11s !important; animation-iteration-count: infinite !important; will-change: transform; }
+html[data-design='zoom'] .template-hero::before { top: 7%; left: -14rem; width: min(54rem, 94vw); height: 25rem; background: radial-gradient(circle, #4184ff 0%, #5d5ae4b8 42%, transparent 70%); }
+html[data-design='zoom'] .template-hero::after { right: -14rem; bottom: 1%; width: min(50rem, 92vw); height: 23rem; background: radial-gradient(circle, #d28cff 0%, #7768eeb8 44%, transparent 72%); animation-delay: -7s; }
+html[data-design='zoom'] .template-hero > .relative { z-index: 1; }
+html[data-design='zoom'] .template-hero .hero-glow { background: radial-gradient(ellipse, #d8c3ff 0%, #9f75f5a8 45%, transparent 73%); opacity: .8; }
+html[data-design='zoom'] .template-hero .rotating-light { border-color: #ffffff54; background: #ffffff16; color: #fff; box-shadow: none; }
+html[data-design='zoom'] .template-hero .design-blue,
+html[data-design='zoom'] .template-hero .design-blue span { color: #fff; font-family: var(--font-display); font-weight: 700; text-shadow: 0 2px 22px #07153d77; }
+html[data-design='zoom'] .template-hero :is(.text-zinc-300, .text-zinc-400, .text-zinc-500) { color: #edf3ff; }
+html[data-design='zoom'] .template-hero .button-primary { border-color: #071447; background: #071447; color: #fff; }
+html[data-design='zoom'] .template-hero .button-secondary { border-color: #cedeff; background: #f7faff; color: #071447; }
+html[data-design='zoom'] .landing-cta { background: linear-gradient(135deg, #e5efff, #f4ecff); }
+html[data-design='zoom'] .landing-cta .design-blue { color: #17387d; }
+html[data-design='zoom'] .landing-cta .design-blue span { color: #5288ff; }
+html[data-design='zoom'] .landing-cta .button-secondary { border-color: #17387d; background: #fff; color: #17387d; opacity: 1; }
+html[data-design='zoom'] .landing-cta .button-secondary:hover { border-color: #0c56c4; background: #edf4ff; color: #0c56c4; }
+
+@keyframes ui3-aurora {
+  from { transform: translate3d(-4%, -5%, 0) scale(.9); }
+  to { transform: translate3d(8%, 7%, 0) scale(1.12); }
+}
+@keyframes ui3-gradient-shift {
+  from { background-position: 0% 12%; }
+  to { background-position: 100% 88%; }
+}
+
+@media (max-width: 767px) {
+  html[data-design='zoom'] .app-main:has(.template-hero) .ui3-announcement { min-height: 54px; margin-top: 82px; font-size: 12px; }
+  html[data-design='zoom'] .template-hero { min-height: 510px; padding-top: 56px; }
+}
+
+/* UI 3 is intentionally animated even when the site-wide reduced-motion fallback is active. */
+@media (prefers-reduced-motion: reduce) {
+  html[data-design='zoom'] .template-hero { animation: ui3-gradient-shift 10s ease-in-out infinite alternate !important; animation-duration: 10s !important; animation-iteration-count: infinite !important; }
+  html[data-design='zoom'] .template-hero::before,
+  html[data-design='zoom'] .template-hero::after { animation: ui3-aurora 11s ease-in-out infinite alternate !important; animation-duration: 11s !important; animation-iteration-count: infinite !important; }
+  html[data-design='zoom'] .template-hero::after { animation-delay: -7s !important; }
+}
