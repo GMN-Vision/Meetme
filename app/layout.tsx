@@ -93,7 +93,6 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" data-design="zoom" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: "try{const d=localStorage.getItem('melanam-design');document.documentElement.dataset.design=d==='current'||d==='magenta'||d==='zoom'?d:'zoom'}catch(e){}" }} />
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="dark" />

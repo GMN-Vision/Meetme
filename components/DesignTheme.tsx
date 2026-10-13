@@ -1,33 +1,19 @@
 'use client';
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation';
 import { Check, MoreHorizontal } from 'lucide-react';
 
 type Design = 'current' | 'magenta' | 'zoom';
 const DesignContext = createContext<{ design: Design; renderedDesign: Design; select: (design: Design) => void }>({ design: 'zoom', renderedDesign: 'zoom', select: () => {} });
 
 export function DesignThemeProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
   const [design, setDesign] = useState<Design>('zoom');
-  useEffect(() => {
-    const stored = document.documentElement.dataset.design;
-    setDesign(stored === 'current' || stored === 'magenta' || stored === 'zoom' ? stored : 'zoom');
-    const sync = (event: StorageEvent) => {
-      if (event.key !== 'melanam-design' && event.key !== null) return;
-      const next = event.newValue === 'current' || event.newValue === 'magenta' || event.newValue === 'zoom' ? event.newValue : 'zoom';
-      setDesign(next);
-    };
-    window.addEventListener('storage', sync);
-    return () => window.removeEventListener('storage', sync);
-  }, []);
-  const renderedDesign = design === 'zoom' && pathname?.startsWith('/meetings') ? 'magenta' : design;
+  const renderedDesign = design;
   useEffect(() => {
     document.documentElement.dataset.design = renderedDesign;
   }, [renderedDesign]);
   const select = (next: Design) => {
     setDesign(next);
-    try { localStorage.setItem('melanam-design', next); } catch { /* The selection still works without storage. */ }
   };
   return <DesignContext.Provider value={{ design, renderedDesign, select }}>{children}</DesignContext.Provider>;
 }
