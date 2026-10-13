@@ -29,6 +29,7 @@ export function LandingPage() {
   const labels = ['Video meetings', 'Screen sharing', 'Live captions', 'Shared files', 'Whiteboards', 'AI meeting notes'];
 
   return <>
+    <div className="ui3-hero-shell">
     <div className="ui3-announcement" role="status">
       <span>Meet, teach and collaborate in one connected workspace.</span>
       <Link href="/pricing">Explore Melanam <ArrowRight className="h-4 w-4" /></Link>
@@ -49,6 +50,7 @@ export function LandingPage() {
         </Reveal>
       </div>
     </section>
+    </div>
 
     <section className="meeting-essentials border-y border-zinc-800/70 py-10" aria-label="Melanam meeting tools">
       <div className="mb-7 text-center"><p className="rotating-light essentials-label inline-flex text-xs uppercase tracking-[.18em] text-zinc-500">Your meeting essentials. All together.</p></div>

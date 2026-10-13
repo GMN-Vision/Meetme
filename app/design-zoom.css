@@ -18,11 +18,12 @@ html[data-design='zoom'] .design-switcher button[aria-pressed='true'] { backgrou
 html[data-design='zoom']:has(.template-hero),
 html[data-design='zoom'] body:has(.template-hero),
 html[data-design='zoom'] .app-main:has(.template-hero) { background: #08133a; }
-html[data-design='zoom'] .app-main:has(.template-hero) { padding-top: 96px; }
-html[data-design='zoom'] .app-main:has(.template-hero) .ui3-announcement { display: flex; position: relative; z-index: 1; align-items: center; justify-content: center; gap: 1rem; min-height: 62px; padding: .75rem 1rem; background: #102967; color: #fff; font-size: 15px; font-weight: 600; text-align: center; }
+html[data-design='zoom'] .app-main:has(.template-hero) { padding-top: 0; }
+html[data-design='zoom'] .ui3-hero-shell { display: block; overflow: hidden; padding-top: 96px; background: linear-gradient(160deg, #08133a 0%, #142e77 28%, #365bb9 49%, #927be8 68%, #f7f7ff 88%, #fff 100%); background-size: 220% 220%; animation: ui3-gradient-shift 10s ease-in-out infinite alternate; }
+html[data-design='zoom'] .app-main:has(.template-hero) .ui3-announcement { display: flex; position: relative; z-index: 1; align-items: center; justify-content: center; gap: 1rem; min-height: 62px; padding: .75rem 1rem; color: #fff; font-size: 15px; font-weight: 600; text-align: center; }
 html[data-design='zoom'] .ui3-announcement a { display: inline-flex; align-items: center; gap: .35rem; border-radius: .75rem; padding: .45rem .9rem; background: linear-gradient(100deg, #2879ff, #bd54ef); color: #fff; }
 
-html[data-design='zoom'] .template-hero { isolation: isolate; min-height: 590px; background: linear-gradient(160deg, #08133a 0%, #142e77 28%, #365bb9 49%, #927be8 68%, #f7f7ff 88%, #fff 100%); background-size: 220% 220%; animation: ui3-gradient-shift 10s ease-in-out infinite alternate !important; animation-duration: 10s !important; animation-iteration-count: infinite !important; will-change: background-position; }
+html[data-design='zoom'] .template-hero { isolation: isolate; min-height: 590px; overflow: visible; background: transparent; }
 html[data-design='zoom'] .template-hero::before,
 html[data-design='zoom'] .template-hero::after { content: ''; position: absolute; z-index: 0; pointer-events: none; border-radius: 999px; filter: blur(60px); opacity: .75; animation: ui3-aurora 11s ease-in-out infinite alternate !important; animation-duration: 11s !important; animation-iteration-count: infinite !important; will-change: transform; }
 html[data-design='zoom'] .template-hero::before { top: 7%; left: -14rem; width: min(54rem, 94vw); height: 25rem; background: radial-gradient(circle, #4184ff 0%, #5d5ae4b8 42%, transparent 70%); }
@@ -118,7 +119,7 @@ html[data-design='zoom'] .landing-cta .button-secondary:hover { border-color: #0
 @keyframes ui3-note-rise { from { opacity: .35; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 767px) {
-  html[data-design='zoom'] .app-main:has(.template-hero) { padding-top: 88px; }
+  html[data-design='zoom'] .ui3-hero-shell { padding-top: 88px; }
   html[data-design='zoom'] .app-main:has(.template-hero) .ui3-announcement { min-height: 54px; font-size: 12px; }
   html[data-design='zoom'] .template-hero { min-height: 510px; padding-top: 56px; }
   html[data-design='zoom'] .ui3-feature-card { padding: 1.25rem; }
@@ -126,7 +127,7 @@ html[data-design='zoom'] .landing-cta .button-secondary:hover { border-color: #0
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html[data-design='zoom'] .template-hero,
+  html[data-design='zoom'] .ui3-hero-shell,
   html[data-design='zoom'] .template-hero::before,
   html[data-design='zoom'] .template-hero::after,
   html[data-design='zoom'] .ui3-feature-card * { animation: none !important; }
