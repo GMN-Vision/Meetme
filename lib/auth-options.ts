@@ -8,7 +8,8 @@ import User from '../models/User';
 import Organization from '../models/Organization';
 import { canAddOrganizationSeat } from './workspace-usage';
 
-const emailFrom = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'no-reply@localhost';
+const emailFromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'no-reply@localhost';
+const emailFrom = emailFromAddress.includes('<') ? emailFromAddress : `Melanam <${emailFromAddress}>`;
 
 const smtpHost = process.env.EMAIL_SERVER_HOST || process.env.EMAIL_HOST || 'smtp.gmail.com';
 const smtpPort = Number(process.env.EMAIL_SERVER_PORT || process.env.EMAIL_PORT || 587);

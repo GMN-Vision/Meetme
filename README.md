@@ -121,6 +121,7 @@ MONGODB_URI=mongodb://localhost:27017/melanam
 
 #### Configure sign-in email:
 Use your SMTP provider settings above. For local development only, `EMAIL_TRANSPORT=console` logs the magic link on the server instead of sending email.
+Magic-link emails display "Melanam" as the sender name. To replace the Gmail address shown to recipients, set `EMAIL_FROM` to an address verified with your SMTP provider (for example, `hello@your-domain.com`) and configure that domain for sending. Changing the display name alone does not hide the underlying sender address.
 
 #### MongoDB Setup:
 **Option A: Local MongoDB**
