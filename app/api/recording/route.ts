@@ -8,20 +8,20 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const email = await recordingUser();
-    // Apply visibility and meeting lifecycle checks BEFORE limiting the feed.
-    // Otherwise recent unended rooms can hide every completed recording.
+    // Hosts see their recordings while they process; participants see only
+    // recordings that the host has shared after processing.
     const recordings = await Recording.aggregate([
       { $match: { $or: [{ hostEmail: email }, { sharedWith: email, sharedAt: { $ne: null }, status: 'ready', expiresAt: { $gt: new Date() } }] } },
       { $lookup: {
         from: Meeting.collection.name,
         localField: 'meetingId', foreignField: 'meetingId',
-        pipeline: [{ $match: { endedAt: { $ne: null } } }, { $project: { _id: 1 } }],
-        as: 'endedMeeting',
+        pipeline: [{ $project: { _id: 1 } }],
+        as: 'meeting',
       } },
-      { $match: { 'endedMeeting.0': { $exists: true } } },
+      { $match: { 'meeting.0': { $exists: true } } },
       { $sort: { createdAt: -1, recordingId: -1 } },
       { $limit: 50 },
-      { $project: { endedMeeting: 0 } },
+      { $project: { meeting: 0 } },
     ]);
     let syncPending = false;
     if (getRecordingAvailability().available) {

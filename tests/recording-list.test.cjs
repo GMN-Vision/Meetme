@@ -20,7 +20,7 @@ function route({ records = [], refresh = async r => r, authenticated = true } = 
   return { GET, pipeline: () => pipeline };
 }
 
-test('feed applies exact ownership/shared-ready-expiry and ended-meeting filters before the 50-row limit', async () => {
+test('feed includes host and shared ready recordings from open meetings before the limit', async () => {
   const handler = route();
   const response = await handler.GET();
   assert.equal(response.status, 200);
@@ -37,9 +37,9 @@ test('feed applies exact ownership/shared-ready-expiry and ended-meeting filters
   assert.equal(stages[join].$lookup.from, 'meetings');
   assert.equal(stages[join].$lookup.localField, 'meetingId');
   assert.equal(stages[join].$lookup.foreignField, 'meetingId');
-  assert.deepEqual(stages[join].$lookup.pipeline[0], { $match: { endedAt: { $ne: null } } });
-  assert.deepEqual(stages[join + 1], { $match: { 'endedMeeting.0': { $exists: true } } });
-  assert.ok(stages.findIndex(s => s.$limit) > join + 1, 'unended rooms must not consume the page limit');
+  assert.deepEqual(stages[join].$lookup.pipeline[0], { $project: { _id: 1 } });
+  assert.deepEqual(stages[join + 1], { $match: { 'meeting.0': { $exists: true } } });
+  assert.ok(stages.findIndex(s => s.$limit) > join + 1);
 });
 
 test('feed reconciles a missed completion callback for the host and returns ready immediately', async () => {
@@ -94,4 +94,40 @@ test('Recordings polling replaces processing with playable ready output, preserv
   await act(async () => { buttons[0].props.onClick(); });
   assert.equal(view.root.findByType('video').props.src, '/api/recording/capture');
   assert.equal(view.root.findByType('a').props.href, '/api/recording/capture?download=1');
+});
+
+test('host sees a stopped recording become playable and shareable without ending the meeting', async t => {
+  const React = require('react');
+  const { create, act } = require('react-test-renderer');
+  let poll, status = 'processing', shares = 0;
+  t.mock.method(global, 'setInterval', callback => { poll = callback; return 1; });
+  t.mock.method(global, 'clearInterval', () => {});
+  const originalWindow = global.window;
+  global.window = { addEventListener: () => {}, removeEventListener: () => {}, confirm: () => true };
+  let view;
+  t.after(() => { if (view) act(() => view.unmount()); global.window = originalWindow; });
+  t.mock.method(global, 'fetch', async (url, options) => {
+    if (url.endsWith('/quota')) return new Response('{}', { status: 503 });
+    if (url === '/api/recording/share') {
+      shares++;
+      assert.equal(options.method, 'POST');
+      assert.deepEqual(JSON.parse(options.body), { meetingId: 'room' });
+      return new Response('{}');
+    }
+    return new Response(JSON.stringify({ recordings: [{ recordingId: 'capture', meetingId: 'room', title: 'Recorded class',
+      status, createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 60000).toISOString(),
+      durationSeconds: 60, isHost: true }] }));
+  });
+  const { MeetingRecordings } = load('components/meetings/MeetingRecordings.tsx');
+  await act(async () => { view = create(React.createElement(MeetingRecordings)); });
+  assert.equal(view.root.findAllByType('a').length, 0);
+  status = 'ready';
+  await act(async () => { poll(); });
+  assert.equal(view.root.findByType('a').props.href, '/api/recording/capture?download=1');
+  const buttons = view.root.findAllByType('button');
+  assert.equal(buttons.length, 3, 'host receives Watch, Share, and Delete without an End meeting button');
+  await act(async () => { buttons[1].props.onClick(); });
+  assert.equal(shares, 1);
+  await act(async () => { buttons[0].props.onClick(); });
+  assert.equal(view.root.findByType('video').props.src, '/api/recording/capture');
 });

@@ -86,7 +86,7 @@ test('callbacks cannot rewind status, resurrect expired output or change the out
   assert.equal(expired.changes.length, 0);
 });
 
-test('sharing requires the host and an ended meeting; recipients come from server membership', async () => {
+test('sharing requires the host and a completed recording; recipients come from server membership', async () => {
   let query, update;
   const { lib, room } = service();
   const { POST } = load('app/api/recording/share/route.ts', {
@@ -95,11 +95,25 @@ test('sharing requires the host and an ended meeting; recipients come from serve
     '@/models/Recording': { exists: async () => false, updateMany: async (q, u) => { query = q; update = u; return { matchedCount: 2 }; } },
   });
   const request = { json: async () => ({ meetingId: 'room', sharedWith: ['attacker@example.com'] }) };
-  assert.equal((await POST(request)).status, 409);
-  room.endedAt = new Date();
   assert.equal((await POST(request)).status, 200);
   assert.equal(query.hostEmail, 'host@example.com');
   assert.deepEqual(update.$set.sharedWith, ['member@example.com']);
+});
+
+test('host can play a completed recording before the meeting ends', async () => {
+  const { lib } = service();
+  let signed = false;
+  const { GET } = load('app/api/recording/[id]/route.ts', {
+    '@/lib/server-recording': lib, '@/lib/recording-policy': policy,
+    '@/models/Recording': { findOne: async () => ({ meetingId: 'room', hostEmail: 'host@example.com', status: 'ready',
+      expiresAt: new Date(Date.now() + 60000), storagePath: 'id/meeting.mp4' }) },
+    '@/lib/supabaseServer': { supabaseServer: { storage: { from: () => ({ createSignedUrl: async () => {
+      signed = true; return { data: { signedUrl: 'https://media.example/meeting.mp4' } };
+    } }) } } },
+  });
+  const response = await GET({ nextUrl: new URL('http://app/recording/id') }, { params: { id: 'id' } });
+  assert.equal(response.status, 307);
+  assert.equal(signed, true);
 });
 
 test('unauthenticated worker callbacks and retired local recording cannot mutate data', async () => {

@@ -59,7 +59,7 @@ export function MeetingRecordings() {
       <p className="mt-2 text-sm text-zinc-400">Your recordings and meetings shared with you. Hosts decide when to share with their recent meeting group.</p>
       {quota && <p className="mt-2 text-xs text-zinc-300">{quota.plan}: {Math.ceil(quota.usedSeconds / 60)} / {quota.limits.monthlyMinutes} recording minutes used this month · {(quota.storedBytes / 1024 ** 3).toFixed(1)} / {quota.limits.storageGb} GB · {quota.limits.retentionDays}-day retention. Usage updates after processing; minutes reset monthly in UTC.</p>}
       {error && <p role="alert" className="mt-3 text-sm text-red-300">{error}</p>}
-      {!recordings.length && <p className="mt-4 text-sm text-zinc-400">{loaded ? 'After the host ends a recorded meeting, it will appear here once processed. Server recording is included on every plan.' : 'Loading recordings...'}</p>}
+      {!recordings.length && <p className="mt-4 text-sm text-zinc-400">{loaded ? 'Recordings you start appear here. Watch and download once processing finishes. Recordings shared by a host also appear here.' : 'Loading recordings...'}</p>}
       <div className="mt-4 grid gap-3">
         {recordings.map(recording => {
           const ready = recording.status === 'ready' && Boolean(recording.expiresAt && Date.parse(recording.expiresAt) > Date.now());
@@ -69,7 +69,7 @@ export function MeetingRecordings() {
                 <div className="min-w-0">
                   <h3 className="break-words font-semibold text-zinc-100">{recording.title}</h3>
                   <p className="mt-1 text-xs text-zinc-400">{new Date(recording.createdAt).toLocaleString()} · {recording.isHost ? (recording.sharedAt ? 'Shared with meeting group' : 'Private to you') : 'Shared by host'}</p>
-                  <p className="mt-1 text-xs text-zinc-400">{ready ? `${Math.ceil(recording.durationSeconds / 60)} min · Available until ${new Date(recording.expiresAt!).toLocaleDateString()}` : recording.status === 'failed' ? recording.error || 'Recording failed' : recording.status === 'expired' || recording.status === 'ready' ? 'Recording expired or deleted' : 'Processing recording...'}</p>
+                  <p className="mt-1 text-xs text-zinc-400">{ready ? `${Math.ceil(recording.durationSeconds / 60)} min · Available until ${new Date(recording.expiresAt!).toLocaleDateString()}` : recording.status === 'recording' ? 'Recording in progress...' : recording.status === 'starting' ? 'Starting recording...' : recording.status === 'failed' ? recording.error || 'Recording failed' : recording.status === 'expired' || recording.status === 'ready' ? 'Recording expired or deleted' : 'Processing recording...'}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {ready && <>
