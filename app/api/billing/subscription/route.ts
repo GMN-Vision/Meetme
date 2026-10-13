@@ -106,9 +106,14 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
     }
 
-    subscription.status = 'canceled';
+    if (subscription.plan === 'enterprise') {
+      return NextResponse.json({ error: 'Contact support to change an Enterprise plan' }, { status: 409 });
+    }
+    if (subscription.status !== 'active' && subscription.status !== 'trialing') {
+      return NextResponse.json({ error: 'No active plan to cancel' }, { status: 409 });
+    }
     subscription.cancelAtPeriodEnd = true;
-    subscription.notes = 'Canceled by user';
+    subscription.notes = 'Cancellation requested by user; access ends at period end';
     await subscription.save();
 
     return NextResponse.json({ success: true, subscription: serializeMembership(subscription) });

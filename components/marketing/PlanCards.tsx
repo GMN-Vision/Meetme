@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Check } from 'lucide-react';
-import { BILLING_PLANS, formatPrice, type DisplayCurrency, getAnnualSavings, getPlanPrice, type BillingCycle, type PlanKey } from '@/lib/billing-plans';
+import { BILLING_PLANS, getDisplayAnnualSavings, getDisplayPlanPrice, type DisplayCurrency, getAnnualSavings, type BillingCycle, type PlanKey } from '@/lib/billing-plans';
 
 export function BillingToggle({ cycle, onChange }: { cycle: BillingCycle; onChange: (cycle: BillingCycle) => void }) {
   return <div className="billing-toggle inline-flex rounded-full border border-zinc-800 bg-zinc-900 p-1" aria-label="Billing cycle">
@@ -21,8 +21,8 @@ export function PlanCards({ cycle, currency = 'GBP', action }: { cycle: BillingC
       <h3 className="text-xl font-semibold text-white">{plan.title}</h3>
       <p className="mt-2 min-h-12 text-sm leading-6 text-zinc-400">{plan.audience}</p>
       <div className="my-6">
-        <div className="flex flex-wrap items-baseline gap-1"><strong className="text-3xl font-bold tracking-tight text-white">{formatPrice(getPlanPrice(plan.key, cycle), currency)}</strong>{plan.key !== 'enterprise' && <span className="text-sm text-zinc-400">/{cycle === 'annual' ? 'year' : 'month'}</span>}</div>
-        <p className="mt-2 min-h-5 text-xs text-zinc-400">{plan.key === 'enterprise' ? 'Tailored to your organization' : cycle === 'annual' && getAnnualSavings(plan.key) > 0 ? `Save ${formatPrice(getAnnualSavings(plan.key), currency)} per year` : plan.key === 'free' ? 'No credit card required' : currency === 'GBP' ? 'Estimated monthly price in GBP' : 'Billed monthly in INR'}</p>
+        <div className="flex flex-wrap items-baseline gap-1"><strong className="text-3xl font-bold tracking-tight text-white">{getDisplayPlanPrice(plan.key, cycle, currency)}</strong>{plan.key !== 'enterprise' && <span className="text-sm text-zinc-400">/{cycle === 'annual' ? 'year' : 'month'}</span>}</div>
+        <p className="mt-2 min-h-5 text-xs text-zinc-400">{plan.key === 'enterprise' ? 'Tailored to your organization' : cycle === 'annual' && getAnnualSavings(plan.key) > 0 ? `Save ${getDisplayAnnualSavings(plan.key, currency)} per year` : plan.key === 'free' ? 'No credit card required' : currency === 'GBP' ? 'Estimated monthly price in GBP' : 'Billed monthly in INR'}</p>
       </div>
       <ul className="mb-8 flex-1 space-y-3">
         {[plan.limits.participants, plan.limits.meetingMinutes, ...plan.highlights.slice(1)].map((feature, index) => <li key={index} className="flex gap-2.5 text-sm leading-6 text-zinc-300"><Check className="mt-1 h-4 w-4 shrink-0 text-emerald-500" strokeWidth={1.5} /><span>{feature}</span></li>)}
@@ -39,6 +39,6 @@ export function CurrencySelector({ currency, onChange }: { currency: DisplayCurr
         <option value="GBP">{'\u00a3'} GBP</option><option value="INR">Rs. INR</option>
       </select>
     </label>
-    {currency === 'GBP' && <p className="mt-2 text-xs text-zinc-400">Estimated conversion at {'\u00a3'}1 = Rs. 126.67 (12 Oct 2026). Checkout is charged in INR.</p>}
+    {currency === 'GBP' && <p className="mt-2 text-xs text-zinc-400">GBP prices are estimates; yearly plans use {'\u00a3'}1 = Rs. 126.67 (12 Oct 2026). Checkout is charged in INR.</p>}
   </div>;
 }

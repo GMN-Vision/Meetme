@@ -7,6 +7,7 @@ import { authOptions } from '../../../../../lib/auth-options';
 import { BILLING_PLAN_MAP, CREDIT_PACK_MAP, getPlanPrice, type BillingCycle, type CreditPackKey, type PlanKey } from '../../../../../lib/billing-plans';
 import dbConnect from '../../../../../lib/db';
 import User from '../../../../../models/User';
+import BillingPayment from '../../../../../models/BillingPayment';
 import { findMembershipByEmail, getPlanChangeBlock, markPendingCreditPurchase, upsertPendingPlanMembership } from '../../../../../lib/membership';
 
 function toPaise(amountInr: number) {
@@ -66,6 +67,8 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      await BillingPayment.create({ userEmail: user.email, orderId: order.id, type: 'credits', description: `${pack.credits} ${pack.title}`, credits: pack.credits, amountInr: pack.amountInr, status: 'pending' });
+
       const updatedSubscription = await markPendingCreditPurchase({
         subscription,
         packKey: pack.key,
@@ -110,6 +113,8 @@ export async function POST(req: NextRequest) {
         userEmail: user.email,
       },
     });
+
+    await BillingPayment.create({ userEmail: user.email, orderId: order.id, type: 'plan', description: `${plan.title} ${normalizedCycle} plan`, planKey: normalizedPlanKey, billingCycle: normalizedCycle, amountInr: price, status: 'pending' });
 
     const subscription = await upsertPendingPlanMembership({
       user,

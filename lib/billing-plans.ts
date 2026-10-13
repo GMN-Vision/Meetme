@@ -370,3 +370,37 @@ export function formatPrice(valueInr: number | null, currency: DisplayCurrency =
   if (currency === 'INR') return formatInr(valueInr);
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(valueInr / INR_PER_GBP);
 }
+
+const monthlyGbpPrices: Partial<Record<PlanKey, number>> = {
+  pro: 6.99,
+  business: 19.99,
+};
+
+const creditPackGbpPrices: Record<CreditPackKey, number> = {
+  starter: 2.99,
+  growth: 7.99,
+  scale: 19.99,
+};
+
+export function getDisplayCreditPackPrice(packKey: CreditPackKey, currency: DisplayCurrency) {
+  if (currency === 'GBP') {
+    return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(creditPackGbpPrices[packKey]);
+  }
+  return formatPrice(CREDIT_PACK_MAP[packKey].amountInr, currency);
+}
+
+export function getDisplayPlanPrice(planKey: PlanKey, cycle: BillingCycle, currency: DisplayCurrency) {
+  if (currency === 'GBP' && cycle === 'monthly' && monthlyGbpPrices[planKey] != null) {
+    return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(monthlyGbpPrices[planKey]);
+  }
+  return formatPrice(getPlanPrice(planKey, cycle), currency);
+}
+
+export function getDisplayAnnualSavings(planKey: PlanKey, currency: DisplayCurrency) {
+  if (currency === 'INR') return formatPrice(getAnnualSavings(planKey), currency);
+  const annualPrice = getPlanPrice(planKey, 'annual');
+  const monthlyPrice = monthlyGbpPrices[planKey] ?? ((getPlanPrice(planKey, 'monthly') ?? 0) / INR_PER_GBP);
+  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(
+    Math.max(0, monthlyPrice * 12 - (annualPrice ?? 0) / INR_PER_GBP),
+  );
+}

@@ -143,7 +143,6 @@ export async function upsertPendingPlanMembership({
     pendingCreditAmount: 0,
     pendingCreditQuantity: 0,
     razorpayOrderId,
-    cancelAtPeriodEnd: false,
     notes: `Pending ${planKey} ${billingCycle} checkout`,
   };
 
@@ -204,7 +203,6 @@ export async function completeVerifiedPurchase(subscription: ISubscription, paym
   const now = new Date();
   subscription.razorpayPaymentId = payment.paymentId;
   subscription.razorpaySignature = payment.signature;
-  subscription.cancelAtPeriodEnd = false;
 
   if (subscription.pendingPurchaseType === 'credits') {
     subscription.extraCredits = Number(subscription.extraCredits || 0) + Number(subscription.pendingCreditQuantity || 0);
@@ -225,6 +223,7 @@ export async function completeVerifiedPurchase(subscription: ISubscription, paym
   subscription.billingCycle = nextCycle;
   subscription.amount = nextAmount;
   subscription.status = 'active';
+  subscription.cancelAtPeriodEnd = false;
   subscription.includedCredits = getIncludedCredits(nextPlan);
   subscription.usedCredits = 0;
   subscription.currentPeriodStart = now;
