@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { createPortal } from 'react-dom';
@@ -231,7 +232,11 @@ export function Navbar() {
   const userEmail = session?.user?.email || '';
   const userInitial = userEmail?.[0]?.toUpperCase() || 'U';
   const isLoggedIn = status === 'authenticated';
-  const captionSpeakerName = userEmail || guestSpeakerName || 'Guest';
+  const accountName = String(session?.user?.name || '').trim();
+  const captionSpeakerName =
+    (accountName && !accountName.includes('@') ? accountName : '') ||
+    guestSpeakerName ||
+    (userEmail ? userEmail.split('@')[0] : 'Guest');
   const captionSpeakerId = userEmail
     ? `user:${userEmail}`
     : `guest:${guestSpeakerName || 'guest'}`;
@@ -309,15 +314,21 @@ export function Navbar() {
       <div className={`app-navbar-shell mx-auto max-w-[80rem] rounded-2xl border border-white/10 bg-black/70 shadow-xl backdrop-blur-xl ${pathname === '/' ? 'app-navbar-shell--landing' : ''} ${isRoomPage ? 'app-navbar-shell--room' : ''}`}>
         <div className="flex h-14 items-center justify-between gap-3">
           <div className="flex items-center gap-3 sm:gap-4">
-            <Link href="/" className={`app-navbar-brand ${isRoomPage ? 'hidden md:flex' : 'flex'} items-center gap-2.5`} aria-label="Melanam home">
-              <span className="app-brand-mark" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </span>
-              <span className="hidden font-display text-xl font-semibold tracking-[-0.055em] text-[#f8f8f8] sm:inline">
-                melan<span>am</span>
-              </span>
+            <Link href="/" className="app-navbar-brand flex shrink-0 items-center gap-2.5" aria-label="Melanam home">
+              {isRoomPage ? (
+                <Image src="/images/melanam-logo-skyblue.svg" alt="" width={131} height={32} className="h-7 w-auto sm:h-8" />
+              ) : (
+                <>
+                  <span className="app-brand-mark" aria-hidden="true">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <span className="hidden font-display text-xl font-semibold tracking-[-0.055em] text-[#f8f8f8] sm:inline">
+                    melan<span>am</span>
+                  </span>
+                </>
+              )}
             </Link>
 
             <DesignSwitcher />

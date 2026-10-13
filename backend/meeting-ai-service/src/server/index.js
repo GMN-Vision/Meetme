@@ -261,8 +261,9 @@ function createServer() {
           // Try to resolve a friendly speaker name if mapping exists
           try {
             const mapped =
-              resolveSpeaker(meetingId, payload.speakerId) ||
-              resolveSpeaker(meetingId, payload.speaker);
+              String(payload.speakerId || '').startsWith('diarized:')
+                ? undefined
+                : resolveSpeaker(meetingId, payload.speakerId) || resolveSpeaker(meetingId, payload.speaker);
             if (mapped) payload.speaker = mapped;
           } catch (err) {
             // ignore mapping errors
@@ -350,8 +351,9 @@ function createServer() {
 
           try {
             const mapped =
-              resolveSpeaker(meetingId, captionPayload.speakerId) ||
-              resolveSpeaker(meetingId, captionPayload.speaker);
+              String(captionPayload.speakerId || '').startsWith('diarized:')
+                ? undefined
+                : resolveSpeaker(meetingId, captionPayload.speakerId) || resolveSpeaker(meetingId, captionPayload.speaker);
             if (mapped) captionPayload.speaker = mapped;
           } catch (err) {
             // ignore mapping errors

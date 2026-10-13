@@ -9,6 +9,7 @@ const { chromium } = require('playwright');
 const dotenv = require('dotenv');
 const WebSocketModule = require('ws');
 const { createJitsiBotToken } = require('./jitsiJwt');
+const { getRealtimeSpeakerLabel } = require('./assemblyAiSpeaker');
 
 dotenv.config({ path: path.resolve(process.cwd(), '../../.env.local') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
@@ -31,6 +32,8 @@ function buildAssemblyAiWsUrl() {
   const url = new URL(ASSEMBLYAI_WS_URL);
   url.searchParams.set('token', ASSEMBLYAI_API_KEY);
   url.searchParams.set('sample_rate', String(Number(process.env.ASSEMBLYAI_SAMPLE_RATE || 16000)));
+  url.searchParams.set('speech_model', ASSEMBLYAI_SPEECH_MODEL);
+  url.searchParams.set('speaker_labels', 'true');
   return url.toString();
 }
 
@@ -210,13 +213,6 @@ function supportsWindowsWasapi(ffmpegBin) {
 
 function normalizeTranscriptText(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
-}
-
-function getRealtimeSpeakerLabel(message) {
-  const speakerId = String(message?.speaker || message?.speaker_id || message?.user_id || message?.speakerId || 'assemblyai');
-  const speakerName = String(message?.speaker_name || message?.speakerName || (speakerId === 'assemblyai' ? 'AssemblyAI' : `Speaker ${speakerId}`));
-
-  return { speakerId, speakerName };
 }
 
 async function publishCaption(meetingId, payload) {
@@ -1054,7 +1050,7 @@ function recordAudioWithWindowsDshow(ffmpegBin, filePath, recordDurationSeconds,
 function connectAssemblyAiRealtime(meetingId) {
   return new Promise((resolve, reject) => {
     const aaiUrl = buildAssemblyAiWsUrl();
-    console.log('[aai] connecting to AssemblyAI realtime:', aaiUrl);
+    console.log('[aai] connecting to AssemblyAI realtime with speaker labels');
     console.log('[aai] Authorization header present?:', ASSEMBLYAI_API_KEY ? `yes (${String(ASSEMBLYAI_API_KEY).length} chars)` : 'no');
 
     const aaiWebSocket = new WebSocketModule(aaiUrl, {
