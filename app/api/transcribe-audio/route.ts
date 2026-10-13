@@ -5,7 +5,7 @@ import { requireCredits, requireFeatureAccess } from '@/lib/membership';
 
 const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY || process.env.AAI_API_KEY || '';
 const ASSEMBLYAI_TRANSCRIBE_LANGUAGE = process.env.ASSEMBLYAI_TRANSCRIBE_LANGUAGE || process.env.AAI_TRANSCRIBE_LANGUAGE || '';
-const CAPTION_BACKEND_URL = (process.env.CAPTION_BACKEND_URL || `http://localhost:${process.env.MEETING_AI_PORT || 4010}`).replace(/\/$/, '');
+const CAPTION_BACKEND_URL = (process.env.CAPTION_BACKEND_URL || process.env.MEETING_AI_CONTROL_URL || `http://localhost:${process.env.MEETING_AI_PORT || 4010}`).replace(/\/$/, '');
 
 type AssemblyAIUtterance = {
   text?: string;
@@ -52,7 +52,7 @@ async function transcribeAudio(audioUrl: string): Promise<AssemblyAITranscript> 
     },
     body: JSON.stringify({
       audio_url: audioUrl,
-      speech_models: ['universal-3-pro', 'universal-2'],
+      speech_models: ['universal-3-5-pro', 'universal-2'],
       ...(ASSEMBLYAI_TRANSCRIBE_LANGUAGE
         ? { language_detection: false, language_code: ASSEMBLYAI_TRANSCRIBE_LANGUAGE }
         : { language_detection: true }),

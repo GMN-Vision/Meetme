@@ -79,16 +79,9 @@ class AssemblyAIService {
   ) {
     const body = {
       audio_url: audioUrl,
+      speech_models: ['universal-3-5-pro', 'universal-2'],
       language_code: options.language || 'en',
       speaker_labels: options.speakerLabels ?? true,
-      auto_highlights: true,
-      iab_categories: true,
-      word_boost: options.wordBoost || [],
-      content_safety: true,
-      is_sensitive_content: true,
-      redact_pii: options.redact || false,
-      sentiment_analysis: true,
-      entity_detection: true,
     };
 
     const response = await fetch(`${this.baseUrl}/transcript`, {
@@ -128,33 +121,14 @@ class AssemblyAIService {
     text: string,
     targetLanguage: SupportedLanguage = 'en'
   ): Promise<string> {
-    // AssemblyAI LeMUR API for translation
-    const body = {
-      context: {
-        existing_transcript_ids: [], // Could pass transcript IDs for context
-      },
-      final_model: 'default',
-      max_output_size: 4096,
-      prompt: `Translate the following text to ${SUPPORTED_LANGUAGES[targetLanguage]}:\n\n${text}`,
-    };
-
-    const response = await fetch(`${this.baseUrl}/lemur/v3/generate`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(`Translation failed: ${error.error || error.message}`);
-    }
-
-    const result = await response.json();
-    return result.response;
+    return this.generateTextWithProvider(
+      `Translate the following text to ${SUPPORTED_LANGUAGES[targetLanguage]}. Return only the translation:\n\n${text}`,
+      false
+    );
   }
 
   /**
-   * Generate meeting summary using LeMUR API
+   * Generate meeting summary using the AssemblyAI LLM Gateway.
    */
   async generateSummary(transcriptId: string): Promise<{
     summary: string;
@@ -166,7 +140,7 @@ class AssemblyAIService {
   }
 
   /**
-   * Generate structured meeting notes using the completed transcript as LeMUR context
+   * Generate structured meeting notes from a completed transcript.
    */
   async generateMeetingNotes(
     transcriptId: string,
@@ -204,7 +178,7 @@ Rules:
 Transcript:
 ${transcriptText}`;
 
-    const response = await this.lemurGenerate(prompt, [transcriptId]);
+    const response = await this.generateTextWithProvider(prompt, true);
     const notes = this.parseMeetingNotes(response);
 
     return {
@@ -216,34 +190,39 @@ ${transcriptText}`;
   }
 
   /**
-   * Use LeMUR API for AI generation tasks
+   * Use Gemini when configured, or the AssemblyAI LLM Gateway.
    */
-  private async lemurGenerate(
-    prompt: string,
-    transcriptIds: string[] = []
-  ): Promise<string> {
-    const body = {
-      context: {
-        existing_transcript_ids: transcriptIds,
-      },
-      final_model: 'default',
-      max_output_size: 4096,
-      prompt,
-    };
+  private async generateTextWithProvider(prompt: string, jsonOutput: boolean): Promise<string> {
+    if (process.env.GEMINI_API_KEY) {
+      const model = process.env.GEMINI_MEETING_SUMMARY_MODEL || 'gemini-2.5-flash';
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
+        signal: AbortSignal.timeout(30000),
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { ...(jsonOutput ? { responseMimeType: 'application/json' } : {}), maxOutputTokens: 1800 } }),
+      });
+      if (!response.ok) throw new Error(`Gemini meeting notes failed: HTTP ${response.status}`);
+      const result = await response.json();
+      return String(result.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || '').join('') || '');
+    }
 
-    const response = await fetch(`${this.baseUrl}/lemur/v3/generate`, {
+    const response = await fetch('https://llm-gateway.assemblyai.com/v1/chat/completions', {
       method: 'POST',
       headers: this.getHeaders(),
-      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30000),
+      body: JSON.stringify({
+        model: process.env.MEETING_AI_SUMMARY_MODEL || 'claude-sonnet-4-6',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 1800,
+      }),
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(`LeMUR generation failed: ${error.error || error.message}`);
+      throw new Error(`AssemblyAI LLM Gateway failed: HTTP ${response.status}`);
     }
 
     const result = await response.json();
-    return result.response;
+    return String(result.choices?.[0]?.message?.content || '');
   }
 
   /**

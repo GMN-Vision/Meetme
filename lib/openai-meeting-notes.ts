@@ -24,6 +24,15 @@ export async function generateOpenAIMeetingNotes(
     return null;
   }
 
+  try {
+    return await generateWithOpenAI(transcript);
+  } catch (error) {
+    if (!process.env.GEMINI_API_KEY) throw error;
+    return generateWithGemini(transcript);
+  }
+}
+
+async function generateWithOpenAI(transcript: string): Promise<OpenAIMeetingNotes> {
   const apiKey = getOpenAIKey();
   const model =
     process.env.OPENAI_MEETING_SUMMARY_MODEL ||
@@ -111,6 +120,23 @@ export async function generateOpenAIMeetingNotes(
   }
 
   return normalizeMeetingNotes(parseOpenAIJson(body));
+}
+
+async function generateWithGemini(transcript: string): Promise<OpenAIMeetingNotes> {
+  const model = process.env.GEMINI_MEETING_SUMMARY_MODEL || 'gemini-2.5-flash';
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY! },
+    signal: AbortSignal.timeout(30000),
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: buildPrompt(transcript) }] }],
+      generationConfig: { responseMimeType: 'application/json', maxOutputTokens: 1800 },
+    }),
+  });
+  if (!response.ok) throw new Error(`Gemini meeting summary failed: HTTP ${response.status}`);
+  const body = await response.json();
+  const outputText = body.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || '').join('') || '';
+  return normalizeMeetingNotes(parseOpenAIJson({ output_text: outputText }));
 }
 
 export function normalizeOpenAIActionItems(value: unknown) {

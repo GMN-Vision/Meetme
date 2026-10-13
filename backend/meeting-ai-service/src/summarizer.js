@@ -1,9 +1,10 @@
 'use strict';
 
 const ASSEMBLYAI_KEY = process.env.ASSEMBLYAI_API_KEY || process.env.AAI_API_KEY || '';
+const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
 const { broadcast } = require('./ws/roomHub');
 
-const ASSEMBLYAI_LEMUR_URL = 'https://api.assemblyai.com/v2/lemur/v3/generate';
+const ASSEMBLYAI_LLM_URL = 'https://llm-gateway.assemblyai.com/v1/chat/completions';
 
 const buffers = new Map();
 const lastSummaries = new Map();
@@ -17,20 +18,7 @@ function ensureBuffer(meetingId) {
 }
 
 async function callAssemblyAIMeetingNotes(text) {
-  if (!ASSEMBLYAI_KEY) {
-    throw new Error('AssemblyAI API key not configured');
-  }
-
-  const response = await fetch(ASSEMBLYAI_LEMUR_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: ASSEMBLYAI_KEY,
-    },
-    body: JSON.stringify({
-      final_model: 'default',
-      max_output_size: 4096,
-      prompt: `You are preparing an executive meeting brief from live captions for a product dashboard. Analyze these captions and return ONLY valid JSON.
+  const prompt = `You are preparing an executive meeting brief from live captions for a product dashboard. Analyze these captions and return ONLY valid JSON.
 
 Schema:
 {
@@ -53,17 +41,45 @@ Rules:
 - If the captions are too thin or unclear, say exactly what is known and what is missing; do not pad the brief.
 
 Captions:
-${text}`,
+${text}`;
+
+  if (GEMINI_KEY) {
+    const model = process.env.GEMINI_MEETING_SUMMARY_MODEL || 'gemini-2.5-flash';
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_KEY },
+      signal: AbortSignal.timeout(30000),
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json', maxOutputTokens: 1800 } }),
+    });
+    if (!response.ok) throw new Error(`Gemini meeting summary failed: HTTP ${response.status}`);
+    const json = await response.json();
+    return parseMeetingNotes(json.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('') || '');
+  }
+
+  if (!ASSEMBLYAI_KEY) {
+    throw new Error('AssemblyAI API key not configured');
+  }
+
+  const response = await fetch(ASSEMBLYAI_LLM_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: ASSEMBLYAI_KEY,
+    },
+    signal: AbortSignal.timeout(30000),
+    body: JSON.stringify({
+      model: process.env.MEETING_AI_SUMMARY_MODEL || 'claude-sonnet-4-6',
+      max_tokens: 1800,
+      messages: [{ role: 'user', content: prompt }],
     }),
   });
 
   if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`AssemblyAI LeMUR failed: ${response.status} ${body}`);
+    throw new Error(`AssemblyAI LLM Gateway failed: HTTP ${response.status}`);
   }
 
   const json = await response.json();
-  return parseMeetingNotes(json.response || json.text || '');
+  return parseMeetingNotes(json.choices?.[0]?.message?.content || '');
 }
 
 function parseMeetingNotes(text) {

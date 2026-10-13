@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { requireFeatureAccess } from '@/lib/membership';
 
-const CAPTION_BACKEND_URL = (process.env.CAPTION_BACKEND_URL || `http://localhost:${process.env.MEETING_AI_PORT || 4010}`).replace(/\/$/, '');
+const CAPTION_BACKEND_URL = (process.env.CAPTION_BACKEND_URL || process.env.MEETING_AI_CONTROL_URL || `http://localhost:${process.env.MEETING_AI_PORT || 4010}`).replace(/\/$/, '');
 
 async function requirePaidCaptions() {
   const session = await getServerSession(authOptions);
