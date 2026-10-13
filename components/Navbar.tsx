@@ -331,7 +331,7 @@ export function Navbar() {
               )}
             </Link>
 
-            <DesignSwitcher />
+            {!isRoomPage && !isMeetingsPage && <DesignSwitcher />}
             {pathname === '/' && (
               <div className="app-navbar-links hidden items-center gap-1 md:flex">
                 <Link href="#features">Features</Link>
