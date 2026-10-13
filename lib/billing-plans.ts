@@ -361,3 +361,12 @@ export function getPlanRank(planKey: PlanKey) {
 
   return ranks[planKey] ?? 0;
 }
+
+export type DisplayCurrency = 'GBP' | 'INR';
+// Display estimate: https://open.er-api.com/v6/latest/GBP, updated 2026-10-12.
+export const INR_PER_GBP = 126.669949;
+export function formatPrice(valueInr: number | null, currency: DisplayCurrency = 'GBP') {
+  if (valueInr == null) return 'Custom';
+  if (currency === 'INR') return formatInr(valueInr);
+  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(valueInr / INR_PER_GBP);
+}

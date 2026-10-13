@@ -9,8 +9,8 @@ import { motion, useReducedMotion } from 'motion/react';
 import { ArrowRight, Captions, Check, FileText, Files, Mic, MonitorUp, PencilLine, Play, ShieldCheck, Sparkles, Video } from 'lucide-react';
 import { JoinModal } from '@/components/JoinModal';
 import { Footer } from '@/components/ui/footer';
-import { BILLING_PLAN_MAP, type BillingCycle } from '@/lib/billing-plans';
-import { BillingToggle, PlanCards } from './PlanCards';
+import { BILLING_PLAN_MAP, type DisplayCurrency, type BillingCycle } from '@/lib/billing-plans';
+import { BillingToggle, CurrencySelector, PlanCards } from './PlanCards';
 import { ComparisonTable } from './ComparisonTable';
 
 function Reveal({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
@@ -22,6 +22,7 @@ export function LandingPage() {
   const { status } = useSession();
   const [joinOpen, setJoinOpen] = useState(false);
   const [cycle, setCycle] = useState<BillingCycle>('monthly');
+  const [currency, setCurrency] = useState<DisplayCurrency>('GBP');
   const startHref = status === 'authenticated' ? '/meetings' : '/sign-in';
   const free = BILLING_PLAN_MAP.free;
   const tools = [Video, MonitorUp, Captions, Files, PencilLine, Sparkles];
@@ -69,8 +70,8 @@ export function LandingPage() {
     </section>
 
     <section id="pricing" className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
-      <Reveal className="mb-12 text-center"><h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Simple, transparent pricing.</h2><p className="mb-8 mt-4 text-zinc-400">Start free. Find more room to grow when you need it.</p><BillingToggle cycle={cycle} onChange={setCycle} /></Reveal>
-      <Reveal><PlanCards cycle={cycle} /></Reveal>
+      <Reveal className="mb-12 text-center"><h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Simple, transparent pricing.</h2><p className="mb-8 mt-4 text-zinc-400">Start free. Find more room to grow when you need it.</p><BillingToggle cycle={cycle} onChange={setCycle} /><CurrencySelector currency={currency} onChange={setCurrency} /></Reveal>
+      <Reveal><PlanCards cycle={cycle} currency={currency} /></Reveal>
       <p className="mt-8 text-center text-sm text-zinc-400"><Link href="/pricing" className="inline-flex items-center gap-2 hover:text-white">Explore all plan details <ArrowRight className="h-4 w-4" /></Link></p>
     </section>
     <ComparisonTable />
