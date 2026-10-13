@@ -106,11 +106,12 @@ Create `.env.local` file in the root directory:
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=replace-with-a-random-secret
 EMAIL_TRANSPORT=smtp
-EMAIL_SERVER_HOST=smtp.example.com
+EMAIL_SERVER_HOST=smtp.gmail.com
 EMAIL_SERVER_PORT=587
-EMAIL_USER=your-smtp-user
-EMAIL_PASS=your-smtp-password
-EMAIL_FROM=meetings@example.com
+EMAIL_SERVER_SECURE=false
+EMAIL_USER=contact.melanam@gmail.com
+EMAIL_PASS=replace_with_contact_melanam_gmail_app_password
+EMAIL_FROM=contact.melanam@gmail.com
 
 # Jitsi Configuration
 NEXT_PUBLIC_JITSI_DOMAIN=meet.myapp.com
@@ -120,8 +121,14 @@ MONGODB_URI=mongodb://localhost:27017/melanam
 ```
 
 #### Configure sign-in email:
-Use your SMTP provider settings above. For local development only, `EMAIL_TRANSPORT=console` logs the magic link on the server instead of sending email.
-Magic-link emails display "Melanam" as the sender name. To replace the Gmail address shown to recipients, set `EMAIL_FROM` to an address verified with your SMTP provider (for example, `hello@your-domain.com`) and configure that domain for sending. Changing the display name alone does not hide the underlying sender address.
+Magic-link emails display "Melanam <contact.melanam@gmail.com>" as the sender. Replace EMAIL_PASS in the root .env.local with a Gmail App Password for contact.melanam@gmail.com.
+
+1. Sign in to contact.melanam@gmail.com and enable Google Account 2-Step Verification.
+2. Open https://myaccount.google.com/apppasswords, create an App Password named Melanam, and paste it into EMAIL_PASS without spaces. Use the App Password for this account, rather than your normal Gmail password.
+3. Restart the development server. For production, set the same email variables in your hosting provider's environment settings and redeploy. Set NEXTAUTH_URL to your deployed app URL.
+4. Request a sign-in link to confirm delivery and the sender address.
+
+Keep .env.local private; it is ignored by Git. For local development only, EMAIL_TRANSPORT=console logs the magic link on the server instead of sending email.
 
 #### MongoDB Setup:
 **Option A: Local MongoDB**
