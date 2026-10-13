@@ -4,9 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { resolveMeetingAiHttpUrl, resolveMeetingAiSocketUrl, resolveMeetingAiSocketUrls } from '@/lib/meeting-ai-client';
 
-/**
- * Caption data model matching Google Meet / Zoom
- */
+/** Caption data shown over the meeting video. */
 type Caption = {
   id: string;
   speakerId: string;
@@ -74,7 +72,7 @@ interface CaptionOverlayProps {
 }
 
 /**
- * Caption reducer: implements Google Meet/Zoom behavior exactly
+ * Keep the active caption and one recent caption visible.
  * 
  * Rules:
  * - Max 2 captions visible (active + 1 previous final)
@@ -569,8 +567,8 @@ export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }
 
   // Render overlay
   const overlay = (
-    <div 
-      className={`${portalTarget ? 'absolute' : 'fixed'} inset-x-0 bottom-0 z-40 pointer-events-none flex justify-center px-3 sm:px-6`}
+    <div
+      className={`${portalTarget ? 'absolute' : 'fixed'} inset-x-0 bottom-0 z-40 flex justify-center px-3 pointer-events-none sm:px-6`}
       style={{ 
         paddingBottom: typeof window !== 'undefined' && window.innerWidth < 640
           ? 'calc(env(safe-area-inset-bottom, 0px) + 112px)'
@@ -588,31 +586,30 @@ export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }
       )}
 
       <div
-        className={`w-full max-w-[min(46rem,calc(100vw-1.5rem))] transition-all duration-200 ease-out ${
-          hasVisibleCaptions ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
+        className={`min-w-0 max-w-[min(38rem,calc(100vw-1.5rem))] transition-all duration-200 ease-out ${
+          hasVisibleCaptions ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
         }`}
+        role="log"
+        aria-label="Live captions"
         aria-live="polite"
-        aria-atomic="false"
+        aria-relevant="additions text"
       >
         {hasVisibleCaptions && (
-          <div className="overflow-hidden rounded-[18px] bg-black/90 px-4 py-3 text-left shadow-xl ring-1 ring-white/10 backdrop-blur-md sm:px-5">
-            <div className="flex flex-col gap-2">
+          <div className="w-fit max-w-full rounded-xl bg-zinc-950/85 px-3.5 py-2.5 text-left shadow-lg ring-1 ring-white/10 backdrop-blur-sm sm:px-4">
+            <div className="flex flex-col gap-1.5">
               {captions.map((caption) => (
-                <div
+                <p
                   key={caption.id}
-                  className="grid grid-cols-1 gap-1 sm:grid-cols-[8.5rem_minmax(0,1fr)] sm:gap-3"
+                  className="line-clamp-2 break-words text-sm font-medium leading-5 text-white sm:text-base sm:leading-6"
                   style={{
                     opacity: caption.opacity ?? 1,
-                    transition: 'opacity 220ms ease, transform 220ms ease',
+                    transition: 'opacity 220ms ease',
                   }}
                 >
-                  <div className="min-w-0 truncate text-[13px] font-semibold leading-6 text-[#8ab4f8] sm:text-right">
-                    {caption.speakerName}
-                  </div>
-                  <p className="line-clamp-2 min-w-0 break-words text-[17px] font-medium leading-6 tracking-[-0.01em] text-white sm:text-[18px]">
-                    {caption.text}
-                  </p>
-                </div>
+                  <span className="font-semibold text-sky-300">{caption.speakerName}</span>
+                  <span className="text-white/65" aria-hidden="true"> · </span>
+                  <span>{caption.text}</span>
+                </p>
               ))}
             </div>
           </div>
