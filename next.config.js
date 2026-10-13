@@ -10,6 +10,7 @@ const nextConfig = {
   swcMinify: true,
   async redirects() {
     return [
+      { source: '/favicon.ico', destination: '/icon.svg', permanent: false },
       { source: '/lms/:role/recordings', destination: '/meetings/recordings', permanent: true },
       { source: '/lms/:role/notes', destination: '/meetings/notes', permanent: true },
       { source: '/lms/admin', destination: '/admin', permanent: true },

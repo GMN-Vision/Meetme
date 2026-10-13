@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Recording from '@/models/Recording';
 import Meeting from '@/models/Meeting';
-import { supabaseServer } from '@/lib/supabaseServer';
 import { RECORDING_BUCKET, ACTIVE_RECORDING_STATES } from '@/lib/recording-policy';
 import { validWorkerSecret, refreshRecording, stopServerRecording, recordingErrorResponse } from '@/lib/server-recording';
+import { deleteLocalRecording, localRecordingFile } from '@/lib/local-recording';
 export async function POST(request: NextRequest) {
   if (!validWorkerSecret(request.headers.get('authorization'))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
@@ -17,8 +17,14 @@ export async function POST(request: NextRequest) {
     const failures = results.filter(result => result.status === 'rejected').length;
     const expired = await Recording.find({ status: 'ready', expiresAt: { $lte: new Date() } }).limit(100);
     for (const recording of expired) {
-      const { error } = await supabaseServer.storage.from(RECORDING_BUCKET).remove([recording.storagePath]);
-      if (error) continue;
+      const local = await localRecordingFile(recording.recordingId);
+      if (local) {
+        await deleteLocalRecording(local.file);
+      } else if (recording.storagePath) {
+        const { supabaseServer } = await import('@/lib/supabaseServer');
+        const { error } = await supabaseServer.storage.from(RECORDING_BUCKET).remove([recording.storagePath]);
+        if (error) continue;
+      }
       await Recording.updateOne({ recordingId: recording.recordingId, status: 'ready' }, { $set: { status: 'expired', sizeBytes: 0, sharedWith: [] }, $unset: { storagePath: '' } });
     }
     return NextResponse.json({ success: true, retrying: failures });
