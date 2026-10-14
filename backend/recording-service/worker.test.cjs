@@ -35,7 +35,8 @@ test('worker enforces cap, produces playable MP4, uploads privately and survives
     fs.rmSync(directory, { recursive: true });
   });
   const source = path.join(directory, 'fixture.mp4');
-  await exec('ffmpeg', ['-nostdin', '-y', '-f', 'lavfi', '-i', 'testsrc2=size=320x180:rate=10', '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=44100', '-t', '3', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', source]);
+  // A 4:3, 10 FPS source exercises padding and frame-rate normalization.
+  await exec('ffmpeg', ['-nostdin', '-y', '-f', 'lavfi', '-i', 'testsrc2=size=320x240:rate=10', '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=44100', '-t', '3', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', source]);
   let starts = 0, stops = 0, currentId, readyCallback = false, uploads = 0;
   const uploaded = path.join(directory, 'uploaded.mp4');
   upstream = http.createServer(async (req, res) => {
@@ -66,7 +67,7 @@ test('worker enforces cap, produces playable MP4, uploads privately and survives
   worker = createService(env); let workerUrl = await listen(worker);
   const request = (route, body) => fetch(workerUrl + route, { method: body ? 'POST' : 'GET', headers: { Authorization: 'Bearer test-secret', 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   assert.equal((await fetch(workerUrl + '/health')).status, 401);
-  const input = { recordingId: randomUUID(), roomName: 'class', maxDurationSeconds: 2, maxBytes: 800000 };
+  const input = { recordingId: randomUUID(), roomName: 'class', maxDurationSeconds: 2, maxBytes: 1400000 };
   assert.equal((await request('/recordings', input)).status, 202);
   await request('/recordings', input);
   const busy = await (await request('/recordings', { ...input, recordingId: randomUUID() })).json();
@@ -79,9 +80,15 @@ test('worker enforces cap, produces playable MP4, uploads privately and survives
   }
   assert.equal(result.status, 'ready'); assert.equal(starts, 1); assert.ok(stops >= 1); assert.equal(uploads, 1);
   assert.ok(result.durationSeconds <= 2); assert.ok(fs.existsSync(uploaded));
-  const { stdout } = await exec('ffprobe', ['-v', 'error', '-show_entries', 'stream=codec_name', '-of', 'json', uploaded]);
-  const codecs = JSON.parse(stdout).streams.map(stream => stream.codec_name);
+  const { stdout } = await exec('ffprobe', ['-v', 'error', '-show_entries', 'stream=codec_name,width,height,avg_frame_rate,pix_fmt,sample_aspect_ratio', '-of', 'json', uploaded]);
+  const streams = JSON.parse(stdout).streams;
+  const codecs = streams.map(stream => stream.codec_name);
   assert.ok(codecs.includes('h264')); assert.ok(codecs.includes('aac'));
+  const video = streams.find(stream => stream.codec_name === 'h264');
+  assert.equal(video.width, 1920); assert.equal(video.height, 1080);
+  assert.equal(video.avg_frame_rate, '30/1');
+  assert.equal(video.pix_fmt, 'yuv420p'); assert.equal(video.sample_aspect_ratio, '1:1');
+  assert.ok(fs.statSync(uploaded).size <= input.maxBytes);
   assert.equal(readyCallback, true);
   assert.equal(fs.existsSync(path.join(mediaRoot, input.recordingId)), false);
   await close(worker); worker = createService(env); workerUrl = await listen(worker);

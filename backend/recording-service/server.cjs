@@ -115,8 +115,8 @@ function createService(env = process.env) {
       if (!job.outputReady || !fs.existsSync(output)) {
         await exec(env.FFMPEG_PATH || 'ffmpeg', ['-nostdin', '-y', '-i', input, '-t', String(job.maxDurationSeconds),
           '-map', '0:v:0', '-map', '0:a:0?', '-c:v', 'libx264', '-preset', 'veryfast', '-pix_fmt', 'yuv420p',
-          '-vf', 'scale=1280:720:force_original_aspect_ratio=decrease:force_divisible_by=2',
-          '-b:v', '2200k', '-maxrate', '2800k', '-bufsize', '5600k', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', output],
+          '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease:force_divisible_by=2,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30',
+          '-b:v', '4000k', '-maxrate', '5000k', '-bufsize', '10000k', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', output],
         { timeout: 6 * 3600000, maxBuffer: 16 * 1024 * 1024 });
         job.outputReady = true; job.uploadUrl = null; save(job);
       }

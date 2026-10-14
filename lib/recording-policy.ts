@@ -1,7 +1,8 @@
 export const ACTIVE_RECORDING_STATES = ['starting', 'recording', 'processing'];
 export const RECORDING_BUCKET = 'meeting-recordings';
-// H.264/AAC output is limited to <= 3 Mbps. Include muxing headroom.
-export const RECORDING_BYTES_PER_SECOND = 400_000;
+// 1080p30 H.264 targets 4 Mbps, with a 5 Mbps peak plus 128 kbps AAC.
+// Reserve 5.6 Mbps including muxing/rate-control headroom.
+export const RECORDING_BYTES_PER_SECOND = 700_000;
 
 export function isMeetingHost(meeting: { hostEmail?: string }, email: string) {
   return Boolean(email) && meeting.hostEmail?.toLowerCase() === email.toLowerCase();

@@ -10,7 +10,10 @@ async function main() {
   const existing = buckets.find(bucket => bucket.id === 'meeting-recordings');
   if (existing?.public) throw Error('meeting-recordings must be private. Fix bucket visibility before enabling recording.');
   if (!existing) {
-    const { error } = await storage.createBucket('meeting-recordings', { public: false, allowedMimeTypes: ['video/mp4'], fileSizeLimit: 40 * 1024 ** 3 });
+    const { error } = await storage.createBucket('meeting-recordings', { public: false, allowedMimeTypes: ['video/mp4'], fileSizeLimit: 64 * 1024 ** 3 });
+    if (error) throw error;
+  } else if (existing.file_size_limit != null && Number(existing.file_size_limit) < 64 * 1024 ** 3) {
+    const { error } = await storage.updateBucket('meeting-recordings', { public: false, fileSizeLimit: 64 * 1024 ** 3 });
     if (error) throw error;
   }
   const mongo = new MongoClient(process.env.MONGODB_URI);
@@ -23,7 +26,7 @@ async function main() {
       { key: { scopeKey: 1, month: 1 } }, { key: { hostEmail: 1 } }, { key: { sharedWith: 1 } },
     ]);
     await mongo.db().collection('meetingmembers').createIndex({ meetingId: 1, userEmail: 1 }, { unique: true });
-    console.log('Private recording bucket and quota indexes prepared. Check the project-wide upload limit is at least 40 GiB.');
+    console.log('Private recording bucket and quota indexes prepared. Check the project-wide upload limit is at least 64 GiB for 1080p recordings.');
   } finally { await mongo.close(); }
 }
 main().catch(error => { console.error(error.message); process.exitCode = 1; });

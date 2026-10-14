@@ -32,7 +32,9 @@ test('Free includes recording without AI credits; checkout prices match catalog'
 
 test('allowance honors monthly minutes, per-recording length, storage and meeting deadline', () => {
   const limits = BILLING_PLAN_MAP.free.recording;
-  assert.equal(policy.recordingAllowance(limits, 0, 0).seconds, 10800);
+  // At 1080p, the Free plan's storage fills before its 3-hour session cap.
+  assert.equal(policy.recordingAllowance(limits, 0, 0).seconds, Math.floor(5 * 1024 ** 3 / 700_000));
+  assert.equal(policy.recordingAllowance(BILLING_PLAN_MAP.pro.recording, 0, 0).seconds, 6 * 3600);
   assert.equal(policy.recordingAllowance(limits, 299 * 60, 0).seconds, 60);
   assert.equal(policy.recordingAllowance(limits, 300 * 60, 0).seconds, 0);
   assert.equal(policy.recordingAllowance(limits, 0, 5 * 1024 ** 3).seconds, 0);
@@ -141,7 +143,8 @@ test('the database reservation prevents simultaneous captures before either work
   t.mock.method(global, 'fetch', async (_url, options) => {
     if (options.method === 'POST') {
       starts++; const body = JSON.parse(options.body);
-      assert.equal(body.maxDurationSeconds, 10800);
+      assert.equal(body.maxDurationSeconds, Math.floor(5 * 1024 ** 3 / 700_000));
+      assert.equal(body.maxBytes, body.maxDurationSeconds * 700_000);
     }
     return new Response(JSON.stringify({ status: 'starting' }));
   });
