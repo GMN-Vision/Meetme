@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { FileUpload } from './FileUpload'
+import FileAllowance, { useFileAllowance } from './FileAllowance'
+import { uploadSharedFile, formatFileBytes } from '@/lib/file-upload-client'
 
 interface MediaFile {
   name: string
@@ -35,6 +37,8 @@ export default function UploadMedia({
   const [files, setFiles] = useState<MediaFile[]>([])
   const [downloadUrls, setDownloadUrls] = useState<Record<string, string>>({})
   const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const allowance = useFileAllowance()
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [recentActivity, setRecentActivity] = useState<MeetingActivityItem[]>([])
 
@@ -125,23 +129,16 @@ export default function UploadMedia({
     }
 
     const file = uploadedFiles[0]
+    if (uploading) return
+    if (!allowance.limits) { pushNotice('Wait for your upload allowance to load'); return }
+    if (file.size > allowance.limits.availableFileBytes) {
+      pushNotice('You can send up to ' + formatFileBytes(allowance.limits.availableFileBytes) + ' with your current plan and storage')
+      return
+    }
     setUploading(true)
-    const formData = new FormData()
-    formData.append('meetingId', meetingId)
-    formData.append('file', file)
-
+    setProgress(0)
     try {
-      const res = await fetch('/api/files/upload', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        const errorMsg = body.error || 'Upload failed'
-        pushNotice(errorMsg)
-      } else {
-        const body = await res.json().catch(() => ({}))
+        const body = await uploadSharedFile(file, meetingId, setProgress)
         const uploadedName = file.name
         pushNotice(`Shared media: ${uploadedName}`)
 
@@ -162,12 +159,12 @@ export default function UploadMedia({
         if (body?.path) {
           console.log('[UploadMedia] uploaded:', body.path)
         }
-      }
     } catch (err) {
       console.error('[UploadMedia] upload error:', err)
-      pushNotice('Upload error. Try again.')
+      pushNotice(err instanceof Error ? err.message : 'Upload error. Try again.')
     }
 
+    await allowance.refresh()
     setUploading(false)
   }
 
@@ -180,6 +177,7 @@ export default function UploadMedia({
       })
       if (res.ok) {
         pushNotice('Media removed')
+        allowance.refresh()
         await fetchFiles()
       } else {
         pushNotice('Failed to remove media')
@@ -207,6 +205,8 @@ export default function UploadMedia({
         </span>
       </div>
 
+      <FileAllowance allowance={allowance} />
+      {uploading && <p className="mb-3 text-sm text-zinc-300" role="status">Uploading {progress}%</p>}
       <div className="mb-4 space-y-2">
         {notifications.map((notification) => (
           <div

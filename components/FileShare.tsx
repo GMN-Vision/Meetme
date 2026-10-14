@@ -1,6 +1,8 @@
 "use client"
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Download, Upload, Trash2, FileText } from 'lucide-react'
+import FileAllowance, { useFileAllowance } from './FileAllowance'
+import { uploadSharedFile, formatFileBytes } from '@/lib/file-upload-client'
 
 export default function FileShare({
   meetingId,
@@ -19,6 +21,8 @@ export default function FileShare({
   const [downloadUrls, setDownloadUrls] = useState<Record<string, string>>({})
   const [selected, setSelected] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const allowance = useFileAllowance()
   const [notice, setNotice] = useState('')
   const [loadingList, setLoadingList] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -62,47 +66,24 @@ export default function FileShare({
       setNotice('Select a file first')
       return
     }
+    if (!allowance.limits) { setNotice('Wait for your upload allowance to load'); return }
+    if (selected.size > allowance.limits.availableFileBytes) {
+      setNotice('You can send up to ' + formatFileBytes(allowance.limits.availableFileBytes) + ' with your current plan and storage')
+      return
+    }
     setUploading(true)
-    const formData = new FormData()
-    formData.append('scopeType', scopeType)
-    formData.append('scopeId', resolvedScopeId)
-    formData.append('file', selected)
-
-    console.log('[FileShare] Uploading file:', {
-      scopeType,
-      scopeId: resolvedScopeId,
-      fileName: selected.name,
-      fileSize: selected.size,
-      fileType: selected.type,
-    })
-
+    setProgress(0)
     try {
-      const res = await fetch('/api/files/upload', {
-        method: 'POST',
-        body: formData,
-      })
-
-      console.log('[FileShare] Upload response status:', res.status)
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        const errorMsg = body.error || `HTTP ${res.status}`
-        console.error('[FileShare] Upload failed:', errorMsg, body)
-        setNotice('Upload failed: ' + errorMsg)
-      } else {
-        const body = await res.json().catch(() => ({}))
-        console.log('[FileShare] Upload successful:', body)
-        setSelected(null)
-        if (fileInputRef.current) {
-          fileInputRef.current.value = ''
-        }
-        setNotice('File shared with everyone in this room')
-        await fetchFiles()
-      }
+      await uploadSharedFile(selected, resolvedScopeId, setProgress)
+      setSelected(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      setNotice('File shared with everyone in this room')
+      await fetchFiles()
     } catch (err) {
       console.error('[FileShare] Upload error:', err)
       setNotice('Upload error: ' + String(err))
     }
+    await allowance.refresh()
     setUploading(false)
   }
 
@@ -114,6 +95,7 @@ export default function FileShare({
     })
     if (res.ok) {
       setNotice('File deleted')
+      allowance.refresh()
       fetchFiles()
     } else {
       setNotice('Delete failed')
@@ -138,15 +120,17 @@ export default function FileShare({
         </div>
       ) : null}
 
+      <FileAllowance allowance={allowance} />
+      {selected && <p className="mb-2 text-xs text-zinc-400">Selected: {formatFileBytes(selected.size)}</p>}
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <input ref={fileInputRef} type="file" onChange={handleChange} className="block w-full text-sm text-zinc-100 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-800 file:px-3 file:py-2 file:text-xs file:font-medium file:text-zinc-100 hover:file:bg-zinc-800" />
+        <input ref={fileInputRef} type="file" disabled={uploading} onChange={handleChange} className="block w-full text-sm text-zinc-100 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-800 file:px-3 file:py-2 file:text-xs file:font-medium file:text-zinc-100 hover:file:bg-zinc-800" />
         <button
           onClick={handleUpload}
-          disabled={!selected || uploading || !isReady}
+          disabled={!selected || uploading || !isReady || !allowance.limits || selected.size > allowance.limits.availableFileBytes}
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Upload className="h-4 w-4" />
-          {uploading ? 'Uploading...' : 'Share'}
+          {uploading ? `Uploading ${progress}%` : 'Share'}
         </button>
       </div>
 

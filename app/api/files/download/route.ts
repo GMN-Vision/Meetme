@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer } from '../../../../lib/supabaseServer'
-import { MEETING_FILES_BUCKET } from '../../../../lib/meeting-storage'
+import { supabaseServer } from '@/lib/supabaseServer'
+import { MEETING_FILES_BUCKET } from '@/lib/meeting-storage'
+import { localDownload } from '@/lib/server-file-storage'
+
+export const runtime = 'nodejs'
 
 function getFileNameFromPath(path: string) {
   const parts = path.split('/').filter(Boolean)
@@ -15,6 +18,7 @@ export async function GET(req: Request) {
     if (!path) {
       return NextResponse.json({ error: 'missing path' }, { status: 400 })
     }
+    if (path.startsWith('local/')) return await localDownload(path, req)
 
     const { data, error } = await supabaseServer.storage
       .from(MEETING_FILES_BUCKET)

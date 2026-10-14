@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer } from '../../../../lib/supabaseServer'
-import { MEETING_FILES_BUCKET } from '../../../../lib/meeting-storage'
+import { supabaseServer } from '@/lib/supabaseServer'
+import { MEETING_FILES_BUCKET } from '@/lib/meeting-storage'
 
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url)
     const path = url.searchParams.get('path') || ''
     if (!path) return NextResponse.json({ error: 'missing path' }, { status: 400 })
+    if (path.startsWith('local/')) return NextResponse.json({ url: `/api/files/download?path=${encodeURIComponent(path)}` })
 
     const { data, error } = await supabaseServer.storage
       .from(MEETING_FILES_BUCKET)

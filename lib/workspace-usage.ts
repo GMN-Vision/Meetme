@@ -6,6 +6,7 @@ import { supabaseServer } from '@/lib/supabaseServer';
 import Meeting from '@/models/Meeting';
 import Organization from '@/models/Organization';
 import User from '@/models/User';
+import SharedFile from '@/models/SharedFile';
 
 export type WorkspaceQuota = {
   plan: PlanKey;
@@ -78,18 +79,13 @@ export async function getWorkspaceQuota(userEmail: string, allowAdmin = false): 
 }
 
 async function getFolderSizeBytes(folder: string) {
-  const { data, error } = await supabaseServer.storage
-    .from(MEETING_FILES_BUCKET)
-    .list(folder, { limit: 1000 });
-
-  if (error) {
-    throw new Error(`Unable to calculate workspace storage: ${error.message}`);
+  let total = 0;
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await supabaseServer.storage.from(MEETING_FILES_BUCKET).list(folder, { limit: 1000, offset });
+    if (error) throw new Error(`Unable to calculate workspace storage: ${error.message}`);
+    total += (data || []).reduce((sum: number, file: any) => sum + (Number(file?.metadata?.size) || 0), 0);
+    if (!data || data.length < 1000) return total;
   }
-
-  return (data || []).reduce((total: number, file: any) => {
-    const size = Number(file?.metadata?.size || 0);
-    return total + (Number.isFinite(size) ? size : 0);
-  }, 0);
 }
 
 export async function getWorkspaceStorageUsageBytes(quota: WorkspaceQuota) {
@@ -98,7 +94,11 @@ export async function getWorkspaceStorageUsageBytes(quota: WorkspaceQuota) {
   const folders = meetings.map((meeting) => String(meeting.meetingId));
 
   const sizes = await Promise.all(folders.map(getFolderSizeBytes));
-  return sizes.reduce((total, size) => total + size, 0);
+  const localFiles = await SharedFile.aggregate([
+    { $match: { workspace: `${quota.scope}:${quota.scopeId}`, $or: [{ ready: true }, { expiresAt: { $gt: new Date() } }] } },
+    { $group: { _id: null, bytes: { $sum: '$size' } } },
+  ]);
+  return sizes.reduce((total, size) => total + size, 0) + (localFiles[0]?.bytes || 0);
 }
 
 export async function getWorkspaceUsage(userEmail: string, allowAdmin = false) {
