@@ -58,7 +58,7 @@ export default function AdminSubscriptionTable() {
         window.location.href = '/admin/login';
         return;
       }
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         throw new Error(data.error || 'Failed to load subscriptions');
       }
@@ -95,7 +95,7 @@ export default function AdminSubscriptionTable() {
         window.location.href = '/admin/login';
         return;
       }
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update subscription');
       }
@@ -136,7 +136,7 @@ export default function AdminSubscriptionTable() {
         window.location.href = '/admin/login';
         return;
       }
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         throw new Error(data.error || 'Failed to cancel subscription');
       }

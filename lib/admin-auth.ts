@@ -28,7 +28,9 @@ export function verifyAdminToken(token: string | undefined | null) {
   const [encoded, signature] = token.split('.');
   if (!encoded || !signature) return null;
   const expected = crypto.createHmac('sha256', getSecret()).update(encoded).digest('base64url');
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+  const actualSignature = Buffer.from(signature);
+  const expectedSignature = Buffer.from(expected);
+  if (actualSignature.length !== expectedSignature.length || !crypto.timingSafeEqual(actualSignature, expectedSignature)) return null;
 
   try {
     const payload = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8')) as { username?: string; iat?: number };
@@ -47,7 +49,9 @@ export async function getAdminAuthorization(request?: Request) {
 
   const cookieHeader = request?.headers.get('cookie') || cookies().toString();
   const match = cookieHeader.match(new RegExp(`${ADMIN_COOKIE}=([^;]+)`));
-  const token = match?.[1] ? decodeURIComponent(match[1]) : cookies().get(ADMIN_COOKIE)?.value;
+  let token: string | undefined;
+  try { token = match?.[1] ? decodeURIComponent(match[1]) : cookies().get(ADMIN_COOKIE)?.value; }
+  catch { return { authorized: false, source: 'none' as const, username: '' }; }
   const payload = verifyAdminToken(token);
   if (payload?.username) {
     return { authorized: true, source: 'cookie' as const, username: payload.username };

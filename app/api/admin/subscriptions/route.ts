@@ -8,7 +8,7 @@ import { getAdminAuthorization } from '../../../../lib/admin-auth';
 import { BILLING_PLAN_MAP, getIncludedCredits, getPlanPrice, type BillingCycle, type PlanKey } from '../../../../lib/billing-plans';
 import { getNextPeriodEnd, resetMembershipCredits, serializeMembership } from '../../../../lib/membership';
 
-export async function GET(request: NextRequest) {
+async function listSubscriptions(request: NextRequest) {
   const auth = await getAdminAuthorization(request);
   if (!auth.authorized) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
@@ -18,7 +18,11 @@ export async function GET(request: NextRequest) {
     Subscription.find({}).sort({ updatedAt: -1 }),
   ]);
 
-  const subscriptionsByEmail = new Map(subscriptions.map((subscription) => [subscription.userEmail.toLowerCase(), subscription]));
+  const subscriptionsByEmail = new Map<string, typeof subscriptions[number]>();
+  for (const subscription of subscriptions) {
+    const email = String(subscription.userEmail || '').trim().toLowerCase();
+    if (email && !subscriptionsByEmail.has(email)) subscriptionsByEmail.set(email, subscription);
+  }
   const rows: any[] = users.map((user: any) => {
     const email = String(user.email || '').toLowerCase();
     const subscription = subscriptionsByEmail.get(email);
@@ -44,11 +48,13 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ success: true, subscriptions: rows });
 }
 
-export async function PATCH(request: NextRequest) {
+async function updateSubscription(request: NextRequest) {
   const auth = await getAdminAuthorization(request);
   if (!auth.authorized) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await request.json();
+  const validationError = validateUpdate(body);
+  if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
   const {
     subscriptionId,
     userEmail,
@@ -75,7 +81,11 @@ export async function PATCH(request: NextRequest) {
   let subscription = subscriptionId ? await Subscription.findById(subscriptionId) : null;
 
   if (!subscription && userEmail) {
-    const user = await User.findOne({ email: String(userEmail).toLowerCase() });
+    subscription = await Subscription.findOne({ userEmail: String(userEmail).trim().toLowerCase() }).sort({ updatedAt: -1 });
+  }
+
+  if (!subscription && userEmail) {
+    const user = await User.findOne({ email: String(userEmail).trim().toLowerCase() });
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     subscription = new Subscription({
@@ -96,6 +106,7 @@ export async function PATCH(request: NextRequest) {
 
   if (!subscription) return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
 
+  if (billingCycle !== undefined) subscription.billingCycle = billingCycle;
   if (plan !== undefined) {
     const planKey = String(plan) as PlanKey;
     if (!BILLING_PLAN_MAP[planKey]) {
@@ -107,6 +118,10 @@ export async function PATCH(request: NextRequest) {
     if (amount === undefined && planAmount != null) {
       subscription.amount = planAmount;
     }
+  }
+  if (billingCycle !== undefined && plan === undefined && amount === undefined) {
+    const planAmount = getPlanPrice(subscription.plan as PlanKey, subscription.billingCycle as BillingCycle);
+    if (planAmount != null) subscription.amount = planAmount;
   }
   if (status !== undefined) subscription.status = status;
   if (cancelAtPeriodEnd !== undefined) subscription.cancelAtPeriodEnd = cancelAtPeriodEnd;
@@ -170,13 +185,14 @@ export async function PATCH(request: NextRequest) {
   return NextResponse.json({ success: true, subscription: serializeMembership(subscription) });
 }
 
-export async function DELETE(request: NextRequest) {
+async function cancelSubscription(request: NextRequest) {
   const auth = await getAdminAuthorization(request);
   if (!auth.authorized) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const searchParams = request.nextUrl.searchParams;
   const subscriptionId = searchParams.get('subscriptionId');
   if (!subscriptionId) return NextResponse.json({ error: 'subscriptionId required' }, { status: 400 });
+  if (!/^[a-f0-9]{24}$/i.test(subscriptionId)) return NextResponse.json({ error: 'Invalid subscription ID' }, { status: 400 });
 
   await dbConnect();
   const subscription = await Subscription.findById(subscriptionId);
@@ -191,6 +207,45 @@ export async function DELETE(request: NextRequest) {
 
   return NextResponse.json({ success: true, subscription: serializeMembership(subscription) });
 }
+
+function validateUpdate(body: any) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return 'A membership update is required';
+  if (body.subscriptionId && (typeof body.subscriptionId !== 'string' || !/^[a-f0-9]{24}$/i.test(body.subscriptionId))) return 'Invalid subscription ID';
+  if (body.userEmail !== undefined && (typeof body.userEmail !== 'string' || !body.userEmail.trim())) return 'Invalid member email';
+  if (body.plan !== undefined && !['free', 'pro', 'business', 'enterprise'].includes(body.plan)) return 'Invalid plan';
+  if (body.status !== undefined && !['active', 'trialing', 'past_due', 'canceled', 'pending'].includes(body.status)) return 'Invalid membership status';
+  if (body.billingCycle !== undefined && !['monthly', 'annual'].includes(body.billingCycle)) return 'Invalid billing cycle';
+  if (body.action !== undefined && !['activate', 'cancel', 'extend', 'resetCredits', 'grantCredits'].includes(body.action)) return 'Invalid membership action';
+  if (body.cancelAtPeriodEnd !== undefined && typeof body.cancelAtPeriodEnd !== 'boolean') return 'Cancellation flag must be true or false';
+  if (body.notes !== undefined && typeof body.notes !== 'string') return 'Notes must be text';
+  for (const field of ['amount', 'includedCredits', 'usedCredits', 'extraCredits']) {
+    if (body[field] !== undefined && (typeof body[field] !== 'number' || !Number.isFinite(body[field]) || body[field] < 0)) return `${field} must be a non-negative number`;
+  }
+  for (const [action, field] of [['extend', 'extendDays'], ['grantCredits', 'creditAmount']]) {
+    if (body.action === action && body[field] !== undefined && (!Number.isSafeInteger(body[field]) || body[field] < 1)) return `${field} must be a positive whole number`;
+  }
+  if (body.currentPeriodEnd && (typeof body.currentPeriodEnd !== 'string' || !Number.isFinite(new Date(body.currentPeriodEnd).getTime()))) return 'Invalid membership end date';
+  return '';
+}
+
+async function respond(action: string, handler: () => Promise<NextResponse>) {
+  try { return await handler(); }
+  catch (error: any) {
+    if (error instanceof SyntaxError) return NextResponse.json({ error: 'Invalid JSON request' }, { status: 400 });
+    if (error.name === 'CastError' || error.name === 'ValidationError') {
+      const fields = Object.keys(error.errors || {});
+      return NextResponse.json({ error: fields.length ? `Invalid membership fields: ${fields.join(', ')}. Check the values and save again.` : 'Invalid membership value or ID' }, { status: 400 });
+    }
+    if (error.code === 11000) return NextResponse.json({ error: 'A membership already exists for this user. Refresh the list and try again.' }, { status: 409 });
+    console.error(`[admin/subscriptions] Unable to ${action}`, error);
+    const unavailable = ['MongoServerSelectionError', 'MongooseServerSelectionError', 'MongoNetworkError', 'MongoNetworkTimeoutError'].includes(error.name);
+    return NextResponse.json({ error: unavailable ? 'The membership database is temporarily unavailable. Please retry.' : `Unable to ${action}. Please retry or check the server logs.` }, { status: unavailable ? 503 : 500 });
+  }
+}
+
+export async function GET(request: NextRequest) { return respond('load memberships', () => listSubscriptions(request)); }
+export async function PATCH(request: NextRequest) { return respond('save membership', () => updateSubscription(request)); }
+export async function DELETE(request: NextRequest) { return respond('cancel membership', () => cancelSubscription(request)); }
 
 function buildUnselectedMembershipRow(user: any) {
   const now = new Date();
