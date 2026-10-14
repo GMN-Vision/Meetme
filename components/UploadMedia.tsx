@@ -35,7 +35,7 @@ export default function UploadMedia({
   className?: string
 }) {
   const [files, setFiles] = useState<MediaFile[]>([])
-  const [downloadUrls, setDownloadUrls] = useState<Record<string, string>>({})
+  const [syncNotice, setSyncNotice] = useState('')
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const allowance = useFileAllowance()
@@ -62,31 +62,17 @@ export default function UploadMedia({
         cache: 'no-store',
       })
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to refresh files')
       const filesList = (data.files || []).map((file: any) => ({
         name: file.name,
         path: file.path,
         uploadedAt: file.uploadedAt || Date.now(),
       }))
       setFiles(filesList)
-
-      const urlPairs = await Promise.all(
-        filesList.map(async (file: MediaFile) => {
-          try {
-            const response = await fetch(`/api/files/url?path=${encodeURIComponent(file.path)}&t=${Date.now()}`, {
-              cache: 'no-store',
-            })
-            if (!response.ok) return [file.path, ''] as const
-            const body = await response.json()
-            return [file.path, body.url || ''] as const
-          } catch {
-            return [file.path, ''] as const
-          }
-        })
-      )
-
-      setDownloadUrls(Object.fromEntries(urlPairs))
+      setSyncNotice(data.warning || '')
     } catch (err) {
       console.error('[UploadMedia] fetchFiles error:', err)
+      setSyncNotice('Files could not be refreshed. Retrying automatically…')
     }
   }
 
@@ -206,6 +192,7 @@ export default function UploadMedia({
       </div>
 
       <FileAllowance allowance={allowance} />
+      {syncNotice && <p className="mb-3 text-xs text-amber-300" role="status">{syncNotice}</p>}
       {uploading && <p className="mb-3 text-sm text-zinc-300" role="status">Uploading {progress}%</p>}
       <div className="mb-4 space-y-2">
         {notifications.map((notification) => (
@@ -248,7 +235,7 @@ export default function UploadMedia({
                     </svg>
                   </div>
                   <a
-                    href={downloadUrls[file.path] || '#'}
+                    href={`/api/files/download?path=${encodeURIComponent(file.path)}`}
                     target="_blank"
                     rel="noreferrer"
                     className="min-w-0 flex-1 text-sm font-medium text-zinc-100 truncate hover:text-zinc-300"
@@ -257,7 +244,7 @@ export default function UploadMedia({
                   </a>
                   <div className="flex items-center gap-2">
                     <a
-                      href={downloadUrls[file.path] || '#'}
+                      href={`/api/files/download?path=${encodeURIComponent(file.path)}`}
                       target="_blank"
                       rel="noreferrer"
                       className="rounded-full bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-100 transition hover:bg-zinc-800"

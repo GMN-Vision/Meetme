@@ -18,7 +18,7 @@ export default function FileShare({
   className?: string
 }) {
   const [files, setFiles] = useState<Array<{ name: string; path: string }>>([])
-  const [downloadUrls, setDownloadUrls] = useState<Record<string, string>>({})
+  const [syncNotice, setSyncNotice] = useState('')
   const [selected, setSelected] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -38,11 +38,12 @@ export default function FileShare({
         { cache: 'no-store' }
       )
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to refresh files')
       setFiles(data.files || [])
-      setDownloadUrls({})
+      setSyncNotice(data.warning || '')
     } catch (err) {
       console.error('fetchFiles', err)
-      setNotice('Failed to refresh files')
+      setSyncNotice('Files could not be refreshed. Retrying automatically…')
     } finally {
       setLoadingList(false)
     }
@@ -103,8 +104,7 @@ export default function FileShare({
   }
 
   const getDownloadHref = (path: string) => {
-    const internal = `/api/files/download?path=${encodeURIComponent(path)}`
-    return downloadUrls[path] || internal
+    return `/api/files/download?path=${encodeURIComponent(path)}`
   }
 
   return (
@@ -121,6 +121,7 @@ export default function FileShare({
       ) : null}
 
       <FileAllowance allowance={allowance} />
+      {syncNotice && <p className="mb-3 text-xs text-amber-300" role="status">{syncNotice}</p>}
       {selected && <p className="mb-2 text-xs text-zinc-400">Selected: {formatFileBytes(selected.size)}</p>}
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
         <input ref={fileInputRef} type="file" disabled={uploading} onChange={handleChange} className="block w-full text-sm text-zinc-100 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-800 file:px-3 file:py-2 file:text-xs file:font-medium file:text-zinc-100 hover:file:bg-zinc-800" />

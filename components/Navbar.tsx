@@ -266,7 +266,6 @@ export function Navbar() {
   const currentPlanRank = membership?.active ? PLAN_RANK[membership.plan] : -1;
   const canUseCaptions = currentPlanRank >= PLAN_RANK.pro;
 
-  const canUseFiles = Boolean(membership?.active);
   const canUseLivestream = currentPlanRank >= PLAN_RANK.business;
 
   const productLinks = [
@@ -447,22 +446,16 @@ export function Navbar() {
                 </button>
                 <div ref={filesPopoverRef} className="relative">
                   <button
-                    onClick={() => {
-                      if (isFilesOpen) {
-                        setIsFilesOpen(false);
-                      } else if (canUseFiles) {
-                        setIsFilesOpen(true);
-                      }
-                    }}
+                    onClick={() => setIsFilesOpen(open => !open)}
                     className={`${navActionButtonClass} ${
                       isFilesOpen
                         ? 'border-emerald-200 bg-emerald-50/85 text-emerald-950 shadow-xl'
                         : uploadMediaHoverClass
                     }`}
                     aria-label={isFilesOpen ? 'Close upload media' : 'Open upload media'}
-                    title={isFilesOpen ? 'Close upload media' : canUseFiles ? 'Open upload media' : 'Select an active plan to share files'}
+                    title={isFilesOpen ? 'Close upload media' : 'View and download shared files'}
                   >
-                    {canUseFiles ? <Upload className="h-4 w-4" /> : <LockKeyhole className="h-4 w-4" />}
+                    <Upload className="h-4 w-4" />
                     <span className="hidden lg:inline">Files</span>
                   </button>
                   {isFilesOpen && (
