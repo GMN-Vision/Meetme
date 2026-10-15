@@ -40,6 +40,7 @@
   input[type='checkbox'], input[type='radio'] { accent-color: #e4e4e7; }
   option { color: #fafafa; background: #18181b; }
   h1, h2, h3 { text-wrap: balance; }
+  h1, h2, h3, h4, h5, h6, [role='heading'] { text-transform: capitalize; }
 }
 @layer components {
   .app-main { width: 100%; min-height: 100dvh; padding-top: 96px; }

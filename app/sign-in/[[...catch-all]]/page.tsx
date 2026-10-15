@@ -69,7 +69,7 @@ export default function Page() {
 
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-96px)] max-w-lg flex-col justify-center px-4 py-10">
-      <header className="mb-8 text-center"><p className="section-kicker mb-4">Welcome to Melanam</p><h1 className="text-4xl font-bold tracking-tight text-white">Good conversations<br /><span className="text-zinc-500">start here.</span></h1><p className="mt-5 text-sm leading-6 text-zinc-400">One email. One secure link. Sign in or create your account to start meeting.</p></header>
+      <header className="mb-8 text-center"><p className="section-kicker mb-4">Welcome to Melanam</p><h1 className="text-4xl font-bold tracking-tight text-white">Good Conversations{' '}<br /><span className="text-zinc-500">Start{' '}Here.</span></h1><p className="mt-5 text-sm leading-6 text-zinc-400">One email. One secure link. Sign in or create your account to start meeting.</p></header>
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 sm:p-8">
         <div className="mb-6 flex items-center justify-between"><h2 className="text-lg font-semibold text-white">Continue with email</h2><AuthHelpButton mode="sign-in" /></div>
         <form onSubmit={handleSubmit} className="space-y-5">
