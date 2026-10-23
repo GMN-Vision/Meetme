@@ -197,6 +197,7 @@ test('guests and participants without a resolved subscription can open the meeti
     },
     'next-auth/react': { useSession: () => authenticated ? { data: { user: { email: 'viewer@example.com' } }, status: 'authenticated' } : { data: null, status: 'unauthenticated' } },
     './FileShare': { __esModule: true, default: props => React.createElement('section', { 'data-shared-meeting': props.meetingId }, 'Shared files') },
+    './SharedFileNotifications': { __esModule: true, default: () => null },
     './DesignTheme': { DesignSwitcher: () => null },
     './AudioCapture': { AudioCapture: () => null },
     './Whiteboard': { __esModule: true, default: () => null },
@@ -217,3 +218,4 @@ test('guests and participants without a resolved subscription can open the meeti
     } finally { if (view) act(() => view.unmount()); }
   }
 });
+

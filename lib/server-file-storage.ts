@@ -64,14 +64,18 @@ export async function localDownload(key: string, request?: Request) {
       return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${file.size}` } });
     }
   }
+  const mediaTypes: Record<string, string> = { mp4: 'video/mp4', webm: 'video/webm', mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', pdf: 'application/pdf' };
+  const mediaType = mediaTypes[file.name.split('.').pop()?.toLowerCase() || ''];
+  const preview = request && new URL(request.url).searchParams.get('preview') === '1' && mediaType;
   const stream = Readable.toWeb(createReadStream(location, { start, end })) as ReadableStream;
   return new Response(stream, { status: range ? 206 : 200, headers: {
-    'Content-Type': 'application/octet-stream',
+    'Content-Type': preview ? mediaType : 'application/octet-stream',
     'Accept-Ranges': 'bytes',
     ...(range ? { 'Content-Range': `bytes ${start}-${end}/${file.size}` } : {}),
     'Content-Length': String(end - start + 1),
-    'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(file.name).replace(/['()*]/g, c => '%' + c.charCodeAt(0).toString(16))}`,
+    'Content-Disposition': `${preview ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(file.name).replace(/['()*]/g, c => '%' + c.charCodeAt(0).toString(16))}`,
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
   } });
 }
+

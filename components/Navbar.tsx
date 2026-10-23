@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Copy, LockKeyhole, PencilLine, Radio, ShieldCheck, Sparkles, Square, Upload, Video } from 'lucide-react';
 import FileShare from './FileShare';
+import SharedFileNotifications from './SharedFileNotifications';
 import { DesignSwitcher } from './DesignTheme';
 import { AudioCapture } from './AudioCapture';
 import Whiteboard from './Whiteboard';
@@ -310,6 +311,7 @@ export function Navbar() {
 
   return (
     <nav aria-label="Meeting navigation" className={isRoomPage ? 'fixed left-1/2 top-4 z-[1000] w-[calc(100%-2rem)] max-w-4xl -translate-x-1/2' : 'fixed inset-x-0 top-0 z-[1000] px-3 pt-3 sm:px-5 sm:pt-5'}>
+      {isRoomPage && roomMeetingId && <SharedFileNotifications meetingId={roomMeetingId} />}
       <div className={`app-navbar-shell mx-auto max-w-[80rem] rounded-2xl border border-white/10 bg-black/70 shadow-xl backdrop-blur-xl ${pathname === '/' ? 'app-navbar-shell--landing' : ''} ${isRoomPage ? 'app-navbar-shell--room' : ''}`}>
         <div className="flex h-14 items-center justify-between gap-3">
           <div className="flex items-center gap-3 sm:gap-4">
@@ -660,3 +662,4 @@ export function Navbar() {
     </nav>
   );
 }
+
