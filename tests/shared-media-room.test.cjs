@@ -19,7 +19,13 @@ test('shared display follows uploads in both participant views, preserves select
   const poll = () => act(async () => { polls.forEach(cb => cb()); });
   const first = { name: 'photo.png', path: 'local/room/photo', uploadedAt: 10 };
   const second = { name: 'clip.mp4', path: 'local/room/clip', uploadedAt: 20 };
+  const layout = view => view.root.findByProps({ className: 'shared-media-room' });
+  for (const view of views) assert.equal(layout(view).props['data-display'], 'compact');
   files = [first]; await poll();
+  for (const view of views) {
+    assert.equal(layout(view).props['data-display'], 'expanded');
+    assert.equal(layout(view).props.style['--media-height'], '480px');
+  }
   for (const view of views) assert.equal(view.root.findByType('img').props.src, `/api/files/download?path=${encodeURIComponent(first.path)}&preview=1`);
   files = [first, second]; await poll();
   for (const view of views) {
@@ -29,6 +35,9 @@ test('shared display follows uploads in both participant views, preserves select
   await act(async () => views[0].root.findByType('select').props.onChange({ target: { value: first.path } }));
   await poll();
   assert.equal(views[0].root.findByType('select').props.value, first.path, 'polling does not replace a locally selected older file');
+  act(() => views[1].root.findByProps({ 'aria-label': 'Make shared display smaller' }).props.onClick());
+  await poll();
+  assert.equal(layout(views[1]).props['data-display'], 'compact', 'unchanged polling preserves a compact display');
   fail = true; await poll();
   assert.equal(views[0].root.findAllByType('img').length, 1);
   assert.match(JSON.stringify(views[0].toJSON()), /Retrying automatically/);
@@ -37,7 +46,15 @@ test('shared display follows uploads in both participant views, preserves select
   await act(async () => views[0].root.findByType('video').props.onError());
   assert.match(JSON.stringify(views[0].toJSON()), /could not be played/);
   files = []; await poll();
-  for (const view of views) assert.equal(view.root.findAllByType('select').length, 0);
+  for (const view of views) {
+    assert.equal(view.root.findAllByType('select').length, 0);
+    assert.equal(layout(view).props['data-display'], 'compact');
+  }
+  files = [{ name: 'document.pdf', path: 'local/room/pdf', uploadedAt: 30 }]; await poll();
+  for (const view of views) {
+    assert.equal(layout(view).props['data-display'], 'expanded');
+    assert.equal(layout(view).props.style['--media-height'], '560px');
+  }
 });
 
 test('shared display offers size presets and keyboard resizing without unmounting the call', async t => {

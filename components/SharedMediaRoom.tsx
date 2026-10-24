@@ -12,6 +12,7 @@ export default function SharedMediaRoom({ meetingId, children }: { meetingId: st
   const [failedPath, setFailedPath] = useState('');
   const [size, setSize] = useState(40);
   const [panelHeight, setPanelHeight] = useState(360);
+  const [expanded, setExpanded] = useState(false);
   const layoutRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,6 +23,7 @@ export default function SharedMediaRoom({ meetingId, children }: { meetingId: st
     setFiles([]);
     setSelectedPath('');
     setNotice('');
+    setExpanded(false);
     const refresh = async () => {
       if (busy) return;
       busy = true;
@@ -33,6 +35,15 @@ export default function SharedMediaRoom({ meetingId, children }: { meetingId: st
         const next: SharedMediaFile[] = [...(data.files || [])].sort((a, b) => (b.uploadedAt || 0) - (a.uploadedAt || 0));
         const newest = next.find(file => !knownPaths.has(file.path));
         const firstLoad = !initialized;
+        if ((firstLoad || newest) && next.length) {
+          const sharedFile = newest || next[0];
+          const extension = sharedFile.name.split('.').pop()?.toLowerCase() || '';
+          setSize(40);
+          setPanelHeight(extension === 'pdf' ? 560 : /^(mp3|wav|ogg)$/.test(extension) ? 300 : 480);
+          setExpanded(true);
+        } else if (!next.length) {
+          setExpanded(false);
+        }
         setFiles(next);
         setSelectedPath(current => {
           if (firstLoad || newest) return (newest || next[0])?.path || '';
@@ -73,10 +84,10 @@ export default function SharedMediaRoom({ meetingId, children }: { meetingId: st
     const panel = layoutRef.current?.querySelector('aside')?.getBoundingClientRect();
     if (panel) setPanelHeight(Math.max(240, Math.min(720, event.clientY - panel.top)));
   };
-  const changeSize = (large: boolean) => { setSize(large ? 60 : 30); setPanelHeight(large ? 560 : 280); };
+  const changeSize = (large: boolean) => { setExpanded(large); setSize(large ? 60 : 30); setPanelHeight(large ? 560 : 280); };
 
   return (
-    <div ref={layoutRef} className="shared-media-room" style={{ '--media-width': `${size}%`, '--media-height': `${panelHeight}px` } as CSSProperties}>
+    <div ref={layoutRef} className="shared-media-room" data-display={expanded ? 'expanded' : 'compact'} style={{ '--media-width': `${size}%`, '--media-height': `${panelHeight}px` } as CSSProperties}>
       <div className="shared-media-main">{children}</div>
       <aside className="shared-media-panel rounded-lg border border-zinc-800 bg-zinc-950" aria-label="Shared media display">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 p-3">
@@ -87,7 +98,11 @@ export default function SharedMediaRoom({ meetingId, children }: { meetingId: st
           </div>
         </div>
         {notice && <p role="status" className="px-3 pt-2 text-xs text-amber-300">{notice}</p>}
-        {selected ? <>
+        {!expanded ? <button type="button" onClick={() => setExpanded(true)} className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-3 text-center text-xs text-zinc-400 hover:text-zinc-100" aria-label="Expand shared display">
+          <MonitorPlay size={24} />
+          <span className="max-w-full truncate">{selected ? name : 'Waiting for shared media'}</span>
+          <span>{selected ? 'Click to view' : 'New files open automatically'}</span>
+        </button> : selected ? <>
           <div className="flex items-center gap-2 p-3">
             <select aria-label="Displayed shared file" value={selectedPath} onChange={event => { setSelectedPath(event.target.value); setFailedPath(''); }} className="min-w-0 flex-1 rounded border border-zinc-700 bg-zinc-900 p-2 text-sm">
               {files.map(file => <option key={file.path} value={file.path}>{file.name.split('/').pop()}</option>)}
