@@ -8,10 +8,11 @@ import { AppGuideChat } from './AppGuideChat';
 
 export function AppChrome() {
   const pathname = usePathname();
+  const isRoomPage = pathname?.startsWith('/room/');
   return (
     <Suspense fallback={null}>
-      {pathname?.startsWith('/room/') ? <Navbar /> : <SiteNavbar />}
-      <AppGuideChat />
+      {isRoomPage ? <Navbar /> : <SiteNavbar />}
+      {!isRoomPage && <AppGuideChat />}
     </Suspense>
   );
 }
