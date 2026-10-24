@@ -122,6 +122,18 @@ test('multi-chunk upload becomes visible in another participant view and downloa
   assert.equal(Number(downloaded.headers.get('content-length')), bytes.length);
   const hash = data => createHash('sha256').update(data).digest('hex');
   assert.equal(hash(Buffer.from(await downloaded.arrayBuffer())), hash(bytes));
+  const preview = await participantFetch(`${downloadUrl}&preview=1`, { headers: { Range: 'bytes=0-1023' } });
+  assert.equal(preview.status, 206);
+  assert.equal(preview.headers.get('content-type'), 'application/pdf');
+  assert.match(preview.headers.get('content-disposition'), /^inline;/);
+  assert.equal(preview.headers.get('x-content-type-options'), 'nosniff');
+  assert.deepEqual(Buffer.from(await preview.arrayBuffer()), bytes.subarray(0, 1024));
+  const legacyPreview = await participantFetch('/api/files/download?path=shared-room/photo.png&preview=1');
+  assert.equal(legacyPreview.headers.get('content-type'), 'image/png');
+  assert.match(legacyPreview.headers.get('content-disposition'), /^inline;/);
+  const activeContent = await participantFetch('/api/files/download?path=shared-room/page.html&preview=1');
+  assert.match(activeContent.headers.get('content-disposition'), /^attachment;/);
+  assert.equal(activeContent.headers.get('content-type'), 'application/octet-stream');
   const suffix = await participantFetch(downloadUrl, { headers: { Range: 'bytes=-1031' } });
   assert.equal(suffix.status, 206);
   assert.deepEqual(Buffer.from(await suffix.arrayBuffer()), bytes.subarray(-1031));

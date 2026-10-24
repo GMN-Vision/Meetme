@@ -30,13 +30,17 @@ export async function GET(req: Request) {
 
     const arrayBuffer = await data.arrayBuffer()
     const fileName = getFileNameFromPath(path)
+    const mediaTypes: Record<string, string> = { mp4: 'video/mp4', webm: 'video/webm', mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', pdf: 'application/pdf' }
+    const mediaType = mediaTypes[fileName.split('.').pop()?.toLowerCase() || '']
+    const preview = url.searchParams.get('preview') === '1' && mediaType
 
     return new Response(arrayBuffer, {
       status: 200,
       headers: {
-        'Content-Type': data.type || 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
+        'Content-Type': preview ? mediaType : 'application/octet-stream',
+        'Content-Disposition': `${preview ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(fileName).replace(/['()*]/g, c => '%' + c.charCodeAt(0).toString(16))}`,
         'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff',
       },
     })
   } catch (err: any) {

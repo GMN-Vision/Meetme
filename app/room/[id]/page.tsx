@@ -11,6 +11,7 @@ import { JitsiMeeting } from '../../../components/JitsiMeeting';
 import { useSession } from 'next-auth/react';
 import { normalizeJitsiRoomName } from '../../../lib/jitsi-room';
 import { startMeetingAccessHeartbeat } from '../../../lib/meeting-access-client';
+import SharedMediaRoom from '../../../components/SharedMediaRoom';
 
 interface MeetingDetails {
   _id: string;
@@ -615,8 +616,9 @@ export default function RoomPage() {
   }
 
   return (
-    <div className="meeting-room mx-auto w-full max-w-[64rem] overflow-hidden px-3 pt-6 text-zinc-100 sm:px-5">
+    <div className="meeting-room mx-auto w-full max-w-[110rem] overflow-hidden px-3 pt-6 text-zinc-100 sm:px-5">
       {!userEmail && <p className="mb-3 text-sm text-zinc-300">To receive shared recordings in your recordings, <a className="text-zinc-300 underline" href={`/sign-in?callbackUrl=${encodeURIComponent(`/room/${meetingId}`)}`}>sign in and rejoin</a> before the host ends the meeting.</p>}
+      <SharedMediaRoom key={meetingId} meetingId={meetingId}>
       <div className="meeting-stage relative min-h-[24rem] overflow-hidden rounded-lg border border-[#27272a] bg-zinc-950">
         <div
           ref={handleVideoStageRef}
@@ -689,6 +691,7 @@ export default function RoomPage() {
           </div>
         )}
       </div>
+      </SharedMediaRoom>
     </div>
   );
 }
