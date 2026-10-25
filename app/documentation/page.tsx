@@ -34,7 +34,12 @@ export default function DocumentationPage() {
         items: [
           'Copy link copies the invite link for the room.',
           'Record starts or stops recording. Only the host can control recording.',
-          'Whiteboard opens the shared whiteboard.',
+          'Use More actions in the meeting for Share video, Share audio, background blur, and virtual backgrounds.',
+          'Share video accepts YouTube links. Files → Present in meeting plays uploaded MP4/WebM videos on the meeting stage for everyone.',
+          'Use Share screen for PDFs, slides, and images. Use the meeting layout control to keep participant thumbnails beside the content.',
+          'The meeting’s picture-in-picture control keeps a small meeting window visible while you work, when your browser and meeting server support it.',
+          'Participants opens participant management and breakout rooms for moderators when supported by the server.',
+          'Native whiteboards and shared documents appear in the meeting menu when their server services are configured.',
           'Files opens the file sharing panel; access may require an active plan.',
           'Live captions may require a Pro plan.'
         ]

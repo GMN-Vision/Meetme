@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Download, Upload, Trash2, FileText } from 'lucide-react'
 import FileAllowance, { useFileAllowance } from './FileAllowance'
 import { uploadSharedFile, formatFileBytes } from '@/lib/file-upload-client'
+import { JITSI_PRESENT_EVENT } from '@/lib/jitsi-features'
 
 export default function FileShare({
   meetingId,
@@ -10,12 +11,14 @@ export default function FileShare({
   scopeType = 'meeting',
   title = 'Meeting Files',
   className,
+  presentationEnabled = false,
 }: {
   meetingId?: string
   scopeId?: string
   scopeType?: 'meeting'
   title?: string
   className?: string
+  presentationEnabled?: boolean
 }) {
   const [files, setFiles] = useState<Array<{ name: string; path: string }>>([])
   const [syncNotice, setSyncNotice] = useState('')
@@ -145,6 +148,13 @@ export default function FileShare({
               </a>
             </div>
             <div className="flex items-center gap-2">
+              {presentationEnabled && meetingId && /\.(mp4|webm)$/i.test(f.name) && (
+                <button type="button" onClick={() => {
+                  const event = new CustomEvent(JITSI_PRESENT_EVENT, { cancelable: true, detail: { meetingId, path: f.path } })
+                  window.dispatchEvent(event)
+                  setNotice(event.defaultPrevented ? 'Video sent to the Jitsi stage. Return to the meeting to control playback.' : 'Join the meeting before presenting this video.')
+                }} className="rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-100">Present in meeting</button>
+              )}
               <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-800" title="Download">
                 <Download className="h-4 w-4" />
               </a>

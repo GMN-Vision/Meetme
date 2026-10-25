@@ -4,14 +4,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
-import { createPortal } from 'react-dom';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Copy, LockKeyhole, PencilLine, Radio, ShieldCheck, Sparkles, Square, Upload, Video } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Copy, LockKeyhole, Radio, ShieldCheck, Sparkles, Square, Upload, Video } from 'lucide-react';
 import FileShare from './FileShare';
 import SharedFileNotifications from './SharedFileNotifications';
 import { DesignSwitcher } from './DesignTheme';
 import { AudioCapture } from './AudioCapture';
-import Whiteboard from './Whiteboard';
 import { YouTubeStreamModal } from './YouTubeStreamModal';
 import { useRecording } from '@/hooks/useRecording';
 import { useLivestream } from '@/hooks/useLivestream';
@@ -42,8 +40,6 @@ export function Navbar() {
   const searchParams = useSearchParams();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isFilesOpen, setIsFilesOpen] = useState(false);
-  const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
-  const [whiteboardCloseRequestId, setWhiteboardCloseRequestId] = useState(0);
   const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState(false);
   const [copyStatus, setCopyStatus] = useState('');
   const [guestSpeakerName, setGuestSpeakerName] = useState('');
@@ -76,14 +72,9 @@ export function Navbar() {
   } = useRecording(roomMeetingId);
   const { isStreaming, startLivestream, stopLivestream, loading: livestreamLoading, error: livestreamError, clearError: clearLivestreamError } = useLivestream(roomMeetingId);
 
-  const requestWhiteboardClose = useCallback(() => {
-    setWhiteboardCloseRequestId((requestId) => requestId + 1);
-  }, []);
-
   useEffect(() => {
     setIsFilesOpen(false);
     setIsDropdownOpen(false);
-    setIsWhiteboardOpen(false);
     setIsYouTubeModalOpen(false);
   }, [pathname]);
 
@@ -166,19 +157,6 @@ export function Navbar() {
     return () => document.removeEventListener('mousedown', handlePointerDown);
   }, [isFilesOpen]);
 
-  useEffect(() => {
-
-    if (!isWhiteboardOpen) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        requestWhiteboardClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isWhiteboardOpen, requestWhiteboardClose]);
 
   useEffect(() => {
     if (!isDropdownOpen) return;
@@ -302,8 +280,6 @@ export function Navbar() {
     'hover:border-[#d4d4d8] hover:text-[#d4d4d8]';
   const uploadMediaHoverClass =
     'hover:border-[#34d399] hover:text-[#34d399]';
-  const whiteboardHoverClass =
-    'hover:border-[#f2b84b] hover:text-[#f2b84b]';
   const recordingHoverClass =
     'hover:border-[#ef6b73] hover:text-[#ef6b73]';
   const livestreamHoverClass =
@@ -427,25 +403,6 @@ export function Navbar() {
                   {canUseLivestream || isStreaming ? <Video className="h-4 w-4" /> : <LockKeyhole className="h-4 w-4" />}
                   <span className="hidden lg:inline">{isStreaming ? 'Stop Live' : 'Go Live'}</span>
                 </button> */}
-                <button
-                  onClick={() => {
-                    if (isWhiteboardOpen) {
-                      requestWhiteboardClose();
-                    } else {
-                      setIsWhiteboardOpen(true);
-                    }
-                  }}
-                  className={`${navActionButtonClass} ${
-                    isWhiteboardOpen
-                      ? 'border-amber-200 bg-amber-50/85 text-amber-950 shadow-xl'
-                      : whiteboardHoverClass
-                  }`}
-                  aria-label={isWhiteboardOpen ? 'Close whiteboard' : 'Open whiteboard'}
-                  title={isWhiteboardOpen ? 'Close whiteboard' : 'Open whiteboard'}
-                >
-                  <PencilLine className="h-4 w-4" />
-                  <span className="hidden lg:inline">Whiteboard</span>
-                </button>
                 <div ref={filesPopoverRef} className="relative">
                   <button
                     onClick={() => setIsFilesOpen(open => !open)}
@@ -464,6 +421,7 @@ export function Navbar() {
                     <div className="fixed left-1/2 top-20 z-[1010] w-[calc(100vw-1.5rem)] max-w-[520px] -translate-x-1/2 overflow-hidden rounded-[1.5rem] border border-zinc-800 bg-zinc-900 p-3 shadow-xl sm:absolute sm:left-0 sm:top-auto sm:mt-3 sm:w-[520px] sm:max-w-[calc(100vw-2rem)] sm:translate-x-0">
                       <FileShare
                         meetingId={roomMeetingId}
+                        presentationEnabled
                         scopeType="meeting"
                         title="Shared Files"
                         className="border-0 bg-transparent p-0"
@@ -635,23 +593,6 @@ export function Navbar() {
             </div>
           </div>
         </div>
-      )}
-      {isWhiteboardOpen && roomMeetingId && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[70]">
-          <button
-            aria-label="Close whiteboard backdrop"
-            onClick={requestWhiteboardClose}
-            className="absolute inset-0 h-full w-full cursor-default bg-zinc-950/40 backdrop-blur-sm"
-          />
-          <div className="absolute right-0 top-0 flex h-full w-full max-w-[72rem] flex-col border-l border-white/10 bg-zinc-950 shadow-xl sm:w-[92vw]">
-            <Whiteboard
-              meetingId={roomMeetingId}
-              closeRequestId={whiteboardCloseRequestId}
-              onClose={() => setIsWhiteboardOpen(false)}
-            />
-          </div>
-        </div>,
-        document.body
       )}
       <YouTubeStreamModal
         isOpen={isYouTubeModalOpen}

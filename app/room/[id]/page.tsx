@@ -11,7 +11,8 @@ import { JitsiMeeting } from '../../../components/JitsiMeeting';
 import { useSession } from 'next-auth/react';
 import { normalizeJitsiRoomName } from '../../../lib/jitsi-room';
 import { startMeetingAccessHeartbeat } from '../../../lib/meeting-access-client';
-import SharedMediaRoom from '../../../components/SharedMediaRoom';
+import { getJitsiToolbarButtons } from '@/lib/jitsi-features';
+import JitsiPresentationControls from '@/components/JitsiPresentationControls';
 
 interface MeetingDetails {
   _id: string;
@@ -60,6 +61,7 @@ export default function RoomPage() {
   const [aiResults, setAiResults] = useState<any | null>(null);
   const [captionPortalTarget, setCaptionPortalTarget] = useState<HTMLElement | null>(null);
   const apiRef = useRef<any>(null);
+  const [jitsiApi, setJitsiApi] = useState<any>(null);
   const videoStageRef = useRef<HTMLDivElement | null>(null);
   const transcriptEntriesRef = useRef<Array<{ text: string; timestamp: number; speakerId: string; speaker: string }>>([]);
   const partialTranscriptRef = useRef<Map<string, { text: string; timestamp: number; speakerId: string; speaker: string }>>(new Map());
@@ -439,16 +441,6 @@ export default function RoomPage() {
   );
 
   const handleMeetingReadyToClose = useCallback(async () => {
-    const clearWhiteboard = async () => {
-      const response = await fetch(`/api/whiteboards?meetingId=${encodeURIComponent(meetingId)}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        console.warn('[whiteboard] cleanup failed:', body?.error || response.status);
-      }
-    };
 
     try {
       const { resolveMeetingAiHttpUrl } = await import('../../../lib/meeting-ai-client');
@@ -479,7 +471,6 @@ export default function RoomPage() {
         livePersistTimerRef.current = null;
       }
       await persistAIResults(undefined, { generateSummary: true });
-      await clearWhiteboard();
       router.push(fallbackRoute);
     }
   }, [fallbackRoute, meetingId, persistAIResults, router]);
@@ -541,6 +532,7 @@ export default function RoomPage() {
 
   const handleApiReady = useCallback((api: any) => {
     apiRef.current = api;
+    setJitsiApi(api);
 
     if (displayRoomName) {
       api.executeCommand?.('subject', displayRoomName);
@@ -565,24 +557,7 @@ export default function RoomPage() {
   }, []);
 
   const roomToolbarButtons = useMemo(
-    () => [
-      'microphone',
-      'camera',
-      'desktop',
-      'fullscreen',
-      'hangup',
-      ...(meeting?.chatEnabled !== false ? ['chat'] : []),
-
-      'settings',
-      'videoquality',
-      'raisehand',
-      'tileview',
-      'participants-pane',
-      'stats',
-      'shortcuts',
-      'security',
-      'download',
-    ],
+    () => [...getJitsiToolbarButtons(meeting?.chatEnabled !== false), 'videoquality'],
     [meeting?.chatEnabled, meeting?.recordingEnabled]
   );
   const canMountJitsi = Boolean(
@@ -618,8 +593,9 @@ export default function RoomPage() {
   return (
     <div className="meeting-room mx-auto w-full max-w-[110rem] overflow-hidden px-3 pt-6 text-zinc-100 sm:px-5">
       {!userEmail && <p className="mb-3 text-sm text-zinc-300">To receive shared recordings in your recordings, <a className="text-zinc-300 underline" href={`/sign-in?callbackUrl=${encodeURIComponent(`/room/${meetingId}`)}`}>sign in and rejoin</a> before the host ends the meeting.</p>}
-      <SharedMediaRoom key={meetingId} meetingId={meetingId}>
-      <div className="meeting-stage relative min-h-[24rem] overflow-hidden rounded-lg border border-[#27272a] bg-zinc-950">
+      <JitsiPresentationControls key={meetingId} api={jitsiApi} meetingId={meetingId} />
+      {/* Preserve the original centered stage width and its desktop side gutters. */}
+      <div className="meeting-stage relative mx-auto mb-4 min-h-[24rem] w-full overflow-hidden rounded-lg border border-[#27272a] bg-zinc-950 lg:w-[calc(100%_-_22rem)] lg:max-w-[61.5rem]">
         <div
           ref={handleVideoStageRef}
           className="relative h-[min(68dvh,40rem)] min-h-[24rem] w-full overflow-hidden bg-zinc-950"
@@ -691,7 +667,6 @@ export default function RoomPage() {
           </div>
         )}
       </div>
-      </SharedMediaRoom>
     </div>
   );
 }

@@ -139,6 +139,11 @@ test('meeting iframe survives network errors, device errors and parent renders f
   assert.equal(api.options.configOverwrite.screenShareSettings.desktopSystemAudio, 'include');
   assert.equal(api.options.configOverwrite.disableSimulcast, false);
   assert.equal(api.options.configOverwrite.resolution, 720);
+  assert.equal(api.options.configOverwrite.pip.enableBrowserPiP, true);
+  assert.equal(api.options.configOverwrite.filmstrip.disabled, false);
+  for (const control of ['sharedvideo', 'shareaudio', 'select-background', 'etherpad', 'whiteboard']) {
+    assert.ok(api.options.configOverwrite.toolbarButtons.includes(control));
+  }
   act(() => {
     browser.dispatchEvent(new Event('offline'));
     browser.dispatchEvent(new Event('online'));

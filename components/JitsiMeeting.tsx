@@ -1,25 +1,10 @@
 ﻿'use client';
 
 import { resolveMeetingAiHttpUrl } from '@/lib/meeting-ai-client';
+import { getJitsiFeatureConfig, getJitsiToolbarButtons } from '@/lib/jitsi-features';
 import { useEffect, useRef, useState } from 'react';
 
-const DEFAULT_TOOLBAR_BUTTONS = [
-  'microphone',
-  'camera',
-  'desktop',
-  'fullscreen',
-  'hangup',
-  'chat',
-  'settings',
-  'raisehand',
-  'participants-pane',
-  'videoquality',
-  'tileview',
-  'stats',
-  'shortcuts',
-  'download',
-  'security',
-];
+const DEFAULT_TOOLBAR_BUTTONS = [...getJitsiToolbarButtons(), 'videoquality'];
 
 // Bound camera load for sustained group calls. Screen capture has independent
 // frame-rate settings and can still use the display's full resolution.
@@ -379,6 +364,7 @@ export function JitsiMeeting({
           ...(userEmail && { email: userEmail }),
         },
         configOverwrite: {
+          ...getJitsiFeatureConfig(),
           toolbarButtons: toolbarButtonsRef.current.filter(button => button !== 'recording'),
           startWithAudioMuted: startWithAudioMutedOnJoin,
           startWithVideoMuted: startWithVideoMutedOnJoin,
