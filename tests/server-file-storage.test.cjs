@@ -109,6 +109,41 @@ test('client splits files into small requests and cleans up reservations after e
   } finally { global.fetch = originalFetch; }
 });
 
+test('media uploads negotiate proxy request limits without skipping or duplicating bytes', async t => {
+  const { uploadSharedFile } = load('lib/file-upload-client.ts');
+  const accepted = [], sizes = [], progress = [];
+  let offset = 0;
+  t.mock.method(global, 'fetch', async (url, init) => {
+    if (init.method === 'POST') return Response.json({ path: 'local/room/id', chunkBytes: 4 * 1024 ** 2 });
+    assert.equal(init.method, 'PUT', 'successful negotiation must not delete the upload');
+    assert.equal(Number(new URL(url, 'https://app').searchParams.get('offset')), offset);
+    sizes.push(init.body.size);
+    if (init.body.size > 1024 ** 2) return new Response('<html>Request too large</html>', { status: 413 });
+    accepted.push(Buffer.from(await init.body.arrayBuffer()));
+    offset += init.body.size;
+    return Response.json({ offset });
+  });
+  const bytes = Buffer.alloc(5 * 1024 ** 2 + 13, 0xab);
+  const file = new Blob([bytes], { type: 'video/mp4' }); file.name = 'clip.MP4';
+  await uploadSharedFile(file, 'room', value => progress.push(value));
+  assert.deepEqual(sizes.slice(0, 3), [4 * 1024 ** 2, 2 * 1024 ** 2, 1024 ** 2]);
+  assert.deepEqual(Buffer.concat(accepted), bytes);
+  assert.equal(progress.at(-1), 100);
+});
+
+test('non-JSON upload failures give useful errors and release reserved storage', async t => {
+  const { uploadSharedFile } = load('lib/file-upload-client.ts');
+  let deleted = false;
+  t.mock.method(global, 'fetch', async (_url, init) => {
+    if (init.method === 'POST') return Response.json({ path: 'local/room/id', chunkBytes: 4 });
+    if (init.method === 'DELETE') { deleted = true; return Response.json({ ok: true }); }
+    return new Response('<html>Bad Gateway</html>', { status: 502 });
+  });
+  const file = new Blob(['jpeg']); file.name = 'photo.jpeg';
+  await assert.rejects(uploadSharedFile(file, 'room', () => {}), /Upload failed \(HTTP 502\)/);
+  assert.equal(deleted, true);
+});
+
 test('allowance API shows each plan limit and reduces the send allowance to remaining storage', async () => {
   let plan = 'free', signedIn = true, used = 0;
   const { BILLING_PLAN_MAP } = load('lib/billing-plans.ts');

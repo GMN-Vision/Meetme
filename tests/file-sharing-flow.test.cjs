@@ -152,6 +152,25 @@ test('multi-chunk upload becomes visible in another participant view and downloa
   assert.equal(deleted.status, 200);
   assert.deepEqual((await listing()).files, []);
   assert.equal((await participantFetch(downloadUrl)).status, 404);
+  // File acceptance must not depend on extension case or browser MIME metadata.
+  for (const [name, mime, previewType] of [
+    ['photo.png', 'image/png', 'image/png'],
+    ['PHOTO.PNG', '', 'image/png'],
+    ['clip.MP4', 'video/mp4', 'video/mp4'],
+    ['photo.jpeg', 'image/jpeg', 'image/jpeg'],
+    ['photo.JPG', '', 'image/jpeg'],
+    ['notes.docx', '', 'application/octet-stream'],
+    ['files.zip', 'application/zip', 'application/octet-stream'],
+  ]) {
+    const content = randomBytes(1031);
+    const media = new Blob([content], { type: mime }); media.name = name;
+    await load('lib/file-upload-client.ts').uploadSharedFile(media, 'shared-room', () => {});
+    assert.ok((await listing()).files.some(file => file.name === name), `${name} is accepted and listed`);
+    const response = await participantFetch(`/api/files/download?path=${encodeURIComponent(uploadPath)}&preview=1`);
+    assert.equal(response.status, 200, name);
+    assert.equal(response.headers.get('content-type'), previewType, name);
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()), content, `${name} retains all bytes`);
+  }
 });
 
 for (const componentName of ['FileShare', 'UploadMedia']) {
