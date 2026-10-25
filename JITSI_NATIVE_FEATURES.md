@@ -1,12 +1,16 @@
 # Native Jitsi meeting features
 
 The room now uses the Jitsi stage for presentations and synchronized video.
-The former Shared display panel and custom whiteboard overlay are no longer
-mounted in the meeting. File uploads/downloads and the existing server recording
-and AI services remain available.
+The former Shared display panel is no longer mounted in the meeting. The
+existing Excalidraw Whiteboard button and overlay are available in the meeting
+navigation. File uploads/downloads and the existing server recording and AI
+services remain available.
 
 ## Using the meeting
 
+- Whiteboard in the top meeting navigation opens the existing Excalidraw board.
+  It uses the app's existing collaboration and saving services and does not
+  require enabling Jitsi's native whiteboard.
 - Share screen: choose a screen, application, or browser tab. Present PDFs,
   slides, images, and audio files this way. Use Jitsi's layout control to keep
   participant thumbnails visible. Jitsi does not render uploaded office files

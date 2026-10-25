@@ -39,7 +39,8 @@ export default function DocumentationPage() {
           'Use Share screen for PDFs, slides, and images. Use the meeting layout control to keep participant thumbnails beside the content.',
           'The meeting’s picture-in-picture control keeps a small meeting window visible while you work, when your browser and meeting server support it.',
           'Participants opens participant management and breakout rooms for moderators when supported by the server.',
-          'Native whiteboards and shared documents appear in the meeting menu when their server services are configured.',
+          'Whiteboard in the top navigation opens the shared Excalidraw board.',
+          'Jitsi native whiteboards and shared documents appear in the meeting menu when their server services are configured.',
           'Files opens the file sharing panel; access may require an active plan.',
           'Live captions may require a Pro plan.'
         ]
