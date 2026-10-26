@@ -1,0 +1,37 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const React = require('react');
+const { act, create } = require('react-test-renderer');
+const load = require('./load-typescript.cjs');
+
+test('new files set unread count; dismissing preserves the badge and opening Files clears it', async t => {
+  const previousWindow = global.window, previousDocument = global.document;
+  const ticks = [];
+  global.window = { setTimeout: callback => { ticks.push(callback); return ticks.length; }, clearTimeout: () => {} };
+  global.document = { body: {} };
+  let files = [{ name: 'old.pdf', path: 'old' }], unread = -1, view;
+  t.mock.method(global, 'fetch', async () => Response.json({ files }));
+  const Component = load('components/SharedFileNotifications.tsx', { 'react-dom': { createPortal: child => child } }).default;
+  const onUnreadChange = count => { unread = count; };
+  const props = { meetingId: 'room', onUnreadChange };
+  t.after(() => { if (view) act(() => view.unmount()); global.window = previousWindow; global.document = previousDocument; });
+  await act(async () => { view = create(React.createElement(Component, props)); });
+  assert.equal(unread, 0, 'existing files are not new notifications');
+  files.push({ name: 'new.png', path: 'new' });
+  await act(async () => { await ticks.shift()(); });
+  assert.equal(unread, 1);
+  assert.equal(view.root.findAllByType('aside').length, 1);
+  act(() => view.root.findByProps({ 'aria-label': 'Dismiss file notifications' }).props.onClick());
+  assert.equal(view.toJSON(), null);
+  assert.equal(unread, 1, 'dismiss closes the toast without marking files as read');
+  await act(async () => { view.update(React.createElement(Component, { ...props, filesOpen: true })); });
+  assert.equal(unread, 0);
+  files.push({ name: 'while-open.mp3', path: 'open' });
+  await act(async () => { await ticks.shift()(); });
+  assert.equal(unread, 0, 'files arriving while the panel is open are read');
+  await act(async () => { view.update(React.createElement(Component, { ...props, filesOpen: false })); });
+  files.push({ name: 'later.ppt', path: 'later' });
+  await act(async () => { await ticks.shift()(); });
+  assert.equal(unread, 1);
+  assert.equal(view.root.findAllByType('aside').length, 1, 'a new file reopens the toast');
+});

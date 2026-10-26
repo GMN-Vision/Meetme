@@ -42,6 +42,7 @@ export function Navbar() {
   const searchParams = useSearchParams();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isFilesOpen, setIsFilesOpen] = useState(false);
+  const [unreadFiles, setUnreadFiles] = useState(0);
   const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
   const [whiteboardCloseRequestId, setWhiteboardCloseRequestId] = useState(0);
   const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState(false);
@@ -319,7 +320,7 @@ export function Navbar() {
 
   return (
     <nav aria-label="Meeting navigation" className={isRoomPage ? 'fixed left-1/2 top-4 z-[1000] w-[calc(100%-2rem)] max-w-4xl -translate-x-1/2' : 'fixed inset-x-0 top-0 z-[1000] px-3 pt-3 sm:px-5 sm:pt-5'}>
-      {isRoomPage && roomMeetingId && <SharedFileNotifications meetingId={roomMeetingId} />}
+      {isRoomPage && roomMeetingId && <SharedFileNotifications meetingId={roomMeetingId} filesOpen={isFilesOpen} onUnreadChange={setUnreadFiles} />}
       <div className={`app-navbar-shell mx-auto max-w-[80rem] rounded-2xl border border-white/10 bg-black/70 shadow-xl backdrop-blur-xl ${pathname === '/' ? 'app-navbar-shell--landing' : ''} ${isRoomPage ? 'app-navbar-shell--room' : ''}`}>
         <div className="flex h-14 items-center justify-between gap-3">
           <div className="flex items-center gap-3 sm:gap-4">
@@ -446,7 +447,7 @@ export function Navbar() {
                 <div ref={filesPopoverRef} className="relative">
                   <button
                     onClick={() => setIsFilesOpen(open => !open)}
-                    className={`${navActionButtonClass} ${
+                    className={`relative ${navActionButtonClass} ${
                       isFilesOpen
                         ? 'border-emerald-200 bg-emerald-50/85 text-emerald-950 shadow-xl'
                         : uploadMediaHoverClass
@@ -456,9 +457,10 @@ export function Navbar() {
                   >
                     <Upload className="h-4 w-4" />
                     <span className="hidden lg:inline">Files</span>
+                    {unreadFiles > 0 && !isFilesOpen && <span aria-label={`${unreadFiles} unread shared files`} className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-zinc-950">{unreadFiles > 9 ? '9+' : unreadFiles}</span>}
                   </button>
                   {isFilesOpen && (
-                    <div className="fixed left-1/2 top-20 z-[1010] w-[calc(100vw-1.5rem)] max-w-[520px] -translate-x-1/2 overflow-hidden rounded-[1.5rem] border border-zinc-800 bg-zinc-900 p-3 shadow-xl sm:absolute sm:left-0 sm:top-auto sm:mt-3 sm:w-[520px] sm:max-w-[calc(100vw-2rem)] sm:translate-x-0">
+                    <div className="fixed left-1/2 top-20 z-[1010] max-h-[min(28rem,calc(100dvh-7rem))] w-[calc(100vw-1.5rem)] max-w-[440px] -translate-x-1/2 overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-900 p-3 shadow-xl sm:absolute sm:left-0 sm:top-auto sm:mt-3 sm:w-[440px] sm:max-w-[calc(100vw-2rem)] sm:translate-x-0">
                       <FileShare
                         meetingId={roomMeetingId}
                         presentationEnabled

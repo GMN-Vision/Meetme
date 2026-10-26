@@ -124,7 +124,10 @@ export default function FileShare({
         </div>
       ) : null}
 
-      <FileAllowance allowance={allowance} />
+      <details className="mb-2 text-xs text-zinc-400">
+        <summary className="cursor-pointer py-1 hover:text-zinc-200">Upload allowance</summary>
+        <FileAllowance allowance={allowance} />
+      </details>
       {syncNotice && <p className="mb-3 text-xs text-amber-300" role="status">{syncNotice}</p>}
       {selected && <p className="mb-2 text-xs text-zinc-400">Selected: {formatFileBytes(selected.size)}</p>}
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -139,23 +142,23 @@ export default function FileShare({
         </button>
       </div>
 
-      <ul className="max-h-64 space-y-2 overflow-y-auto">
+      <ul className="max-h-40 space-y-1.5 overflow-y-auto">
         {files.map((f) => (
           <li key={f.path} className="flex items-center justify-between gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
-            <div className="min-w-0 flex items-center gap-2">
+            <div className="min-w-0 flex flex-1 items-center gap-2">
               <FileText className="h-4 w-4 shrink-0 text-zinc-400" />
               <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="truncate text-sm text-zinc-100 hover:text-zinc-300 hover:underline">
                 {f.name.split('/').pop()}
               </a>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-1.5">
               {presentationEnabled && meetingId && getPresentationKind(f.name) && (
                 <button type="button" onClick={() => {
                   const detail = { meetingId, path: f.path, name: f.name, message: '' }
                   const event = new CustomEvent(JITSI_PRESENT_EVENT, { cancelable: true, detail })
                   window.dispatchEvent(event)
                   setNotice(detail.message || (event.defaultPrevented ? 'Media sent to the Jitsi stage. Return to the meeting to control playback.' : 'Join the meeting before presenting this file.'))
-                }} className="rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-100">Present in meeting</button>
+                }} aria-label={`Present ${f.name} in meeting`} className="rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-100">Present</button>
               )}
               <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-800" title="Download">
                 <Download className="h-4 w-4" />
