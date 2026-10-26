@@ -33,6 +33,7 @@ export function getJitsiFeatureConfig() {
 }
 
 export const JITSI_PRESENT_EVENT = 'melanam:jitsi-present';
+export const JITSI_SCREEN_PRESENT_EVENT = 'melanam:jitsi-present-screen';
 
 export function getSharedVideoUrl(path: string, origin: string) {
   const url = new URL('/api/files/download', origin);

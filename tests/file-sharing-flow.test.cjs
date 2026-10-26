@@ -159,6 +159,11 @@ test('multi-chunk upload becomes visible in another participant view and downloa
     ['clip.MP4', 'video/mp4', 'video/mp4'],
     ['photo.jpeg', 'image/jpeg', 'image/jpeg'],
     ['photo.JPG', '', 'image/jpeg'],
+    ['music.MP3', 'audio/mpeg', 'audio/mpeg'],
+    ['voice.m4a', '', 'audio/mp4'],
+    ['sound.wav', 'audio/wav', 'audio/wav'],
+    ['slides.ppt', 'application/vnd.ms-powerpoint', 'application/octet-stream'],
+    ['slides.PPTX', '', 'application/octet-stream'],
     ['notes.docx', '', 'application/octet-stream'],
     ['files.zip', 'application/zip', 'application/octet-stream'],
   ]) {

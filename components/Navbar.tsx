@@ -6,7 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Copy, LockKeyhole, PencilLine, Radio, ShieldCheck, Sparkles, Square, Upload, Video } from 'lucide-react';
+import { Copy, LoaderCircle, LockKeyhole, PencilLine, Radio, ShieldCheck, Sparkles, Square, Upload, Video } from 'lucide-react';
 import FileShare from './FileShare';
 import SharedFileNotifications from './SharedFileNotifications';
 import { DesignSwitcher } from './DesignTheme';
@@ -309,6 +309,13 @@ export function Navbar() {
     'hover:border-[#ef6b73] hover:text-[#ef6b73]';
   const livestreamHoverClass =
     'hover:border-[#ef6b73] hover:text-[#ef6b73]';
+  const recordingLabel = recordingStatus === 'processing'
+    ? 'Processing...'
+    : recordingStatus === 'starting'
+      ? 'Starting...'
+      : recordingLoading
+        ? (isRecording ? 'Stopping...' : 'Starting...')
+        : isRecording ? 'Recording' : 'Record';
 
   return (
     <nav aria-label="Meeting navigation" className={isRoomPage ? 'fixed left-1/2 top-4 z-[1000] w-[calc(100%-2rem)] max-w-4xl -translate-x-1/2' : 'fixed inset-x-0 top-0 z-[1000] px-3 pt-3 sm:px-5 sm:pt-5'}>
@@ -389,24 +396,13 @@ export function Navbar() {
                       ? 'border-red-200 bg-red-50/85 text-red-950 shadow-xl'
                       : `border-zinc-800 bg-zinc-800/80 text-zinc-100 ${recordingHoverClass}`
                   } disabled:opacity-50`}
-                  aria-label={isRecording ? 'Stop server recording' : 'Start server recording'}
+                  aria-label={recordingLoading ? recordingLabel : isRecording ? 'Stop server recording' : 'Start server recording'}
                   title={isRecording ? 'Stop server recording' : recordingUnavailableReason || (canUseRecording ? 'Start server recording' : 'Only the host can record')}
                 >
-                  {isRecording ? <Square className="h-4 w-4 fill-current" /> : canUseRecording ? <Radio className="h-4 w-4" /> : <LockKeyhole className="h-4 w-4" />}
-                  <span className="hidden lg:inline">
-                    {recordingLoading ? (recordingStatus === 'processing' ? 'Processing...' : 'Starting...') : isRecording ? 'Stop Recording' : 'Record'}
-                  </span>
+                  {recordingLoading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isRecording ? <Square className="h-4 w-4 fill-current" /> : canUseRecording ? <Radio className="h-4 w-4" /> : <LockKeyhole className="h-4 w-4" />}
+                  <span className="hidden lg:inline" aria-live="polite">{recordingLabel}</span>
+                  {isRecording && !recordingLoading && <span className="hidden font-mono text-xs tabular-nums lg:inline">{recordingElapsedTime}</span>}
                 </button>
-                {(isRecording || recordingStatus === 'starting') && (
-                  <div
-                    className="inline-flex h-9 items-center gap-2 rounded-xl border border-red-200 bg-red-50/90 px-3 text-xs font-bold text-red-700 shadow-xl lg:inline-flex"
-                    aria-live="polite"
-                  >
-                    <span className="h-2.5 w-2.5 rounded-full bg-red-600 animate-pulse" />
-                    <span className="hidden sm:inline">{isRecording ? 'Recording' : 'Starting recording'}</span>
-                    <span className="font-mono text-red-900">{recordingElapsedTime}</span>
-                  </div>
-                )}
                 {/* Livestream is temporarily hidden until the server-side streaming setup is ready.
                 <button
                   onClick={() => {

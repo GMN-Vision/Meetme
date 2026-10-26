@@ -10,6 +10,8 @@ The browser reserves space and uploads sequential chunks of up to 4 MiB, with pe
 
 Uploads accept all file extensions, including PNG, JPG/JPEG, MP4, documents, and archives, regardless of uppercase extensions or missing browser MIME types. Plan and workspace size limits still apply. Browser preview/playback support is separate from accepting a file for sharing.
 
+Every joined participant can present shared audio/video, images, PDFs, and PowerPoint from Files. PowerPoint previews require LibreOffice on the app server (`LIBREOFFICE_PATH` for a nonstandard executable path), and convert decks up to 100 MB to static PDF slides. The original file is unchanged. Images and slides use a dedicated viewer tab and Jitsi screen sharing; the browser asks the presenter which tab/window to share. Common audio extensions include MP3, WAV, OGG/OGA, M4A, AAC, FLAC, and Opus. Playback depends on the attendee browser's codec support.
+
 Current per-file limits are Free 100 MB, Pro 1 GB, Business 5 GB and Enterprise 10 GB. Workspace storage is 1 GB, 50 GB, 250 GB and uncapped respectively. Limits are enforced on the server before bytes are accepted; pending uploads reserve their full declared size. Uploads are charged to the uploader's workspace. The interface shows the plan limit and available storage.
 
 Failed browser uploads attempt to delete their partial file and release the reservation. Abandoned uploads expire after 24 hours; expired partial files are removed when another upload starts. Reservations expire even if no new uploads arrive. Files are only listed after all bytes have been written. Files keep their original names for download. Uploaders, meeting hosts and administrators can delete server files.

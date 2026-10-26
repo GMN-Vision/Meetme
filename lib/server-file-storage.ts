@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { Readable } from 'node:stream';
 import SharedFile from '@/models/SharedFile';
 import dbConnect from '@/lib/db';
+import { PREVIEW_TYPES, sharedFileExtension } from '@/lib/shared-file-types';
 
 export const CHUNK_BYTES = 4 * 1024 * 1024;
 export const FILE_LIMITS = { free: 100 * 1024 ** 2, pro: 1024 ** 3, business: 5 * 1024 ** 3, enterprise: 10 * 1024 ** 3 };
@@ -64,8 +65,7 @@ export async function localDownload(key: string, request?: Request) {
       return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${file.size}` } });
     }
   }
-  const mediaTypes: Record<string, string> = { mp4: 'video/mp4', webm: 'video/webm', mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', pdf: 'application/pdf' };
-  const mediaType = mediaTypes[file.name.split('.').pop()?.toLowerCase() || ''];
+  const mediaType = PREVIEW_TYPES[sharedFileExtension(file.name)];
   const preview = request && new URL(request.url).searchParams.get('preview') === '1' && mediaType;
   const stream = Readable.toWeb(createReadStream(location, { start, end })) as ReadableStream;
   return new Response(stream, { status: range ? 206 : 200, headers: {

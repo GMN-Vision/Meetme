@@ -17,10 +17,20 @@ services remain available.
   or PDFs itself.
 - More actions → Share video: paste a YouTube URL. The presenter controls shared
   playback. Embedding restrictions on the YouTube video still apply.
-- Files → Present in meeting: sends an uploaded MP4/WebM URL to Jitsi's native
-  shared-video player. Playback, pause, and seeking use Jitsi's synchronization.
+- Files → Present in meeting: available to every joined participant for shared
+  audio, video, images, PDFs, and PowerPoint files, including another user's files.
+  Audio/video use Jitsi's shared player. Playback, pause, and seeking use Jitsi's synchronization.
   Every participant must be able to reach the app URL; localhost is only suitable
   for attendees on the same machine. A deleted file will no longer play.
+- Images and PDF/PowerPoint slides open a presentation viewer. Select Share in
+  meeting there, then select the presentation tab/window in the browser picker.
+  The browser requires this selection; the app cannot silently capture a tab.
+  PowerPoint (PPT/PPTX/PPS/PPSX/ODP) is converted to PDF locally on the app server
+  using LibreOffice, which must be installed on that server. Set LIBREOFFICE_PATH
+  if it is outside the standard Windows installation or Linux PATH. Slide preview
+  conversion supports files up to 100 MB; larger files remain uploadable/downloadable
+  under the plan limits. Conversion preserves static slides; animations, embedded
+  media, and transitions are not played in the PDF viewer. Fonts can affect layout.
 - More actions also exposes Share audio, Select background, and noise suppression
   where supported by the browser. Screen audio requires selecting audio in the
   browser's capture picker.
@@ -96,7 +106,9 @@ Use two independent browser profiles with camera and microphone permissions:
    can retain participant thumbnails in presentation view.
 2. Share an embeddable YouTube video; play, pause, and seek from the presenting
    attendee and confirm the other attendee follows.
-3. Upload an MP4/WebM, select Present in meeting, and repeat the playback checks.
+3. Upload audio/video and present from a different attendee's Files panel. Repeat
+   playback checks. Upload PNG/JPEG and PPT/PPTX; open the viewer, share its tab,
+   and confirm everyone sees the image or the presenter's slide navigation.
 4. Open/close PiP manually, change tabs, return, and hang up; verify no duplicate
    conference audio or orphan floating window. Test target browsers separately.
 5. Open the native whiteboard and shared document on both profiles and verify

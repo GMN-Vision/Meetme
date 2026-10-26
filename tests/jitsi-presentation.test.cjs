@@ -13,6 +13,8 @@ test('uploaded videos use the joined room, native playback and safe URLs; listen
   global.document = {};
   t.after(() => { global.window = previousWindow; global.document = previousDocument; });
   const calls = [], listeners = new Map();
+  const viewers = [];
+  browser.open = url => { viewers.push(new URL(url)); return {}; };
   const api = {
     getSupportedCommands: () => ['showPiP', 'hidePiP'],
     executeCommand: (...args) => calls.push(args),
@@ -23,9 +25,9 @@ test('uploaded videos use the joined room, native playback and safe URLs; listen
   const { JITSI_PRESENT_EVENT } = load('lib/jitsi-features.ts');
   let view;
   await act(async () => { view = create(React.createElement(Component, { api, meetingId: 'room' })); });
-  const present = meetingId => {
+  const present = (meetingId, name = 'clip.mp4') => {
     const event = new Event(JITSI_PRESENT_EVENT, { cancelable: true });
-    event.detail = { meetingId, path: 'local/room/a b&video' };
+    event.detail = { meetingId, path: 'local/room/a b&video', name };
     browser.dispatchEvent(event);
     return event.defaultPrevented;
   };
@@ -38,6 +40,22 @@ test('uploaded videos use the joined room, native playback and safe URLs; listen
   assert.equal(media.searchParams.get('path'), 'local/room/a b&video');
   assert.equal(media.searchParams.get('preview'), '1');
   assert.deepEqual(calls[1], ['setTileView', false]);
+  for (const name of ['sound.MP3', 'music.m4a', 'voice.wav']) {
+    act(() => assert.equal(present('room', name), true));
+    assert.equal(calls.at(-2)[0], 'startShareVideo');
+  }
+  for (const name of ['image.PNG', 'slides.ppt', 'slides.PPTX', 'notes.pdf']) {
+    act(() => assert.equal(present('room', name), true));
+    assert.equal(viewers.at(-1).pathname, '/present');
+    assert.equal(viewers.at(-1).searchParams.get('name'), name);
+    assert.equal(viewers.at(-1).searchParams.get('meetingId'), 'room');
+  }
+  const { JITSI_SCREEN_PRESENT_EVENT } = load('lib/jitsi-features.ts');
+  const share = new Event(JITSI_SCREEN_PRESENT_EVENT, { cancelable: true });
+  share.detail = { meetingId: 'room' };
+  browser.dispatchEvent(share);
+  assert.equal(share.defaultPrevented, true);
+  assert.deepEqual(calls.at(-1), ['toggleShareScreen', { enable: true }]);
   assert.equal(view.toJSON(), null, 'presentation integration adds no toolbar or help panel');
   act(() => listeners.get('readyToClose')());
   assert.equal(present('room'), false, 'closed conferences cannot present');

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabaseServer'
 import { MEETING_FILES_BUCKET } from '@/lib/meeting-storage'
 import { localDownload } from '@/lib/server-file-storage'
+import { PREVIEW_TYPES, sharedFileExtension } from '@/lib/shared-file-types'
 
 export const runtime = 'nodejs'
 
@@ -30,8 +31,7 @@ export async function GET(req: Request) {
 
     const arrayBuffer = await data.arrayBuffer()
     const fileName = getFileNameFromPath(path)
-    const mediaTypes: Record<string, string> = { mp4: 'video/mp4', webm: 'video/webm', mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', pdf: 'application/pdf' }
-    const mediaType = mediaTypes[fileName.split('.').pop()?.toLowerCase() || '']
+    const mediaType = PREVIEW_TYPES[sharedFileExtension(fileName)]
     const preview = url.searchParams.get('preview') === '1' && mediaType
 
     return new Response(arrayBuffer, {

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 type SharedItem = { name: string; path: string }
 
@@ -31,8 +32,10 @@ export default function SharedFileNotifications({ meetingId }: { meetingId: stri
     return () => { cancelled = true; window.clearTimeout(timer) }
   }, [meetingId])
 
-  if (!items.length) return null
-  return <aside aria-label="Shared file notifications" className="absolute right-0 top-full mt-3 max-h-80 w-80 overflow-auto rounded-xl border border-white/20 bg-zinc-900 p-3 text-white shadow-xl">
+  if (!items.length || typeof document === 'undefined') return null
+  // The centered navigation has a transform; portal to the body so this toast
+  // stays anchored to the viewport instead of the navigation's bounds.
+  return createPortal(<aside aria-label="Shared file notifications" className="fixed right-4 top-24 z-[1050] max-h-[min(20rem,calc(100dvh-7rem))] w-80 max-w-[calc(100vw-2rem)] overflow-auto rounded-xl border border-white/20 bg-zinc-900 p-3 text-white shadow-xl">
     <p role="status" className="mb-2 text-sm font-semibold">Someone shared {items.length === 1 ? 'a file' : `${items.length} files`}</p>
     {items.map(file => <div key={file.path} className="mb-3 text-sm">
       <p className="truncate">{file.name}</p>
@@ -42,5 +45,5 @@ export default function SharedFileNotifications({ meetingId }: { meetingId: stri
       </div>
     </div>)}
     <button className="text-xs text-zinc-300" onClick={() => setItems([])}>Dismiss notifications</button>
-  </aside>
+  </aside>, document.body)
 }
