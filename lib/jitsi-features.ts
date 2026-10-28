@@ -42,4 +42,3 @@ export function getSharedVideoUrl(path: string, origin: string) {
   return url.href;
 }
 
-export const JITSI_DOCUMENT_PRESENT_EVENT = 'melanam:present-document';

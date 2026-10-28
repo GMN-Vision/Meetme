@@ -13,7 +13,6 @@ import { normalizeJitsiRoomName } from '../../../lib/jitsi-room';
 import { startMeetingAccessHeartbeat } from '../../../lib/meeting-access-client';
 import { getJitsiToolbarButtons } from '@/lib/jitsi-features';
 import JitsiPresentationControls from '@/components/JitsiPresentationControls';
-import MeetingDocumentViewer from '@/components/MeetingDocumentViewer';
 
 interface MeetingDetails {
   _id: string;
@@ -612,7 +611,6 @@ export default function RoomPage() {
     <div className="meeting-room mx-auto w-full max-w-[110rem] overflow-hidden px-3 pt-6 text-zinc-100 sm:px-5">
       {!userEmail && <p className="mb-3 text-sm text-zinc-300">To receive shared recordings in your recordings, <a className="text-zinc-300 underline" href={`/sign-in?callbackUrl=${encodeURIComponent(`/room/${meetingId}`)}`}>sign in and rejoin</a> before the host ends the meeting.</p>}
       <JitsiPresentationControls key={meetingId} api={jitsiApi} meetingId={meetingId} participantKey={participantKey} />
-      <MeetingDocumentViewer key={`document-viewer-${meetingId}`} meetingId={meetingId} participantKey={participantKey} />
       {/* Preserve the original centered stage width and its desktop side gutters. */}
       <div className="meeting-stage relative mx-auto mb-4 min-h-[24rem] w-full overflow-hidden rounded-lg border border-[#27272a] bg-zinc-950 lg:w-[calc(100%_-_22rem)] lg:max-w-[61.5rem]">
         <div

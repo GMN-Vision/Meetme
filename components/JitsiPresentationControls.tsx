@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { JITSI_PRESENT_EVENT, JITSI_SCREEN_PRESENT_EVENT, JITSI_DOCUMENT_PRESENT_EVENT, getSharedVideoUrl } from '@/lib/jitsi-features';
+import { JITSI_PRESENT_EVENT, JITSI_SCREEN_PRESENT_EVENT, getSharedVideoUrl } from '@/lib/jitsi-features';
 import { getPresentationKind } from '@/lib/shared-file-types';
 
 interface Props { api: any; meetingId: string; participantKey: string }
@@ -20,16 +20,14 @@ export default function JitsiPresentationControls({ api, meetingId, participantK
         const kind = getPresentationKind(detail.name || 'video.mp4');
         if (!kind) return;
         if (kind !== 'media') {
-          const viewerEvent = new CustomEvent(JITSI_DOCUMENT_PRESENT_EVENT, {
-            cancelable: true,
-            detail: { path: detail.path, name: detail.name },
-          });
-          window.dispatchEvent(viewerEvent);
-          if (!viewerEvent.defaultPrevented) {
-            detail.message = 'The in-room presentation viewer is unavailable. Refresh the meeting and try again.';
-            return;
-          }
-          detail.message = 'Presentation opened in the meeting window.';
+          const viewer = new URL('/present', window.location.origin);
+          viewer.searchParams.set('path', detail.path);
+          viewer.searchParams.set('name', detail.name);
+          viewer.searchParams.set('meetingId', meetingId);
+          viewer.searchParams.set('participantKey', participantKey);
+          const popup = window.open(viewer.href, '_blank');
+          if (!popup) { detail.message = 'Allow pop-ups to open the presentation viewer.'; return; }
+          detail.message = 'Presentation opened. Use Share in meeting in the viewer, then select its tab or window.';
           event.preventDefault();
           return;
         }

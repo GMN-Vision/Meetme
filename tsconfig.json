@@ -40,7 +40,7 @@
     ".next-theme-check/types/**/*.ts",
     ".next-theme-preview/types/**/*.ts",
     ".next-onlyoffice-check/types/**/*.ts",
-    ".next-viewer-check/types/**/*.ts"
+    ".next-rollback-check/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
