@@ -6,6 +6,7 @@ import MeetingMember from '@/models/MeetingMember';
 import { auth } from '@/lib/auth';
 import { isMeetingHost } from '@/lib/recording-policy';
 import { getWorkspaceQuota } from '@/lib/workspace-usage';
+import { signMeetingDocumentAccessToken } from '@/lib/meeting-document-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,8 +97,18 @@ export async function POST(request: NextRequest) {
 
     if (email) await MeetingMember.updateOne({ meetingId, userEmail: email }, { $setOnInsert: { meetingId, userEmail: email } }, { upsert: true });
 
+    // Document viewing is optional: a signing configuration problem must
+    // never prevent an otherwise valid participant from joining the meeting.
+    let documentAccessToken: string | null = null;
+    try {
+      documentAccessToken = signMeetingDocumentAccessToken(meetingId, participantKey);
+    } catch {
+      documentAccessToken = null;
+    }
+
     return NextResponse.json({
       success: true,
+      documentAccessToken,
       sessionEndsAt: meeting.activeSessionEndsAt?.toISOString() || null,
       maxParticipants: meeting.maxParticipants ?? null,
       activeParticipants: existingParticipant ? activeParticipants : activeParticipants + 1,

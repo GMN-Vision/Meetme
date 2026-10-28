@@ -38,10 +38,13 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next-theme-check/types/**/*.ts",
-    ".next-theme-preview/types/**/*.ts"
+    ".next-theme-preview/types/**/*.ts",
+    ".next-onlyoffice-check/types/**/*.ts",
+    ".next-viewer-check/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "v0-reference"
+    "v0-reference",
+    "merge-backup-20261027-231351"
   ]
 }

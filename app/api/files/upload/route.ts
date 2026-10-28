@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     getMeetingStorageRoot('meeting', String(meetingId || ''));
     const quota = await getWorkspaceQuota(user.email, user.admin);
     if (!quota?.planDefinition.features.files) return NextResponse.json({ error: 'File sharing is not included in your plan' }, { status: 402 });
-    if (size > FILE_LIMITS[quota.plan]) return NextResponse.json({ error: 'This file exceeds your plan’s per-file limit' }, { status: 413 });
+    if (size > FILE_LIMITS[quota.plan]) return NextResponse.json({ error: 'This file exceeds your plan\'s per-file limit' }, { status: 413 });
     await cleanupExpiredUploads();
     return await withStorageLock(`workspace:${quota.scope}:${quota.scopeId}`, async () => {
       const capacity = await assertStorageCapacity(user.email, size, user.admin);
