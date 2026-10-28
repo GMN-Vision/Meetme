@@ -158,6 +158,16 @@ export default function RoomPage() {
           setMeetingError(accessData.error || 'Unable to join this meeting.');
           return;
         }
+        if (typeof accessData.documentAccessToken === 'string' && accessData.documentAccessToken) {
+          try {
+            localStorage.setItem(
+              `melanam:meeting-document-access:${meetingId}:${participantKey}`,
+              accessData.documentAccessToken,
+            );
+          } catch {
+            // Meeting access still works if browser storage is unavailable.
+          }
+        }
         setSessionEndsAt(accessData.sessionEndsAt || null);
         setAccessGranted(true);
 
@@ -242,6 +252,13 @@ export default function RoomPage() {
       if (document.visibilityState === 'visible') checkAccess();
     };
     const leave = () => {
+      try {
+        localStorage.removeItem(
+          `melanam:meeting-document-access:${meetingId}:${participantKey}`,
+        );
+      } catch {
+        // The server-side participant expiry remains authoritative.
+      }
       void fetch('/api/meeting-access', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -593,7 +610,7 @@ export default function RoomPage() {
   return (
     <div className="meeting-room mx-auto w-full max-w-[110rem] overflow-hidden px-3 pt-6 text-zinc-100 sm:px-5">
       {!userEmail && <p className="mb-3 text-sm text-zinc-300">To receive shared recordings in your recordings, <a className="text-zinc-300 underline" href={`/sign-in?callbackUrl=${encodeURIComponent(`/room/${meetingId}`)}`}>sign in and rejoin</a> before the host ends the meeting.</p>}
-      <JitsiPresentationControls key={meetingId} api={jitsiApi} meetingId={meetingId} />
+      <JitsiPresentationControls key={meetingId} api={jitsiApi} meetingId={meetingId} participantKey={participantKey} />
       {/* Preserve the original centered stage width and its desktop side gutters. */}
       <div className="meeting-stage relative mx-auto mb-4 min-h-[24rem] w-full overflow-hidden rounded-lg border border-[#27272a] bg-zinc-950 lg:w-[calc(100%_-_22rem)] lg:max-w-[61.5rem]">
         <div

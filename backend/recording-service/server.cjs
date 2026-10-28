@@ -6,7 +6,6 @@ const { timingSafeEqual } = require('node:crypto');
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 const exec = promisify(execFile);
-const { uploadRecording } = require('./upload.cjs');
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const terminal = job => ['ready', 'failed'].includes(job.status);
 
@@ -29,7 +28,7 @@ function safeDirectory(root, id) {
 }
 
 function createService(env = process.env) {
-  for (const name of ['RECORDING_WORKER_SECRET', 'RECORDING_APP_URL', 'JIBRI_SERVICE_URL', 'JITSI_BASE_URL', 'JIBRI_RECORDER_DOMAIN', 'JIBRI_RECORDER_USERNAME', 'JIBRI_RECORDER_PASSWORD', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'JIBRI_RECORDINGS_PATH', 'RECORDING_STATE_PATH']) {
+  for (const name of ['RECORDING_WORKER_SECRET', 'RECORDING_APP_URL', 'JIBRI_SERVICE_URL', 'JITSI_BASE_URL', 'JIBRI_RECORDER_DOMAIN', 'JIBRI_RECORDER_USERNAME', 'JIBRI_RECORDER_PASSWORD', 'JIBRI_RECORDINGS_PATH', 'RECORDING_STATE_PATH']) {
     if (!env[name]) throw new Error(`${name} must be configured.`);
   }
   const root = path.resolve(env.JIBRI_RECORDINGS_PATH);
@@ -96,8 +95,21 @@ function createService(env = process.env) {
   };
   const cleanupMedia = job => {
     const directory = safeDirectory(root, job.recordingId);
-    // Delete only this validated UUID directory, after upload has succeeded.
+    // Full-directory deletion is reserved for expired failed recordings.
     if (fs.existsSync(directory)) fs.rmSync(directory, { recursive: true });
+  };
+  const cleanupRawMedia = job => {
+    const directory = safeDirectory(root, job.recordingId);
+    if (!fs.existsSync(directory)) return;
+    for (const name of fs.readdirSync(directory)) {
+      if (name === 'meeting-output.mp4') continue;
+      try {
+        // Remove the entry itself; do not follow symbolic links.
+        fs.rmSync(path.join(directory, name), { recursive: true, force: true });
+      } catch (error) {
+        console.error(`[recording ${job.recordingId}] Temporary media cleanup failed: ${error.message}`);
+      }
+    }
   };
   const processing = new Set();
   const finalize = async job => {
@@ -114,20 +126,20 @@ function createService(env = process.env) {
       // H.264/AAC MP4 with faststart works in current mobile and desktop browsers.
       if (!job.outputReady || !fs.existsSync(output)) {
         await exec(env.FFMPEG_PATH || 'ffmpeg', ['-nostdin', '-y', '-i', input, '-t', String(job.maxDurationSeconds),
-          '-map', '0:v:0', '-map', '0:a:0?', '-c:v', 'libx264', '-preset', 'veryfast', '-pix_fmt', 'yuv420p',
+          '-map', '0:v:0', '-map', '0:a:0?', '-c:v', 'libx264', '-preset', 'superfast', '-pix_fmt', 'yuv420p',
           '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease:force_divisible_by=2,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30',
           '-b:v', '4000k', '-maxrate', '5000k', '-bufsize', '10000k', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', output],
         { timeout: 6 * 3600000, maxBuffer: 16 * 1024 * 1024 });
-        job.outputReady = true; job.uploadUrl = null; save(job);
+        job.outputReady = true; save(job);
       }
       const { stdout } = await exec(env.FFPROBE_PATH || 'ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'json', output]);
       const duration = Number(JSON.parse(stdout).format.duration);
       const size = fs.statSync(output).size;
       if (!Number.isFinite(duration) || duration <= 0 || size > job.maxBytes) throw new Error('Recording exceeded its reserved storage allowance.');
-      const storagePath = `${job.recordingId}/meeting.mp4`;
-      await uploadRecording({ file: output, size, storagePath, env, job, save });
+      const storagePath = `${job.recordingId}/meeting-output.mp4`;
       Object.assign(job, { status: 'ready', storagePath, sizeBytes: size, durationSeconds: Math.min(Math.ceil(duration), job.maxDurationSeconds), error: '' });
-      save(job); cleanupMedia(job);
+      save(job);
+      cleanupRawMedia(job);
     } catch (error) {
       job.processingAttempts = (job.processingAttempts || 0) + 1;
       // Keep media for up to three processing/upload attempts, including restarts.
@@ -149,7 +161,8 @@ function createService(env = process.env) {
           if (job.notifyPending) void notify(job);
           if (terminal(job)) {
             // Failed raw media is retained for a day for operator recovery only.
-            if (job.status === 'ready' || Date.now() - Date.parse(job.stoppedAt || job.createdAt) > 86400000) cleanupMedia(job);
+            if (job.status === 'ready') cleanupRawMedia(job);
+            else if (Date.now() - Date.parse(job.stoppedAt || job.createdAt) > 86400000) cleanupMedia(job);
             continue;
           }
           const directory = safeDirectory(root, job.recordingId);

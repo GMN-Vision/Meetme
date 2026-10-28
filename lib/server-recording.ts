@@ -56,7 +56,8 @@ export async function recordingWorker(path: string, method = 'GET', body?: unkno
 // Worker snapshots are cumulative, so callbacks and polling can safely arrive out of order.
 export async function syncRecording(recordingId: string, snapshot: any) {
   const recording = await Recording.findOne({ recordingId });
-  if (!recording || !ACTIVE_RECORDING_STATES.includes(recording.status)) return recording;
+  const recoveringFailedRecording = recording?.status === 'failed' && snapshot.status === 'ready';
+  if (!recording || (!ACTIVE_RECORDING_STATES.includes(recording.status) && !recoveringFailedRecording)) return recording;
   const rank: Record<string, number> = { starting: 0, recording: 1, processing: 2, ready: 3, failed: 3 };
   if (!Object.prototype.hasOwnProperty.call(rank, snapshot.status) || rank[snapshot.status] < rank[recording.status]) return recording;
   const update: Record<string, any> = { status: snapshot.status };
@@ -69,7 +70,7 @@ export async function syncRecording(recordingId: string, snapshot: any) {
     update.error = snapshot.status === 'failed' ? String(snapshot.error || 'Recording could not be processed.').slice(0, 300) : '';
     if (snapshot.status === 'ready') {
       const size = Number(snapshot.sizeBytes);
-      if (snapshot.storagePath !== `${recordingId}/meeting.mp4` || !Number.isSafeInteger(size) || size <= 0 || size > recording.maxBytes || duration <= 0) throw new RecordingError('Invalid recording output.');
+      if (snapshot.storagePath !== `${recordingId}/meeting-output.mp4` || !Number.isSafeInteger(size) || size <= 0 || size > recording.maxBytes || duration <= 0) throw new RecordingError('Invalid recording output.');
       update.storagePath = snapshot.storagePath;
       update.sizeBytes = size;
       // Stable retention across callback retries; anchored to capture completion.

@@ -4,10 +4,10 @@ import { useEffect } from 'react';
 import { JITSI_PRESENT_EVENT, JITSI_SCREEN_PRESENT_EVENT, getSharedVideoUrl } from '@/lib/jitsi-features';
 import { getPresentationKind } from '@/lib/shared-file-types';
 
-interface Props { api: any; meetingId: string }
+interface Props { api: any; meetingId: string; participantKey: string }
 
 /** Connect uploads to Jitsi's native stage without adding another toolbar. */
-export default function JitsiPresentationControls({ api, meetingId }: Props) {
+export default function JitsiPresentationControls({ api, meetingId, participantKey }: Props) {
   useEffect(() => {
     if (!api) return;
     let joinedMeeting = false;
@@ -24,6 +24,7 @@ export default function JitsiPresentationControls({ api, meetingId }: Props) {
           viewer.searchParams.set('path', detail.path);
           viewer.searchParams.set('name', detail.name);
           viewer.searchParams.set('meetingId', meetingId);
+          viewer.searchParams.set('participantKey', participantKey);
           const popup = window.open(viewer.href, '_blank');
           if (!popup) { detail.message = 'Allow pop-ups to open the presentation viewer.'; return; }
           detail.message = 'Presentation opened. Use Share in meeting in the viewer, then select its tab or window.';
@@ -55,7 +56,7 @@ export default function JitsiPresentationControls({ api, meetingId }: Props) {
       window.removeEventListener(JITSI_PRESENT_EVENT, present);
       window.removeEventListener(JITSI_SCREEN_PRESENT_EVENT, shareScreen);
     };
-  }, [api, meetingId]);
+  }, [api, meetingId, participantKey]);
 
   return null;
 }
