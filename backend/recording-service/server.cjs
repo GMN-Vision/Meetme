@@ -198,7 +198,9 @@ function createService(env = process.env) {
         const body = JSON.parse(input); validateStart(body);
         const existing = jobs.get(body.recordingId);
         if (existing) return reply(200, snapshot(existing));
-        if ([...jobs.values()].some(job => !terminal(job))) {
+        // Jibri can capture the next meeting while ffmpeg converts an earlier
+        // recording, so only a capture in progress reserves this worker.
+        if ([...jobs.values()].some(job => ['starting', 'recording'].includes(job.status))) {
           // Persist rejected IDs so polling can release their app reservations.
           const rejected = { ...body, status: 'failed', error: 'Recorder is busy. Please try again shortly.', createdAt: new Date().toISOString(), durationSeconds: 0 };
           save(rejected); return reply(200, snapshot(rejected));

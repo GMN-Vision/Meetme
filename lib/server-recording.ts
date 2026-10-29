@@ -78,9 +78,16 @@ export async function syncRecording(recordingId: string, snapshot: any) {
       update.expiresAt = new Date(stopped.getTime() + recording.retentionDays * 86400000);
     }
   }
+  const releaseCaptureReservation = snapshot.status === 'processing';
+  const releaseAllReservations = ['ready', 'failed'].includes(snapshot.status);
   return Recording.findOneAndUpdate(
     { recordingId, status: recording.status },
-    { $set: update, ...(['ready', 'failed'].includes(snapshot.status) ? { $unset: { activeScope: '', activeMeeting: '' } } : {}) },
+    {
+      $set: update,
+      ...(releaseAllReservations
+        ? { $unset: { activeScope: '', activeMeeting: '' } }
+        : releaseCaptureReservation ? { $unset: { activeScope: '' } } : {}),
+    },
     { new: true },
   );
 }
@@ -110,15 +117,31 @@ export async function startServerRecording(meeting: any, email: string) {
   const month = new Date().toISOString().slice(0, 7);
   // Reserve the workspace before reading usage. Indexes are required in production.
   let recording: any;
+  const createReservation = () => Recording.create({
+    recordingId: randomUUID(), meetingId: meeting.meetingId, hostEmail: email, title: meeting.title,
+    scopeKey, activeScope: scopeKey, activeMeeting: meeting.meetingId, month,
+    maxDurationSeconds: 0, maxBytes: 0, retentionDays: quota.planDefinition.recording.retentionDays,
+  });
   try {
-    recording = await Recording.create({
-      recordingId: randomUUID(), meetingId: meeting.meetingId, hostEmail: email, title: meeting.title,
-      scopeKey, activeScope: scopeKey, activeMeeting: meeting.meetingId, month,
-      maxDurationSeconds: 0, maxBytes: 0, retentionDays: quota.planDefinition.recording.retentionDays,
-    });
+    recording = await createReservation();
   } catch (error: any) {
-    if (error.code === 11000) throw new RecordingError('A recording is already active or processing in this workspace.', 409);
-    throw error;
+    if (error.code === 11000) {
+      // A worker callback can be missed after Jibri has already stopped. Sync a
+      // processing job before rejecting the next meeting's capture request.
+      const active = await Recording.findOne({ activeScope: scopeKey });
+      if (active?.status === 'processing') {
+        await refreshRecording(active);
+        try { recording = await createReservation(); }
+        catch (retryError: any) {
+          if (retryError.code === 11000) throw new RecordingError('A recording is already active or processing in this workspace.', 409);
+          throw retryError;
+        }
+      } else {
+        throw new RecordingError('A recording is already active or processing in this workspace.', 409);
+      }
+    } else {
+      throw error;
+    }
   }
   let dispatched = false;
   try {

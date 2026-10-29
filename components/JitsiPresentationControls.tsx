@@ -34,8 +34,9 @@ export default function JitsiPresentationControls({
   useEffect(() => {
     if (!api) return;
     let joinedMeeting = false;
-    const joined = () => { joinedMeeting = true; };
-    const closed = () => { joinedMeeting = false; };
+    let meetingClosed = false;
+    const joined = () => { joinedMeeting = true; meetingClosed = false; };
+    const closed = () => { joinedMeeting = false; meetingClosed = true; };
     const present = (event: Event) => {
       const detail = (event as CustomEvent).detail;
       if (!joinedMeeting || detail?.meetingId !== meetingId || typeof detail?.path !== 'string') return;
@@ -71,7 +72,7 @@ export default function JitsiPresentationControls({
     };
     const playPlaylistVideo = (event: Event) => {
       const detail = (event as CustomEvent).detail;
-      if (!joinedMeeting || detail?.meetingId !== meetingId || typeof detail?.url !== 'string') return;
+      if (meetingClosed || detail?.meetingId !== meetingId || typeof detail?.url !== 'string') return;
       const url = normalizeVideoUrl(detail.url);
       if (!url) return;
       try {
@@ -85,7 +86,7 @@ export default function JitsiPresentationControls({
     };
     const stopPlaylistVideo = (event: Event) => {
       const detail = (event as CustomEvent).detail;
-      if (!joinedMeeting || detail?.meetingId !== meetingId) return;
+      if (meetingClosed || detail?.meetingId !== meetingId) return;
       try {
         api.executeCommand('stopShareVideo');
         event.preventDefault();

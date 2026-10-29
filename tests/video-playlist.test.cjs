@@ -32,7 +32,7 @@ test('video playlist accepts many YouTube and direct video links at once', () =>
   assert.deepEqual(parsed.invalid, ['not-a-link']);
 });
 
-test('playlist playback uses Jitsi shared video only after joining and cleans up', async t => {
+test('playlist playback uses Jitsi shared video whenever the meeting API is open and cleans up', async t => {
   const previousWindow = global.window;
   const browser = new EventTarget();
   global.window = browser;
@@ -60,13 +60,14 @@ test('playlist playback uses Jitsi shared video only after joining and cleans up
     return event.defaultPrevented;
   };
 
-  assert.equal(play('https://youtu.be/dQw4w9WgXcQ'), false, 'prejoin cannot start a playlist video');
-  assert.equal(calls.length, 0);
+  assert.equal(play('https://youtu.be/dQw4w9WgXcQ'), true, 'the playlist works even when the join event was missed');
+  assert.deepEqual(calls[0], ['startShareVideo', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ']);
+  assert.deepEqual(calls[1], ['setTileView', false]);
 
   act(() => listeners.get('videoConferenceJoined')());
   assert.equal(play('https://youtu.be/dQw4w9WgXcQ'), true);
-  assert.deepEqual(calls[0], ['startShareVideo', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ']);
-  assert.deepEqual(calls[1], ['setTileView', false]);
+  assert.deepEqual(calls[2], ['startShareVideo', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ']);
+  assert.deepEqual(calls[3], ['setTileView', false]);
 
   const stop = new Event(JITSI_PLAYLIST_STOP_EVENT, { cancelable: true });
   stop.detail = { meetingId: 'room' };

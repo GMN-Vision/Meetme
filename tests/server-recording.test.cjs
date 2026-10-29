@@ -78,11 +78,13 @@ test('callbacks cannot rewind status, resurrect expired output or change the out
   let { lib, changes } = service({ recording: record });
   await lib.syncRecording('id', { status: 'recording' });
   assert.equal(changes.length, 0);
+  await lib.syncRecording('id', { status: 'processing' });
+  assert.deepEqual(changes[0].$unset, { activeScope: '' });
   await assert.rejects(lib.syncRecording('id', { status: 'ready', storagePath: '../other/meeting.mp4', durationSeconds: 10, sizeBytes: 20 }));
-  await assert.rejects(lib.syncRecording('id', { status: 'ready', storagePath: 'id/meeting.mp4', durationSeconds: 10, sizeBytes: 1001 }));
-  await lib.syncRecording('id', { status: 'ready', storagePath: 'id/meeting.mp4', durationSeconds: 10, sizeBytes: 20, stoppedAt: '2026-10-07T12:00:00Z' });
-  assert.equal(changes[0].$set.expiresAt.toISOString(), '2026-10-14T12:00:00.000Z');
-  assert.deepEqual(changes[0].$unset, { activeScope: '', activeMeeting: '' });
+  await assert.rejects(lib.syncRecording('id', { status: 'ready', storagePath: 'id/meeting-output.mp4', durationSeconds: 10, sizeBytes: 1001 }));
+  await lib.syncRecording('id', { status: 'ready', storagePath: 'id/meeting-output.mp4', durationSeconds: 10, sizeBytes: 20, stoppedAt: '2026-10-07T12:00:00Z' });
+  assert.equal(changes[1].$set.expiresAt.toISOString(), '2026-10-14T12:00:00.000Z');
+  assert.deepEqual(changes[1].$unset, { activeScope: '', activeMeeting: '' });
   const expired = service({ recording: { ...record, status: 'expired' } });
   await expired.lib.syncRecording('id', { status: 'ready' });
   assert.equal(expired.changes.length, 0);
