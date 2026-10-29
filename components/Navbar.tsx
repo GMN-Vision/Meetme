@@ -350,13 +350,13 @@ export function Navbar() {
                 ) : (
                   <button
                     type="button"
-                    onClick={() => requestPaidFeature('Live captions', 'pro')}
+                    onClick={() => requestPaidFeature('Subtitles', 'pro')}
                     className={`${navActionButtonClass} border-zinc-800 bg-zinc-800/80 text-zinc-100 hover:border-zinc-600 hover:bg-zinc-800 hover:text-zinc-300`}
-                    aria-label="Live captions require Pro"
-                    title="Live captions require Pro"
+                    aria-label="Subtitles require Pro"
+                    title="Subtitles require Pro"
                   >
                     <LockKeyhole className="h-4 w-4" />
-                    <span className="hidden lg:inline">Captions</span>
+                    <span className="hidden lg:inline">Subtitle</span>
                   </button>
                 )}
                 {/* Livestream is temporarily hidden until the server-side streaming setup is ready.

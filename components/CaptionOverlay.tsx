@@ -14,7 +14,6 @@ type Caption = {
   isFinal: boolean;
   createdAt: number;
   expiresAt?: number;
-  opacity?: number;
 };
 
 type SummaryAction = {
@@ -55,7 +54,6 @@ type SummaryCard = {
 
 const PARTIAL_IDLE_MS = 4200;
 const FINAL_VISIBLE_MS = 2600;
-const FADE_WINDOW_MS = 1200;
 
 interface CaptionOverlayProps {
   meetingId: string;
@@ -72,13 +70,13 @@ interface CaptionOverlayProps {
 }
 
 /**
- * Keep the active caption and one recent caption visible.
- * 
+ * Keep the latest caption plus a short recent queue for safe expiry.
+ *
  * Rules:
- * - Max 2 captions visible (active + 1 previous final)
+ * - Only the newest caption is rendered, so text updates immediately.
  * - Partial updates REPLACE same speaker's active caption
  * - New speaker creates new caption
- * - Final captions lock in queue, eventually removed
+ * - Expired captions are dropped without a fade animation
  */
 function captionReducer(state: Caption[], action: any): Caption[] {
   const now = Date.now();
@@ -116,7 +114,6 @@ function captionReducer(state: Caption[], action: any): Caption[] {
             ? {
                 ...c,
                 expiresAt: now + PARTIAL_IDLE_MS,
-                opacity: 1,
               }
             : c
         );
@@ -132,7 +129,6 @@ function captionReducer(state: Caption[], action: any): Caption[] {
                 isPartial: !isFinal,
                 isFinal: isFinal || c.isFinal,
                 expiresAt: now + (isFinal ? FINAL_VISIBLE_MS : PARTIAL_IDLE_MS),
-                opacity: 1,
               }
             : c
         );
@@ -151,7 +147,6 @@ function captionReducer(state: Caption[], action: any): Caption[] {
           isFinal: isFinal || false,
           createdAt: now,
           expiresAt: now + (isFinal ? FINAL_VISIBLE_MS : PARTIAL_IDLE_MS),
-          opacity: 1,
         });
 
         return newQueue;
@@ -180,15 +175,9 @@ function captionReducer(state: Caption[], action: any): Caption[] {
     }
 
     case 'TICK': {
-      // Update fade opacity based on time until expiry
-      return queue
-        .filter(c => !c.expiresAt || c.expiresAt > now)
-        .map(c => {
-          const remaining = c.expiresAt - now;
-          const opacity = Math.max(0, Math.min(1, remaining / FADE_WINDOW_MS));
-
-          return { ...c, opacity };
-        });
+      // Drop expired captions; no fade animation so text never lags speech.
+      const next = queue.filter(c => !c.expiresAt || c.expiresAt > now);
+      return next.length === queue.length ? queue : next;
     }
 
     case 'CLEAR':
@@ -519,7 +508,7 @@ export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }
 
     const timer = setInterval(() => {
       captionDispatchRef.current?.dispatch({ type: 'TICK' });
-    }, 120);
+    }, 250);
 
     return () => clearInterval(timer);
   }, [captionsEnabled]);
@@ -563,7 +552,7 @@ export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }
     }
   }, [meetingId, portalTarget]);
 
-  const hasVisibleCaptions = captions.length > 0;
+  const activeCaption = captions.length > 0 ? captions[captions.length - 1] : null;
 
   // Render overlay
   const overlay = (
@@ -585,36 +574,20 @@ export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }
         </div>
       )}
 
-      <div
-        className={`min-w-0 max-w-[min(38rem,calc(100vw-1.5rem))] transition-all duration-200 ease-out ${
-          hasVisibleCaptions ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
-        }`}
-        role="log"
-        aria-label="Live captions"
-        aria-live="polite"
-        aria-relevant="additions text"
-      >
-        {hasVisibleCaptions && (
-          <div className="w-fit max-w-full rounded-xl bg-zinc-950/85 px-3.5 py-2.5 text-left shadow-lg ring-1 ring-white/10 backdrop-blur-sm sm:px-4">
-            <div className="flex flex-col gap-1.5">
-              {captions.map((caption) => (
-                <p
-                  key={caption.id}
-                  className="line-clamp-2 break-words text-sm font-medium leading-5 text-white sm:text-base sm:leading-6"
-                  style={{
-                    opacity: caption.opacity ?? 1,
-                    transition: 'opacity 220ms ease',
-                  }}
-                >
-                  <span className="font-semibold text-sky-300">{caption.speakerName}</span>
-                  <span className="text-white/65" aria-hidden="true"> · </span>
-                  <span>{caption.text}</span>
-                </p>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      {activeCaption && (
+        <div
+          className="max-w-[min(56rem,calc(100vw-2rem))] text-center"
+          role="log"
+          aria-label="Subtitles"
+          aria-live="polite"
+          aria-relevant="additions text"
+          aria-atomic="true"
+        >
+          <p className="line-clamp-2 mx-auto w-fit max-w-full whitespace-pre-wrap break-words rounded-md bg-black/75 px-2.5 py-1.5 text-base font-medium leading-snug text-white sm:text-lg sm:leading-7">
+            {activeCaption.text}
+          </p>
+        </div>
+      )}
     </div>
   );
 

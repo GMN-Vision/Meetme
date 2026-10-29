@@ -84,7 +84,10 @@ export function AudioCapture({
   const speechRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const shouldKeepListeningRef = useRef(false);
   const lastCaptionTextRef = useRef('');
+  const lastCaptionWasFinalRef = useRef(false);
   const lastInterimSentAtRef = useRef(0);
+  const pendingCaptionRef = useRef<{ text: string; final: boolean } | null>(null);
+  const captionPostInFlightRef = useRef(false);
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const resolvedSpeakerName = normalizeSpeakerName(speakerName) || 'You';
@@ -98,14 +101,60 @@ export function AudioCapture({
 
     if (!response.ok) {
       const body = await response.json().catch(() => ({}));
-      throw new Error(body.error || 'Upgrade to Pro or Business to start captions');
+      throw new Error(body.error || 'Upgrade to Pro or Business to start subtitles');
     }
   };
 
-  const postLiveCaption = async (text: string, final: boolean) => {
+  async function flushCaptionQueue(): Promise<void> {
+    if (captionPostInFlightRef.current) return;
+    captionPostInFlightRef.current = true;
+
+    try {
+      while (pendingCaptionRef.current) {
+        const caption = pendingCaptionRef.current;
+        pendingCaptionRef.current = null;
+
+        try {
+          const response = await fetch('/api/captions/publish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              meetingId,
+              text: caption.text,
+              speaker: resolvedSpeakerName,
+              speakerId: resolvedSpeakerId,
+              final: caption.final,
+              timestamp: Date.now(),
+            }),
+          });
+
+          if (!response.ok) {
+            console.error('[audio] live caption post failed:', response.status, response.statusText);
+            if ([401, 402, 403].includes(response.status)) {
+              const body = await response.json().catch(() => ({}));
+              const message = body.error || 'Upgrade to Pro or Business to continue subtitles';
+              setError(message);
+              stopListening();
+              pendingCaptionRef.current = null;
+              break;
+            }
+          }
+        } catch (err) {
+          console.error('[audio] live caption post error:', err);
+        }
+      }
+    } finally {
+      captionPostInFlightRef.current = false;
+      // An event can arrive between the final loop check and clearing the lock.
+      if (pendingCaptionRef.current) void flushCaptionQueue();
+    }
+  }
+
+  const postLiveCaption = (text: string, final: boolean) => {
     const normalizedText = text.trim().replace(/\s+/g, ' ');
 
-    if (!normalizedText || normalizedText === lastCaptionTextRef.current) {
+    if (!normalizedText || (normalizedText === lastCaptionTextRef.current && (!final || lastCaptionWasFinalRef.current))) {
       return;
     }
 
@@ -118,34 +167,12 @@ export function AudioCapture({
     }
 
     lastCaptionTextRef.current = normalizedText;
-
-    try {
-      const response = await fetch('/api/captions/publish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          meetingId,
-          text: normalizedText,
-          speaker: resolvedSpeakerName,
-          speakerId: resolvedSpeakerId,
-          final,
-          timestamp: Date.now(),
-        }),
-      });
-
-      if (!response.ok) {
-        console.error('[audio] live caption post failed:', response.status, response.statusText);
-        if ([401, 402, 403].includes(response.status)) {
-          const body = await response.json().catch(() => ({}));
-          const message = body.error || 'Upgrade to Pro or Business to continue captions';
-          setError(message);
-          stopListening();
-        }
-      }
-    } catch (err) {
-      console.error('[audio] live caption post error:', err);
-    }
+    lastCaptionWasFinalRef.current = final;
+    // Coalesce interim updates while a request is in flight so stale text
+    // cannot queue up and appear after the speaker has already moved on.
+    if (pendingCaptionRef.current?.final && !final) return;
+    pendingCaptionRef.current = { text: normalizedText, final };
+    void flushCaptionQueue();
   };
 
   const uploadAudioChunk = async (blob: Blob, recorderMimeType?: string) => {
@@ -276,7 +303,7 @@ export function AudioCapture({
 
   const startRecorderFallback = async () => {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-      throw new Error('Live captions require microphone recording support in this browser');
+      throw new Error('Subtitles require microphone recording support in this browser');
     }
 
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -382,6 +409,9 @@ export function AudioCapture({
       await verifyCaptionAccess();
       shouldKeepListeningRef.current = true;
       lastCaptionTextRef.current = '';
+      lastCaptionWasFinalRef.current = false;
+      pendingCaptionRef.current = null;
+      lastInterimSentAtRef.current = 0;
 
       const speechStarted = startSpeechRecognition();
       if (!speechStarted) {
@@ -403,6 +433,7 @@ export function AudioCapture({
   const stopListening = () => {
     console.log('[audio] Stopping live captions');
     shouldKeepListeningRef.current = false;
+    pendingCaptionRef.current = null;
 
     if (speechRecognitionRef.current) {
       try {
@@ -439,13 +470,13 @@ export function AudioCapture({
       <button
         onClick={isListening ? stopListening : startListening}
         className={buttonClassName || `flex h-9 items-center gap-2 whitespace-nowrap rounded-xl px-3 text-sm font-semibold text-white shadow-xl transition-all ${ isListening ? 'bg-red-500 hover:bg-red-600' : 'bg-zinc-700 hover:bg-zinc-700' }`}
-        aria-label={isListening ? 'Stop captions' : 'Start captions'}
-        title={isListening ? 'Stop captions' : 'Start captions'}
+        aria-label={isListening ? 'Turn off subtitles' : 'Turn on subtitles'}
+        title={isListening ? 'Turn off subtitles' : 'Turn on subtitles'}
       >
         <div
           className={`h-2.5 w-2.5 rounded-full ${ isListening ? 'animate-pulse bg-red-500' : 'bg-zinc-700' }`}
         />
-        <span className={labelClassName}>{isListening ? 'Stop captions' : 'Start captions'}</span>
+        <span className={labelClassName}>Subtitle</span>
       </button>
 
       {error && (
