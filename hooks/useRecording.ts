@@ -53,14 +53,16 @@ export function useRecording(roomName: string) {
   }, [roomName, canRecord, unavailableReason]);
   const elapsedSeconds = recording?.startedAt ? Math.max(0, Math.floor((now - Date.parse(recording.startedAt)) / 1000)) : 0;
   const isRecording = recording?.status === 'recording';
+  const startRecording = useCallback((room: string) => command('start', room), [command]);
+  const stopRecording = useCallback((room?: string) => command('stop', room), [command]);
   return {
     isRecording, canRecord, canStop, unavailableReason, recordingId: recording?.recordingId || null,
     status: recording?.status || 'idle',
     loading: loading || recording?.status === 'starting' || recording?.status === 'processing',
     error, elapsedSeconds,
     elapsedTime: [Math.floor(elapsedSeconds / 3600), Math.floor(elapsedSeconds / 60) % 60, elapsedSeconds % 60].map(n => String(n).padStart(2, '0')).join(':'),
-    startRecording: (room: string) => command('start', room),
-    stopRecording: (room?: string) => command('stop', room),
+    startRecording,
+    stopRecording,
     clearError: () => setError(null),
   };
 }

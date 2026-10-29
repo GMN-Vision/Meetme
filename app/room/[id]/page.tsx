@@ -13,6 +13,8 @@ import { normalizeJitsiRoomName } from '../../../lib/jitsi-room';
 import { startMeetingAccessHeartbeat } from '../../../lib/meeting-access-client';
 import { getJitsiToolbarButtons } from '@/lib/jitsi-features';
 import JitsiPresentationControls from '@/components/JitsiPresentationControls';
+import VideoPlaylistPanel from '@/components/VideoPlaylistPanel';
+import { useRecording } from '@/hooks/useRecording';
 
 interface MeetingDetails {
   _id: string;
@@ -60,6 +62,7 @@ export default function RoomPage() {
   const [showAiResults, setShowAiResults] = useState(false);
   const [aiResults, setAiResults] = useState<any | null>(null);
   const [captionPortalTarget, setCaptionPortalTarget] = useState<HTMLElement | null>(null);
+  const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
   const apiRef = useRef<any>(null);
   const [jitsiApi, setJitsiApi] = useState<any>(null);
   const videoStageRef = useRef<HTMLDivElement | null>(null);
@@ -76,6 +79,17 @@ export default function RoomPage() {
   const userDisplayName = session?.user?.email || guestName || 'Guest';
   const userEmail = session?.user?.email || undefined;
   const fallbackRoute = session?.user?.email ? '/meetings' : '/';
+
+  const {
+    isRecording,
+    status: recordingStatus,
+    startRecording,
+    stopRecording,
+    loading: recordingLoading,
+    error: recordingError,
+    elapsedTime: recordingElapsedTime,
+    clearError: clearRecordingError,
+  } = useRecording(meetingId);
 
   useEffect(() => {
     // Each tab owns its presence. Shared display names/accounts must not let
@@ -573,9 +587,33 @@ export default function RoomPage() {
     setCaptionPortalTarget(node);
   }, []);
 
+  const handlePlaylistRequested = useCallback(() => {
+    setIsPlaylistOpen(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isPlaylistOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsPlaylistOpen(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [isPlaylistOpen]);
+
+  const handleRecordingRequested = useCallback(() => {
+    if (recordingLoading) return;
+    if (isRecording) {
+      void stopRecording(meetingId);
+    } else {
+      void startRecording(meetingId);
+    }
+  }, [isRecording, meetingId, recordingLoading, startRecording, stopRecording]);
+
+  const recordingEnabled = meeting?.recordingEnabled !== false;
+
   const roomToolbarButtons = useMemo(
-    () => [...getJitsiToolbarButtons(meeting?.chatEnabled !== false), 'videoquality'],
-    [meeting?.chatEnabled, meeting?.recordingEnabled]
+    () => [...getJitsiToolbarButtons(meeting?.chatEnabled !== false, recordingEnabled), 'videoquality'],
+    [meeting?.chatEnabled, recordingEnabled]
   );
   const canMountJitsi = Boolean(
     meeting &&
@@ -610,7 +648,14 @@ export default function RoomPage() {
   return (
     <div className="meeting-room mx-auto w-full max-w-[110rem] overflow-hidden px-3 pt-6 text-zinc-100 sm:px-5">
       {!userEmail && <p className="mb-3 text-sm text-zinc-300">To receive shared recordings in your recordings, <a className="text-zinc-300 underline" href={`/sign-in?callbackUrl=${encodeURIComponent(`/room/${meetingId}`)}`}>sign in and rejoin</a> before the host ends the meeting.</p>}
-      <JitsiPresentationControls key={meetingId} api={jitsiApi} meetingId={meetingId} participantKey={participantKey} />
+      <JitsiPresentationControls
+        key={meetingId}
+        api={jitsiApi}
+        meetingId={meetingId}
+        participantKey={participantKey}
+        onPlaylistRequested={handlePlaylistRequested}
+        onRecordingRequested={handleRecordingRequested}
+      />
       {/* Preserve the original centered stage width and its desktop side gutters. */}
       <div className="meeting-stage relative mx-auto mb-4 min-h-[24rem] w-full overflow-hidden rounded-lg border border-[#27272a] bg-zinc-950 lg:w-[calc(100%_-_22rem)] lg:max-w-[61.5rem]">
         <div
@@ -635,6 +680,8 @@ export default function RoomPage() {
                 onApiReady={handleApiReady}
                 onReadyToClose={handleMeetingReadyToClose}
                 toolbarButtons={roomToolbarButtons}
+                sharedVideoPlaylist
+                recordingEnabled={recordingEnabled}
               />
               <CaptionOverlay
                 meetingId={meetingId}
@@ -652,6 +699,24 @@ export default function RoomPage() {
         {durationNotice && (
           <div className="absolute inset-x-3 top-3 z-50 rounded-lg border border-amber-300/50 bg-amber-100/95 px-3 py-2 text-center text-sm font-semibold text-amber-950 shadow-lg">
             {durationNotice}
+          </div>
+        )}
+        {!durationNotice && (isRecording || recordingStatus === 'starting' || recordingStatus === 'processing') && (
+          <div className="absolute left-3 top-3 z-50 flex items-center gap-2 rounded-full border border-rose-500/40 bg-zinc-950/90 px-3 py-1.5 text-xs font-semibold text-rose-200 shadow-lg">
+            <span className={`h-2 w-2 rounded-full ${isRecording ? 'animate-pulse bg-rose-500' : 'bg-amber-400'}`} />
+            {recordingStatus === 'starting'
+              ? 'Starting recording…'
+              : recordingStatus === 'processing'
+                ? 'Processing recording…'
+                : `Recording ${recordingElapsedTime}`}
+          </div>
+        )}
+        {recordingError && (
+          <div role="alert" className="absolute inset-x-3 bottom-3 z-50 flex items-center justify-between gap-3 rounded-lg border border-rose-500/40 bg-rose-950/95 px-3 py-2 text-sm text-rose-100 shadow-lg">
+            <span>{recordingError}</span>
+            <button type="button" onClick={clearRecordingError} className="text-rose-200 transition hover:text-white" aria-label="Dismiss recording error">
+              ✕
+            </button>
           </div>
         )}
         {showAiResults && aiResults && (
@@ -680,6 +745,28 @@ export default function RoomPage() {
                 <h4 className="mb-2 text-sm font-medium">Live Polls</h4>
                 <Polls meetingId={meetingId} />
               </div>
+            </div>
+          </div>
+        )}
+        {isPlaylistOpen && (
+          <div
+            className="fixed inset-0 z-[1200] flex items-start justify-center overflow-y-auto bg-zinc-950/70 p-3 backdrop-blur-sm sm:items-center"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Video playlist"
+          >
+            <button
+              type="button"
+              aria-label="Close video playlist backdrop"
+              onClick={() => setIsPlaylistOpen(false)}
+              className="absolute inset-0 h-full w-full cursor-default bg-transparent"
+            />
+            <div className="relative z-10 my-auto w-full max-w-[520px]">
+              <VideoPlaylistPanel
+                meetingId={meetingId}
+                addedBy={userEmail || guestName}
+                onClose={() => setIsPlaylistOpen(false)}
+              />
             </div>
           </div>
         )}

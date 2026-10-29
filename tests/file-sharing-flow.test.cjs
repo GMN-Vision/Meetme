@@ -238,7 +238,6 @@ test('guests and participants without a resolved subscription can open the meeti
     './AudioCapture': { AudioCapture: () => null },
     './Whiteboard': { __esModule: true, default: () => null },
     './YouTubeStreamModal': { YouTubeStreamModal: () => null },
-    '@/hooks/useRecording': { useRecording: () => ({}) },
     '@/hooks/useLivestream': { useLivestream: () => ({}) },
   });
   for (const signedIn of [false, true]) {

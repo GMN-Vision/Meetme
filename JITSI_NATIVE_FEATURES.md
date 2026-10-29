@@ -15,8 +15,13 @@ services remain available.
   slides, images, and audio files this way. Use Jitsi's layout control to keep
   participant thumbnails visible. Jitsi does not render uploaded office files
   or PDFs itself.
-- More actions → Share video: paste a YouTube URL. The presenter controls shared
-  playback. Embedding restrictions on the YouTube video still apply.
+- More actions → Share video is replaced by the Melanam playlist: Jitsi's
+  Share video toolbar button opens a panel where you can paste several YouTube
+  or direct video URLs at once, then play, reorder, and stop them. The presenter
+  controls shared playback. Embedding restrictions on the YouTube video still apply.
+- Record in Jitsi's toolbar starts or stops Melanam's server recording without
+  leaving the meeting. Only the meeting host can start recording; the button's
+  status and errors appear on the meeting stage.
 - Files → Present in meeting: available to every joined participant for shared
   audio, video, images, PDFs, and PowerPoint files, including another user's files.
   Audio/video use Jitsi's shared player. Playback, pause, and seeking use Jitsi's synchronization.
@@ -104,9 +109,12 @@ Use two independent browser profiles with camera and microphone permissions:
 
 1. Present a tab with audio; confirm the other attendee sees/hears it and both
    can retain participant thumbnails in presentation view.
-2. Share an embeddable YouTube video; play, pause, and seek from the presenting
-   attendee and confirm the other attendee follows.
-3. Upload audio/video and present from a different attendee's Files panel. Repeat
+2. Share an embeddable YouTube video from the Jitsi Share video button; confirm
+   the playlist panel opens, add several links, and verify play, pause, seek, and
+   stop are followed by the other attendee.
+3. As host, use Jitsi's Record button to start and stop a server recording;
+   confirm the other attendee sees the recording status and cannot start one.
+   Then upload audio/video and present from a different attendee's Files panel. Repeat
    playback checks. Upload PNG/JPEG and PPT/PPTX; open the viewer, share its tab,
    and confirm everyone sees the image or the presenter's slide navigation.
 4. Open/close PiP manually, change tabs, return, and hang up; verify no duplicate

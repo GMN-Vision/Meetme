@@ -71,6 +71,10 @@ export interface JitsiMeetingProps {
   prejoinPageEnabled?: boolean;
   /** Custom toolbar buttons to display */
   toolbarButtons?: string[];
+  /** Route Jitsi's Share video button to the Melanam playlist panel */
+  sharedVideoPlaylist?: boolean;
+  /** Show Jitsi's recording button and route it to Melanam server recording */
+  recordingEnabled?: boolean;
   /** Optional JWT for private rooms */
   jwt?: string;
   /** Caption service room id, when it differs from the normalized Jitsi room name */
@@ -113,6 +117,8 @@ export function JitsiMeeting({
   startWithVideoMuted = false,
   prejoinPageEnabled = false,
   toolbarButtons = DEFAULT_TOOLBAR_BUTTONS,
+  sharedVideoPlaylist = false,
+  recordingEnabled = false,
   jwt,
   captionMeetingId,
   onApiReady,
@@ -140,6 +146,8 @@ export function JitsiMeeting({
   const userEmailRef = useRef(userEmail);
   const captionMeetingIdRef = useRef(captionMeetingId);
   const toolbarButtonsRef = useRef(toolbarButtons);
+  const sharedVideoPlaylistRef = useRef(sharedVideoPlaylist);
+  const recordingEnabledRef = useRef(recordingEnabled);
 
   const clearJoinTimeout = () => {
     if (joinTimeoutRef.current) {
@@ -193,6 +201,14 @@ export function JitsiMeeting({
   useEffect(() => {
     toolbarButtonsRef.current = toolbarButtons;
   }, [toolbarButtons]);
+
+  useEffect(() => {
+    sharedVideoPlaylistRef.current = sharedVideoPlaylist;
+  }, [sharedVideoPlaylist]);
+
+  useEffect(() => {
+    recordingEnabledRef.current = recordingEnabled;
+  }, [recordingEnabled]);
 
   // Get domain from prop or environment variable
   const cleanDomain = (() => {
@@ -364,8 +380,11 @@ export function JitsiMeeting({
           ...(userEmail && { email: userEmail }),
         },
         configOverwrite: {
-          ...getJitsiFeatureConfig(),
-          toolbarButtons: toolbarButtonsRef.current.filter(button => button !== 'recording'),
+          ...getJitsiFeatureConfig({
+            sharedVideoPlaylist: sharedVideoPlaylistRef.current,
+            recordingEnabled: recordingEnabledRef.current,
+          }),
+          toolbarButtons: toolbarButtonsRef.current,
           startWithAudioMuted: startWithAudioMutedOnJoin,
           startWithVideoMuted: startWithVideoMutedOnJoin,
           disableDeepLinking: true,
@@ -433,10 +452,6 @@ export function JitsiMeeting({
             enabled: false,
             notifyAllParticipants: true,
             disable: true,
-          },
-          recordingService: {
-            enabled: false,
-            sharingEnabled: false,
           },
           // Self-hosted Jitsi configuration
           enableWelcomePage: false,
