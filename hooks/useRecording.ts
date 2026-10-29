@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type ServerRecording = { recordingId?: string; status: string; startedAt?: string; maxDurationSeconds?: number };
 export function useRecording(roomName: string) {
@@ -10,12 +10,15 @@ export function useRecording(roomName: string) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
+  const commandPending = useRef(false);
+  const statusGeneration = useRef(0);
   const refresh = useCallback(async (signal?: AbortSignal) => {
     if (!roomName) return;
+    const generation = statusGeneration.current;
     const response = await fetch('/api/recording/status?roomName=' + encodeURIComponent(roomName), { cache: 'no-store', signal });
     const body = await response.json();
     if (!response.ok) throw new Error(body.error || 'Unable to load recording status.');
-    if (signal?.aborted) return;
+    if (signal?.aborted || commandPending.current || generation !== statusGeneration.current) return;
     setRecording(body.recording || null);
     setCanRecord(Boolean(body.canRecord));
     setCanStop(Boolean(body.canStop));
@@ -32,10 +35,13 @@ export function useRecording(roomName: string) {
     return () => { controller.abort(); clearInterval(interval); clearInterval(timer); };
   }, [roomName, refresh]);
   const command = useCallback(async (action: 'start' | 'stop', room = roomName) => {
+    if (commandPending.current) return;
     if (action === 'start' && !canRecord) {
       setError(unavailableReason || 'Only the meeting host can start recording.');
       return;
     }
+    commandPending.current = true;
+    statusGeneration.current += 1;
     setLoading(true); setError(null);
     try {
       const response = await fetch('/api/recording/' + action, {
@@ -48,9 +54,10 @@ export function useRecording(roomName: string) {
       }
       if (!response.ok) throw new Error(body.error || 'Recording request failed.');
       setRecording(body.recording || null);
+      setCanStop(['starting', 'recording'].includes(body.recording?.status));
     } catch (err: any) { setError(err.message); }
-    finally { setLoading(false); }
-  }, [roomName, canRecord, unavailableReason]);
+    finally { statusGeneration.current += 1; commandPending.current = false; setLoading(false); void refresh().catch(() => {}); }
+  }, [roomName, canRecord, unavailableReason, refresh]);
   const elapsedSeconds = recording?.startedAt ? Math.max(0, Math.floor((now - Date.parse(recording.startedAt)) / 1000)) : 0;
   const isRecording = recording?.status === 'recording';
   const startRecording = useCallback((room: string) => command('start', room), [command]);
