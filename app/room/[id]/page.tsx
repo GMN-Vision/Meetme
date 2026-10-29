@@ -105,9 +105,7 @@ export default function RoomPage() {
 
   const {
     isRecording,
-    canRecord,
     canStop,
-    unavailableReason: recordingUnavailableReason,
     status: recordingStatus,
     startRecording,
     stopRecording,
@@ -698,18 +696,6 @@ export default function RoomPage() {
   }, [sharedPresentation?.updatedAt]);
 
   const recordingEnabled = meeting?.recordingEnabled !== false;
-  const recordingActionButton = isMeetingHost && recordingEnabled ? (
-    <button
-      type="button"
-      onClick={handleRecordingRequested}
-      disabled={recordingLoading || (isRecording ? !canStop : !canRecord)}
-      aria-label={isRecording ? 'Stop recording' : 'Start recording'}
-      title={!canRecord && !isRecording ? recordingUnavailableReason || undefined : undefined}
-      className="shrink-0 rounded-lg bg-rose-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      {recordingStatus === 'starting' ? 'Starting recording…' : recordingStatus === 'processing' ? 'Processing recording…' : isRecording ? 'Stop recording' : 'Start recording'}
-    </button>
-  ) : null;
 
   const roomToolbarButtons = useMemo(
     () => [...getJitsiToolbarButtons(meeting?.chatEnabled !== false, recordingEnabled), 'videoquality'],
@@ -822,7 +808,6 @@ export default function RoomPage() {
             </button>
           </div>
         )}
-        <div className="absolute right-3 top-3 z-50">{recordingActionButton}</div>
         {showAiResults && aiResults && (
           <div className="fixed right-0 top-16 z-60 h-[calc(100vh-4rem)] w-full max-w-lg overflow-auto border-l border-zinc-800 bg-zinc-900/95 shadow-2xl dark:border-zinc-600 dark:bg-zinc-900/95">
             <div className="flex items-center justify-between border-b border-zinc-800 p-4 dark:border-zinc-600">
@@ -880,12 +865,8 @@ export default function RoomPage() {
         <section ref={presentationPanelRef} aria-label="Shared presentation" className="mx-auto mb-6 flex w-full max-w-6xl flex-col overflow-hidden rounded-lg border border-zinc-700 bg-zinc-950">
           <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-2 text-sm">
             <span className="min-w-0 truncate font-medium">Presenting: {sharedPresentation.name}</span>
-            <div className="flex shrink-0 items-center gap-2">
-              {recordingActionButton}
-              <button type="button" onClick={() => { void updatePresentation(null).catch(error => setPresentationError(error.message)); }} className="rounded-lg bg-zinc-800 px-3 py-1.5 hover:bg-zinc-700">Stop presenting</button>
-            </div>
+            <button type="button" onClick={() => { void updatePresentation(null).catch(error => setPresentationError(error.message)); }} className="shrink-0 rounded-lg bg-zinc-800 px-3 py-1.5 hover:bg-zinc-700">Stop presenting</button>
           </div>
-          {recordingError && <p role="alert" className="border-b border-rose-900 bg-rose-950 px-4 py-2 text-xs text-rose-100">{recordingError}</p>}
           <iframe key={`${sharedPresentation.path}:${sharedPresentation.updatedAt}`} title={`Shared presentation: ${sharedPresentation.name}`} src={presentationUrl} className="h-[min(70dvh,46rem)] min-h-[28rem] w-full border-0 bg-white" />
         </section>
       )}
