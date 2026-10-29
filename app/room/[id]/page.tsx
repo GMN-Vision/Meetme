@@ -601,13 +601,12 @@ export default function RoomPage() {
   }, [isPlaylistOpen]);
 
   const handleRecordingRequested = useCallback(() => {
-    if (recordingLoading) return;
-    if (isRecording) {
+    if (recordingStatus === 'starting' || recordingStatus === 'recording') {
       void stopRecording(meetingId);
-    } else {
+    } else if (!recordingLoading) {
       void startRecording(meetingId);
     }
-  }, [isRecording, meetingId, recordingLoading, startRecording, stopRecording]);
+  }, [meetingId, recordingLoading, recordingStatus, startRecording, stopRecording]);
 
   const recordingEnabled = meeting?.recordingEnabled !== false;
 

@@ -94,7 +94,6 @@ export default function JitsiPresentationControls({
     // buttonsWithNotifyClick makes Jitsi report its own toolbar presses
     // instead of running the built-in Share video dialog or recorder.
     const toolbarButtonClicked = (event: { key?: string; button?: string }) => {
-      if (!joinedMeeting) return;
       const key = event?.key || event?.button;
       if (key === JITSI_SHARED_VIDEO_BUTTON) onPlaylistRequested?.();
       if (key === JITSI_RECORDING_BUTTON) onRecordingRequested?.();

@@ -210,13 +210,13 @@ test('Jitsi toolbar exposes the playlist and server recording without app chrome
   });
 
   act(() => listeners.get('toolbarButtonClicked')({ key: JITSI_SHARED_VIDEO_BUTTON }));
-  assert.equal(playlistRequests, 0, 'toolbar presses before joining are ignored');
+  assert.equal(playlistRequests, 1, 'toolbar presses are handled as soon as the iframe API is ready');
 
   act(() => listeners.get('videoConferenceJoined')());
   act(() => listeners.get('toolbarButtonClicked')({ key: JITSI_SHARED_VIDEO_BUTTON }));
   act(() => listeners.get('toolbarButtonClicked')({ key: JITSI_RECORDING_BUTTON }));
   act(() => listeners.get('toolbarButtonClicked')({ key: 'camera' }));
-  assert.equal(playlistRequests, 1);
+  assert.equal(playlistRequests, 2);
   assert.equal(recordingRequests, 1);
 
   act(() => view.unmount());
