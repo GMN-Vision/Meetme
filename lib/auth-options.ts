@@ -1,5 +1,6 @@
 import type { NextAuthOptions } from 'next-auth';
 import EmailProvider from 'next-auth/providers/email';
+import GoogleProvider from 'next-auth/providers/google';
 import { MongoDBAdapter } from '@auth/mongodb-adapter';
 import nodemailer from 'nodemailer';
 import clientPromise from './mongodb-adapter';
@@ -20,6 +21,8 @@ const emailTransportMode =
   process.env.EMAIL_TRANSPORT ||
   (process.env.EMAIL_USER && process.env.EMAIL_PASS ? 'smtp' : 'console');
 const SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
 function escapeHtml(value: string) {
   return value
@@ -49,6 +52,21 @@ const buildSmtpTransport = () => {
 export const authOptions: NextAuthOptions = {
   adapter: MongoDBAdapter(clientPromise),
   providers: [
+    ...(googleClientId && googleClientSecret ? [GoogleProvider({
+      clientId: googleClientId,
+      clientSecret: googleClientSecret,
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email?.trim().toLowerCase(),
+          image: profile.picture,
+        };
+      },
+      // Google proves ownership of the email address before it can be linked
+      // to an existing Melanam account. The signIn callback checks this too.
+      allowDangerousEmailAccountLinking: true,
+    })] : []),
     EmailProvider({
       server: {
         host: smtpHost,
@@ -150,11 +168,22 @@ export const authOptions: NextAuthOptions = {
     maxAge: SESSION_MAX_AGE_SECONDS,
   },
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, account, profile }) {
       if (!user.email) return false;
       await dbConnect();
-      
-      const dbUser = await User.findOne({ email: user.email.toLowerCase() });
+
+      const email = user.email.trim().toLowerCase();
+      if (account?.provider === 'google') {
+        if ((profile as { email_verified?: boolean } | undefined)?.email_verified !== true) return false;
+        const dbUser = await User.findOneAndUpdate(
+          { email },
+          { $setOnInsert: { email, name: user.name || '', image: user.image || null, role: 'user', status: 'active' } },
+          { upsert: true, new: true, setDefaultsOnInsert: true },
+        );
+        return dbUser?.status !== 'disabled';
+      }
+
+      const dbUser = await User.findOne({ email });
       if (!dbUser) {
         return false;
       }

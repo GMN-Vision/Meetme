@@ -52,6 +52,53 @@ test('former account roles normalize on login without promoting the first user o
   assert.equal(saves, 3);
 });
 
+test('Google sign-in creates a verified basic account and reuses existing email accounts', async t => {
+  const previousId = process.env.GOOGLE_CLIENT_ID;
+  const previousSecret = process.env.GOOGLE_CLIENT_SECRET;
+  process.env.GOOGLE_CLIENT_ID = 'test-client';
+  process.env.GOOGLE_CLIENT_SECRET = 'test-secret';
+  t.after(() => {
+    if (previousId === undefined) delete process.env.GOOGLE_CLIENT_ID;
+    else process.env.GOOGLE_CLIENT_ID = previousId;
+    if (previousSecret === undefined) delete process.env.GOOGLE_CLIENT_SECRET;
+    else process.env.GOOGLE_CLIENT_SECRET = previousSecret;
+  });
+  let existing = null;
+  let writes = 0;
+  const { authOptions } = load('lib/auth-options.ts', {
+    'next-auth/providers/email': options => ({ id: 'email', ...options }),
+    'next-auth/providers/google': options => ({ id: 'google', ...options }),
+    '@auth/mongodb-adapter': { MongoDBAdapter: () => ({}) },
+    nodemailer: {}, './mongodb-adapter': Promise.resolve({}), './db': async () => {},
+    '../models/User': {
+      findOne: async () => existing,
+      findOneAndUpdate: async (query, update) => {
+        writes++;
+        if (!existing) existing = { email: query.email, ...update.$setOnInsert, status: 'active' };
+        return existing;
+      },
+    },
+    '../models/Organization': { findOne: async () => null },
+    './workspace-usage': { canAddOrganizationSeat: async () => ({ ok: true }) },
+  });
+  assert.equal(authOptions.providers[0].id, 'google');
+  assert.equal(authOptions.providers[0].allowDangerousEmailAccountLinking, true);
+  assert.equal(authOptions.providers[0].profile({ sub: 'google-id', email: 'Person@Example.com' }).email, 'person@example.com');
+  const attempt = verified => authOptions.callbacks.signIn({
+    user: { email: 'Person@Example.com', name: 'Person' }, account: { provider: 'google' },
+    profile: { email_verified: verified },
+  });
+  assert.equal(await attempt(false), false);
+  assert.equal(writes, 0);
+  assert.equal(await attempt(true), true);
+  assert.equal(existing.email, 'person@example.com');
+  assert.equal(existing.role, 'user');
+  assert.equal(await attempt(true), true);
+  assert.equal(writes, 2, 'the upsert reuses the same email account');
+  existing.status = 'disabled';
+  assert.equal(await attempt(true), false);
+});
+
 for (const subscription of [null, { plan: 'pro', active: true }, { plan: 'business', active: false }]) {
   test(`meeting workspace provisions only a missing plan (${subscription?.plan || 'new account'})`, async t => {
     const requests = [];
