@@ -170,6 +170,7 @@ test('the meeting playlist panel adds several links and starts the selected vide
 
 test('Jitsi toolbar exposes the playlist and server recording without app chrome', async t => {
   const {
+    JITSI_HANGUP_BUTTON,
     JITSI_RECORDING_BUTTON,
     JITSI_SHARED_VIDEO_BUTTON,
     getJitsiFeatureConfig,
@@ -184,6 +185,10 @@ test('Jitsi toolbar exposes the playlist and server recording without app chrome
   assert.ok(!getJitsiToolbarButtons(true, false).includes(JITSI_RECORDING_BUTTON));
   assert.equal(getJitsiFeatureConfig().buttonsWithNotifyClick, undefined);
   assert.equal(getJitsiFeatureConfig().recordingService, undefined);
+  assert.deepEqual(
+    getJitsiFeatureConfig({ sharedVideoPlaylist: true, recordingEnabled: true, controlledHangup: true }).buttonsWithNotifyClick,
+    [JITSI_HANGUP_BUTTON, JITSI_SHARED_VIDEO_BUTTON, JITSI_RECORDING_BUTTON],
+  );
 
   const previousWindow = global.window;
   const browser = new EventTarget();
@@ -198,6 +203,7 @@ test('Jitsi toolbar exposes the playlist and server recording without app chrome
   };
   let playlistRequests = 0;
   let recordingRequests = 0;
+  let hangupRequests = 0;
   const Component = load('components/JitsiPresentationControls.tsx').default;
   let view;
   await act(async () => {
@@ -207,6 +213,7 @@ test('Jitsi toolbar exposes the playlist and server recording without app chrome
       participantKey: 'participant-1',
       onPlaylistRequested: () => { playlistRequests += 1; },
       onRecordingRequested: () => { recordingRequests += 1; },
+      onHangupRequested: () => { hangupRequests += 1; },
     }));
   });
 
@@ -216,9 +223,11 @@ test('Jitsi toolbar exposes the playlist and server recording without app chrome
   act(() => listeners.get('videoConferenceJoined')());
   act(() => listeners.get('toolbarButtonClicked')({ key: JITSI_SHARED_VIDEO_BUTTON }));
   act(() => listeners.get('toolbarButtonClicked')({ key: JITSI_RECORDING_BUTTON }));
+  act(() => listeners.get('toolbarButtonClicked')({ key: JITSI_HANGUP_BUTTON }));
   act(() => listeners.get('toolbarButtonClicked')({ key: 'camera' }));
   assert.equal(playlistRequests, 2);
   assert.equal(recordingRequests, 1);
+  assert.equal(hangupRequests, 1);
 
   act(() => view.unmount());
   assert.equal(listeners.size, 0);

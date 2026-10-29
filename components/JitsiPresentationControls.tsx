@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import {
   JITSI_PLAYLIST_PLAY_EVENT,
   JITSI_PLAYLIST_STOP_EVENT,
+  JITSI_HANGUP_BUTTON,
   JITSI_PRESENT_EVENT,
   JITSI_RECORDING_BUTTON,
   JITSI_SCREEN_PRESENT_EVENT,
@@ -21,6 +22,8 @@ interface Props {
   onPlaylistRequested?: () => void;
   /** Toggle Melanam server recording when Jitsi's recording button is pressed. */
   onRecordingRequested?: () => void;
+  /** Leave through the app so the host can finish the meeting safely. */
+  onHangupRequested?: () => void;
 }
 
 /** Connect uploads to Jitsi's native stage without adding another toolbar. */
@@ -30,6 +33,7 @@ export default function JitsiPresentationControls({
   participantKey,
   onPlaylistRequested,
   onRecordingRequested,
+  onHangupRequested,
 }: Props) {
   useEffect(() => {
     if (!api) return;
@@ -98,6 +102,7 @@ export default function JitsiPresentationControls({
       const key = event?.key || event?.button;
       if (key === JITSI_SHARED_VIDEO_BUTTON) onPlaylistRequested?.();
       if (key === JITSI_RECORDING_BUTTON) onRecordingRequested?.();
+      if (key === JITSI_HANGUP_BUTTON) onHangupRequested?.();
     };
     api.addEventListener('videoConferenceJoined', joined);
     api.addEventListener('readyToClose', closed);
@@ -115,7 +120,7 @@ export default function JitsiPresentationControls({
       window.removeEventListener(JITSI_PLAYLIST_PLAY_EVENT, playPlaylistVideo);
       window.removeEventListener(JITSI_PLAYLIST_STOP_EVENT, stopPlaylistVideo);
     };
-  }, [api, meetingId, participantKey, onPlaylistRequested, onRecordingRequested]);
+  }, [api, meetingId, participantKey, onPlaylistRequested, onRecordingRequested, onHangupRequested]);
 
   return null;
 }

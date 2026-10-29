@@ -7,6 +7,7 @@ import { auth } from '@/lib/auth';
 import { isMeetingHost } from '@/lib/recording-policy';
 import { getWorkspaceQuota } from '@/lib/workspace-usage';
 import { signMeetingDocumentAccessToken } from '@/lib/meeting-document-access';
+import { stopServerRecording } from '@/lib/server-recording';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,14 +37,25 @@ export async function POST(request: NextRequest) {
     if (!meeting) {
       return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
     }
+    const email = (await auth())?.user?.email?.toLowerCase() || '';
 
     if (action === 'leave') {
       await MeetingParticipant.deleteOne({ meetingId, participantKey });
+      if (isMeetingHost(meeting, email)) {
+        // The host owns the server recorder. Ending admission before requesting
+        // the stop keeps a browser close from leaving an active capture behind.
+        await Meeting.updateOne({ meetingId, endedAt: null }, { $set: { endedAt: new Date(), activeSessionEndsAt: new Date() } });
+        try {
+          await stopServerRecording(meetingId);
+        } catch (error) {
+          // The worker stores stop intent and retries it after transient outages.
+          console.warn('[meeting-access] Recording stop pending', { meetingId, error });
+        }
+      }
       return NextResponse.json({ success: true });
     }
 
     if (meeting.endedAt) return NextResponse.json({ error: 'The host has ended this meeting.', code: 'MEETING_ENDED' }, { status: 403 });
-    const email = (await auth())?.user?.email?.toLowerCase() || '';
     const now = new Date();
     const staleBefore = new Date(now.getTime() - PARTICIPANT_TTL_MS);
     // Refresh known participants before pruning so a delayed heartbeat cannot
@@ -91,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     await MeetingParticipant.updateOne(
       { meetingId, participantKey },
-      { $set: { lastSeenAt: now } },
+      { $set: { lastSeenAt: now, ...(email ? { userEmail: email } : {}) } },
       { upsert: true }
     );
 

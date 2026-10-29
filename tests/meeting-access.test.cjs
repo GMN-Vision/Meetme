@@ -7,6 +7,7 @@ function accessRoute(plan = load('lib/billing-plans.ts').BILLING_PLAN_MAP.free) 
   let quotaReads = 0;
   let email = 'host@example.com';
   const members = new Set();
+  let recordingStops = 0;
   const meeting = {
     meetingId: 'room', hostEmail: 'host@example.com',
     activeSessionStartedAt: null, activeSessionEndsAt: null,
@@ -18,7 +19,11 @@ function accessRoute(plan = load('lib/billing-plans.ts').BILLING_PLAN_MAP.free) 
     '@/lib/auth': { auth: async () => email ? { user: { email } } : null },
     '@/lib/recording-policy': load('lib/recording-policy.ts'),
     '@/models/MeetingMember': { updateOne: async (query) => members.add(query.userEmail) },
-    '@/models/Meeting': { findOne: async () => meeting },
+    '@/models/Meeting': {
+      findOne: async () => meeting,
+      updateOne: async (_query, update) => Object.assign(meeting, update.$set),
+    },
+    '@/lib/server-recording': { stopServerRecording: async () => { recordingStops++; } },
     '@/models/MeetingParticipant': {
       deleteOne: async ({ participantKey }) => participants.delete(participantKey),
       deleteMany: async ({ lastSeenAt }) => {
@@ -38,7 +43,7 @@ function accessRoute(plan = load('lib/billing-plans.ts').BILLING_PLAN_MAP.free) 
     } },
   });
   return {
-    meeting, participants, members, setEmail: (value) => { email = value; }, quotaReads: () => quotaReads,
+    meeting, participants, members, setEmail: (value) => { email = value; }, quotaReads: () => quotaReads, recordingStops: () => recordingStops,
     request: (participantKey, action = 'heartbeat') => route.POST({
       json: async () => ({ meetingId: 'room', participantKey, action }),
     }),
@@ -85,6 +90,8 @@ test('unlimited plan limits remain null and are not reinitialized on every heart
 
 test('leaving releases only that tab and invalid actions cannot change presence', async () => {
   const room = accessRoute();
+  room.meeting.activeSessionStartedAt = new Date();
+  room.setEmail('member@example.com');
   await room.request('tab-1', 'join');
   await room.request('tab-2', 'join');
   assert.equal((await room.request('tab-1', 'invalid')).status, 400);
@@ -92,6 +99,16 @@ test('leaving releases only that tab and invalid actions cannot change presence'
   await room.request('tab-1', 'leave');
   assert.equal(room.participants.has('tab-2'), true);
   assert.equal(room.participants.size, 1);
+  assert.equal(room.meeting.endedAt, undefined);
+  assert.equal(room.recordingStops(), 0);
+});
+
+test('the host leaving ends the meeting and requests a recording stop', async () => {
+  const room = accessRoute();
+  await room.request('host-tab', 'join');
+  await room.request('host-tab', 'leave');
+  assert.ok(room.meeting.endedAt instanceof Date);
+  assert.equal(room.recordingStops(), 1);
 });
 
 test('only the host starts the room, and ended rooms cannot reopen', async () => {

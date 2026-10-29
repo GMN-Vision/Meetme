@@ -79,6 +79,26 @@ export default function RoomPage() {
   const userDisplayName = session?.user?.email || guestName || 'Guest';
   const userEmail = session?.user?.email || undefined;
   const fallbackRoute = session?.user?.email ? '/meetings' : '/';
+  const isMeetingHost = Boolean(userEmail && meeting?.hostEmail?.toLowerCase() === userEmail.toLowerCase());
+
+  const endMeetingForHost = useCallback(async (keepalive = false) => {
+    if (!isMeetingHost) return;
+    const body = JSON.stringify({ meetingId });
+    try {
+      if (keepalive && typeof navigator !== 'undefined' && navigator.sendBeacon) {
+        const sent = navigator.sendBeacon('/api/meeting-end', new Blob([body], { type: 'application/json' }));
+        if (sent) return;
+      }
+      await fetch('/api/meeting-end', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        keepalive,
+      });
+    } catch (error) {
+      console.warn('[meeting] recording stop request failed', error);
+    }
+  }, [isMeetingHost, meetingId]);
 
   const {
     isRecording,
@@ -273,6 +293,7 @@ export default function RoomPage() {
       } catch {
         // The server-side participant expiry remains authoritative.
       }
+      void endMeetingForHost(true);
       void fetch('/api/meeting-access', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -291,7 +312,7 @@ export default function RoomPage() {
       window.removeEventListener('pagehide', leave);
       leave();
     };
-  }, [accessGranted, meetingId, participantKey]);
+  }, [accessGranted, endMeetingForHost, meetingId, participantKey]);
 
   useEffect(() => {
     if (!sessionEndsAt) return;
@@ -472,7 +493,7 @@ export default function RoomPage() {
   );
 
   const handleMeetingReadyToClose = useCallback(async () => {
-
+    await endMeetingForHost();
     try {
       const { resolveMeetingAiHttpUrl } = await import('../../../lib/meeting-ai-client');
       const baseUrl = resolveMeetingAiHttpUrl();
@@ -504,7 +525,7 @@ export default function RoomPage() {
       await persistAIResults(undefined, { generateSummary: true });
       router.push(fallbackRoute);
     }
-  }, [fallbackRoute, meetingId, persistAIResults, router]);
+  }, [endMeetingForHost, fallbackRoute, meetingId, persistAIResults, router]);
 
   // Open AI results panel when caption overlay dispatches event
   useEffect(() => {
@@ -608,6 +629,10 @@ export default function RoomPage() {
     }
   }, [meetingId, recordingLoading, recordingStatus, startRecording, stopRecording]);
 
+  const handleHangupRequested = useCallback(() => {
+    apiRef.current?.executeCommand?.('hangup');
+  }, []);
+
   const recordingEnabled = meeting?.recordingEnabled !== false;
 
   const roomToolbarButtons = useMemo(
@@ -654,6 +679,7 @@ export default function RoomPage() {
         participantKey={participantKey}
         onPlaylistRequested={handlePlaylistRequested}
         onRecordingRequested={handleRecordingRequested}
+        onHangupRequested={handleHangupRequested}
       />
       {/* Preserve the original centered stage width and its desktop side gutters. */}
       <div className="meeting-stage relative mx-auto mb-4 min-h-[24rem] w-full overflow-hidden rounded-lg border border-[#27272a] bg-zinc-950 lg:w-[calc(100%_-_22rem)] lg:max-w-[61.5rem]">
@@ -681,6 +707,7 @@ export default function RoomPage() {
                 toolbarButtons={roomToolbarButtons}
                 sharedVideoPlaylist
                 recordingEnabled={recordingEnabled}
+                controlledHangup
               />
               <CaptionOverlay
                 meetingId={meetingId}

@@ -1,6 +1,7 @@
 /** Jitsi toolbar keys the app intercepts through the iframe API. */
 export const JITSI_SHARED_VIDEO_BUTTON = 'sharedvideo';
 export const JITSI_RECORDING_BUTTON = 'recording';
+export const JITSI_HANGUP_BUTTON = 'hangup';
 
 /** Native Jitsi controls, shared by the room and the standalone embed. */
 export function getJitsiToolbarButtons(chatEnabled = true, recordingEnabled = false) {
@@ -19,17 +20,21 @@ interface JitsiFeatureOptions {
   sharedVideoPlaylist?: boolean;
   /** Reveal Jitsi's recording button and route it to server recording. */
   recordingEnabled?: boolean;
+  /** Route Hang up through the host page so only the app host can end the room. */
+  controlledHangup?: boolean;
 }
 
 export function getJitsiFeatureConfig({
   sharedVideoPlaylist = false,
   recordingEnabled = false,
+  controlledHangup = false,
 }: JitsiFeatureOptions = {}) {
   const etherpad = process.env.NEXT_PUBLIC_JITSI_ETHERPAD_URL;
   const whiteboard = process.env.NEXT_PUBLIC_JITSI_WHITEBOARD_URL;
   // String entries both suppress Jitsi's own dialog and notify the iframe API.
   // Object form is only understood by newer Jitsi releases, so keep strings.
   const interceptedButtons = [
+    ...(controlledHangup ? [JITSI_HANGUP_BUTTON] : []),
     ...(sharedVideoPlaylist ? [JITSI_SHARED_VIDEO_BUTTON] : []),
     ...(recordingEnabled ? [JITSI_RECORDING_BUTTON] : []),
   ];

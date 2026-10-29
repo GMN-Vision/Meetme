@@ -75,6 +75,8 @@ export interface JitsiMeetingProps {
   sharedVideoPlaylist?: boolean;
   /** Show Jitsi's recording button and route it to Melanam server recording */
   recordingEnabled?: boolean;
+  /** Route Hang up through the host page instead of Jitsi's end-for-all UI. */
+  controlledHangup?: boolean;
   /** Optional JWT for private rooms */
   jwt?: string;
   /** Caption service room id, when it differs from the normalized Jitsi room name */
@@ -119,6 +121,7 @@ export function JitsiMeeting({
   toolbarButtons = DEFAULT_TOOLBAR_BUTTONS,
   sharedVideoPlaylist = false,
   recordingEnabled = false,
+  controlledHangup = false,
   jwt,
   captionMeetingId,
   onApiReady,
@@ -148,6 +151,7 @@ export function JitsiMeeting({
   const toolbarButtonsRef = useRef(toolbarButtons);
   const sharedVideoPlaylistRef = useRef(sharedVideoPlaylist);
   const recordingEnabledRef = useRef(recordingEnabled);
+  const controlledHangupRef = useRef(controlledHangup);
 
   const clearJoinTimeout = () => {
     if (joinTimeoutRef.current) {
@@ -209,6 +213,10 @@ export function JitsiMeeting({
   useEffect(() => {
     recordingEnabledRef.current = recordingEnabled;
   }, [recordingEnabled]);
+
+  useEffect(() => {
+    controlledHangupRef.current = controlledHangup;
+  }, [controlledHangup]);
 
   // Get domain from prop or environment variable
   const cleanDomain = (() => {
@@ -383,6 +391,7 @@ export function JitsiMeeting({
           ...getJitsiFeatureConfig({
             sharedVideoPlaylist: sharedVideoPlaylistRef.current,
             recordingEnabled: recordingEnabledRef.current,
+            controlledHangup: controlledHangupRef.current,
           }),
           toolbarButtons: toolbarButtonsRef.current,
           startWithAudioMuted: startWithAudioMutedOnJoin,
