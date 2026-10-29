@@ -71,6 +71,7 @@ export default function PresentPage() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(true);
+  const [embedded, setEmbedded] = useState(false);
   const [renderMode, setRenderMode] = useState<
     'office' | 'fallback' | 'media' | 'image' | ''
   >('');
@@ -81,6 +82,7 @@ export default function PresentPage() {
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
+    setEmbedded(query.get('embedded') === '1');
 
     setFile({
       path: query.get('path') || '',
@@ -264,8 +266,8 @@ export default function PresentPage() {
   };
 
   return (
-    <main className="fixed inset-0 z-[1100] flex flex-col bg-zinc-950 text-white">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 p-3">
+    <main className="fixed inset-0 flex flex-col bg-zinc-950 text-white">
+      {!embedded && <header className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 p-3">
         <h1 className="min-w-0 truncate text-sm font-medium">
           {file.name || 'Presentation'}
         </h1>
@@ -284,7 +286,7 @@ export default function PresentPage() {
             {notice}
           </p>
         )}
-      </header>
+      </header>}
 
       <div className="relative flex min-h-0 flex-1 items-center justify-center">
         {usesOnlyOffice && (

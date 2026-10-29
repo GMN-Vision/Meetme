@@ -13,8 +13,8 @@ test('uploaded videos use the joined room, native playback and safe URLs; listen
   global.document = {};
   t.after(() => { global.window = previousWindow; global.document = previousDocument; });
   const calls = [], listeners = new Map();
-  const viewers = [];
-  browser.open = url => { viewers.push(new URL(url)); return {}; };
+  const documents = [];
+  browser.open = () => { throw new Error('Presenting must stay in the meeting tab'); };
   const api = {
     getSupportedCommands: () => ['showPiP', 'hidePiP'],
     executeCommand: (...args) => calls.push(args),
@@ -24,7 +24,9 @@ test('uploaded videos use the joined room, native playback and safe URLs; listen
   const Component = load('components/JitsiPresentationControls.tsx').default;
   const { JITSI_PRESENT_EVENT } = load('lib/jitsi-features.ts');
   let view;
-  await act(async () => { view = create(React.createElement(Component, { api, meetingId: 'room' })); });
+  await act(async () => { view = create(React.createElement(Component, {
+    api, meetingId: 'room', onDocumentRequested: async path => { documents.push(path); },
+  })); });
   const present = (meetingId, name = 'clip.mp4') => {
     const event = new Event(JITSI_PRESENT_EVENT, { cancelable: true });
     event.detail = { meetingId, path: 'local/room/a b&video', name };
@@ -46,9 +48,7 @@ test('uploaded videos use the joined room, native playback and safe URLs; listen
   }
   for (const name of ['image.PNG', 'slides.ppt', 'slides.PPTX', 'notes.pdf']) {
     act(() => assert.equal(present('room', name), true));
-    assert.equal(viewers.at(-1).pathname, '/present');
-    assert.equal(viewers.at(-1).searchParams.get('name'), name);
-    assert.equal(viewers.at(-1).searchParams.get('meetingId'), 'room');
+    assert.equal(documents.at(-1), 'local/room/a b&video');
   }
   const { JITSI_SCREEN_PRESENT_EVENT } = load('lib/jitsi-features.ts');
   const share = new Event(JITSI_SCREEN_PRESENT_EVENT, { cancelable: true });

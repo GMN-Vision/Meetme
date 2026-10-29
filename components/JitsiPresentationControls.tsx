@@ -24,6 +24,8 @@ interface Props {
   onRecordingRequested?: () => void;
   /** Leave through the app so the host can finish the meeting safely. */
   onHangupRequested?: () => void;
+  /** Publish a document to the in-room viewer. */
+  onDocumentRequested?: (path: string) => Promise<void>;
 }
 
 /** Connect uploads to Jitsi's native stage without adding another toolbar. */
@@ -34,6 +36,7 @@ export default function JitsiPresentationControls({
   onPlaylistRequested,
   onRecordingRequested,
   onHangupRequested,
+  onDocumentRequested,
 }: Props) {
   useEffect(() => {
     if (!api) return;
@@ -48,14 +51,9 @@ export default function JitsiPresentationControls({
         const kind = getPresentationKind(detail.name || 'video.mp4');
         if (!kind) return;
         if (kind !== 'media') {
-          const viewer = new URL('/present', window.location.origin);
-          viewer.searchParams.set('path', detail.path);
-          viewer.searchParams.set('name', detail.name);
-          viewer.searchParams.set('meetingId', meetingId);
-          viewer.searchParams.set('participantKey', participantKey);
-          const popup = window.open(viewer.href, '_blank');
-          if (!popup) { detail.message = 'Allow pop-ups to open the presentation viewer.'; return; }
-          detail.message = 'Presentation opened. Use Share in meeting in the viewer, then select its tab or window.';
+          if (!onDocumentRequested) return;
+          void onDocumentRequested(detail.path);
+          detail.message = 'Opening the document in the meeting for everyone.';
           event.preventDefault();
           return;
         }
@@ -120,7 +118,7 @@ export default function JitsiPresentationControls({
       window.removeEventListener(JITSI_PLAYLIST_PLAY_EVENT, playPlaylistVideo);
       window.removeEventListener(JITSI_PLAYLIST_STOP_EVENT, stopPlaylistVideo);
     };
-  }, [api, meetingId, participantKey, onPlaylistRequested, onRecordingRequested, onHangupRequested]);
+  }, [api, meetingId, participantKey, onPlaylistRequested, onRecordingRequested, onHangupRequested, onDocumentRequested]);
 
   return null;
 }

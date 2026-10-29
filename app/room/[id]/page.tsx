@@ -63,9 +63,12 @@ export default function RoomPage() {
   const [aiResults, setAiResults] = useState<any | null>(null);
   const [captionPortalTarget, setCaptionPortalTarget] = useState<HTMLElement | null>(null);
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
+  const [sharedPresentation, setSharedPresentation] = useState<{ path: string; name: string; updatedAt: string } | null>(null);
+  const [presentationError, setPresentationError] = useState('');
   const apiRef = useRef<any>(null);
   const [jitsiApi, setJitsiApi] = useState<any>(null);
   const videoStageRef = useRef<HTMLDivElement | null>(null);
+  const presentationPanelRef = useRef<HTMLElement | null>(null);
   const transcriptEntriesRef = useRef<Array<{ text: string; timestamp: number; speakerId: string; speaker: string }>>([]);
   const partialTranscriptRef = useRef<Map<string, { text: string; timestamp: number; speakerId: string; speaker: string }>>(new Map());
   const speakerLabelsRef = useRef<Map<string, { speakerId: string; name: string; color: string }>>(new Map());
@@ -633,6 +636,63 @@ export default function RoomPage() {
     apiRef.current?.executeCommand?.('hangup');
   }, []);
 
+  const updatePresentation = useCallback(async (path: string | null) => {
+    const token = localStorage.getItem(`melanam:meeting-document-access:${meetingId}:${participantKey}`);
+    if (!token) throw new Error('Your meeting document access has expired. Rejoin and try again.');
+    const response = await fetch('/api/meeting-presentation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ meetingId, path }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Could not update the presentation.');
+    setSharedPresentation(result.presentation);
+    setPresentationError('');
+  }, [meetingId, participantKey]);
+
+  const handleDocumentRequested = useCallback(async (path: string) => {
+    try {
+      await updatePresentation(path);
+    } catch (error) {
+      setPresentationError(error instanceof Error ? error.message : 'Could not present the document.');
+    }
+  }, [updatePresentation]);
+
+  useEffect(() => {
+    if (!accessGranted || !participantKey) return;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const refresh = async () => {
+      try {
+        const token = localStorage.getItem(`melanam:meeting-document-access:${meetingId}:${participantKey}`);
+        if (!token) return;
+        const response = await fetch(`/api/meeting-presentation?meetingId=${encodeURIComponent(meetingId)}`, {
+          headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
+        });
+        if (!response.ok) return;
+        const result = await response.json();
+        if (!stopped) setSharedPresentation(current =>
+          current?.path === result.presentation?.path && current?.updatedAt === result.presentation?.updatedAt
+            ? current : result.presentation || null);
+      } catch { /* Keep the current viewer during a temporary connection loss. */ }
+      finally { if (!stopped) timer = setTimeout(refresh, 3000); }
+    };
+    void refresh();
+    return () => { stopped = true; clearTimeout(timer); };
+  }, [accessGranted, meetingId, participantKey]);
+
+  const presentationUrl = sharedPresentation ? `/present?${new URLSearchParams({
+    path: sharedPresentation.path,
+    name: sharedPresentation.name,
+    meetingId,
+    participantKey,
+    embedded: '1',
+  })}` : '';
+
+  useEffect(() => {
+    if (sharedPresentation) presentationPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [sharedPresentation?.updatedAt]);
+
   const recordingEnabled = meeting?.recordingEnabled !== false;
 
   const roomToolbarButtons = useMemo(
@@ -677,6 +737,7 @@ export default function RoomPage() {
         api={jitsiApi}
         meetingId={meetingId}
         participantKey={participantKey}
+        onDocumentRequested={handleDocumentRequested}
         onPlaylistRequested={handlePlaylistRequested}
         onRecordingRequested={handleRecordingRequested}
         onHangupRequested={handleHangupRequested}
@@ -797,6 +858,16 @@ export default function RoomPage() {
           </div>
         )}
       </div>
+      {presentationError && <p role="alert" className="mx-auto mb-3 max-w-5xl rounded-lg border border-rose-500/40 bg-rose-950 px-4 py-2 text-sm text-rose-100">{presentationError}</p>}
+      {sharedPresentation && (
+        <section ref={presentationPanelRef} aria-label="Shared presentation" className="mx-auto mb-6 flex w-full max-w-6xl flex-col overflow-hidden rounded-lg border border-zinc-700 bg-zinc-950">
+          <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-2 text-sm">
+            <span className="min-w-0 truncate font-medium">Presenting: {sharedPresentation.name}</span>
+            <button type="button" onClick={() => { void updatePresentation(null).catch(error => setPresentationError(error.message)); }} className="shrink-0 rounded-lg bg-zinc-800 px-3 py-1.5 hover:bg-zinc-700">Stop presenting</button>
+          </div>
+          <iframe key={`${sharedPresentation.path}:${sharedPresentation.updatedAt}`} title={`Shared presentation: ${sharedPresentation.name}`} src={presentationUrl} className="h-[min(70dvh,46rem)] min-h-[28rem] w-full border-0 bg-white" />
+        </section>
+      )}
     </div>
   );
 }
