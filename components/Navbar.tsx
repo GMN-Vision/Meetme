@@ -265,7 +265,7 @@ export function Navbar() {
   ];
 
   const navActionButtonClass =
-    'inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-transparent bg-transparent px-0 text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white lg:w-auto lg:px-3';
+    'inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-transparent bg-transparent px-0 text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white lg:w-auto lg:px-3';
   const copyInviteHoverClass =
     'hover:border-[#d4d4d8] hover:text-[#d4d4d8]';
   const whiteboardHoverClass =
@@ -295,7 +295,7 @@ export function Navbar() {
               )}
             </Link>
 
-            {!isRoomPage && !isMeetingsPage && <DesignSwitcher />}
+            {!isRoomPage && !isMeetingsPage && pathname !== '/pricing' && <DesignSwitcher />}
             {pathname === '/' && (
               <div className="app-navbar-links hidden items-center gap-1 md:flex">
                 <Link href="#features">Features</Link>
