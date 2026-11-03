@@ -15,6 +15,7 @@ import { getJitsiToolbarButtons } from '@/lib/jitsi-features';
 import JitsiPresentationControls from '@/components/JitsiPresentationControls';
 import VideoPlaylistPanel from '@/components/VideoPlaylistPanel';
 import FileShare from '@/components/FileShare';
+import SharedFileNotifications from '@/components/SharedFileNotifications';
 import { Files, ListVideo } from 'lucide-react';
 import { useRecording } from '@/hooks/useRecording';
 
@@ -66,6 +67,7 @@ export default function RoomPage() {
   const [captionPortalTarget, setCaptionPortalTarget] = useState<HTMLElement | null>(null);
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
   const [isFilesOpen, setIsFilesOpen] = useState(false);
+  const [unreadFiles, setUnreadFiles] = useState(0);
   const [sharedPresentation, setSharedPresentation] = useState<{ path: string; name: string; updatedAt: string } | null>(null);
   const [presentationError, setPresentationError] = useState('');
   const apiRef = useRef<any>(null);
@@ -617,12 +619,7 @@ export default function RoomPage() {
 
   const handlePlaylistRequested = useCallback(() => {
     setIsPlaylistOpen(true);
-  }, []);
-
-  useEffect(() => {
-    const openFiles = () => setIsFilesOpen(true);
-    window.addEventListener('room:open-files', openFiles);
-    return () => window.removeEventListener('room:open-files', openFiles);
+    setIsFilesOpen(false);
   }, []);
 
   useEffect(() => {
@@ -753,15 +750,12 @@ export default function RoomPage() {
         onRecordingRequested={handleRecordingRequested}
         onHangupRequested={handleHangupRequested}
       />
-      <div className="mb-3 flex gap-2 xl:hidden">
-        <button type="button" onClick={() => setIsPlaylistOpen(open => !open)} aria-expanded={isPlaylistOpen} className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[.07] px-4 py-2 text-sm backdrop-blur-xl"><ListVideo className="h-4 w-4" /> Video playlist</button>
-        <button type="button" onClick={() => setIsFilesOpen(open => !open)} aria-expanded={isFilesOpen} className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[.07] px-4 py-2 text-sm backdrop-blur-xl"><Files className="h-4 w-4" /> Shared files</button>
-      </div>
+      <SharedFileNotifications meetingId={meetingId} onUnreadChange={setUnreadFiles} />
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,19rem)_minmax(0,1fr)_minmax(0,19rem)]">
-        <aside aria-label="Video playlist sidebar" className={`${isPlaylistOpen ? 'block' : 'hidden'} min-w-0 xl:block`}>
-          <VideoPlaylistPanel meetingId={meetingId} addedBy={userEmail || guestName} className="room-glass-panel xl:sticky xl:top-24 xl:max-h-[calc(100dvh-7rem)] xl:overflow-y-auto" onClose={() => setIsPlaylistOpen(false)} />
+        <aside id="room-video-playlist" aria-label="Video playlist sidebar" className={`${isPlaylistOpen ? 'block' : 'hidden'} order-3 min-w-0 xl:order-none xl:block`}>
+          <VideoPlaylistPanel meetingId={meetingId} addedBy={userEmail || guestName} className="room-glass-panel max-h-[min(70dvh,32rem)] overflow-y-auto xl:sticky xl:top-24 xl:h-[min(24rem,calc(100dvh-7rem))] xl:max-h-none" onClose={() => setIsPlaylistOpen(false)} />
         </aside>
-      <div className="meeting-stage relative mb-4 min-h-[24rem] min-w-0 w-full overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-[0_24px_70px_rgba(0,0,0,.35)]">
+      <div className="meeting-stage relative order-1 min-h-[24rem] min-w-0 w-full overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-[0_24px_70px_rgba(0,0,0,.35)] xl:order-none">
         <div
           ref={handleVideoStageRef}
           className="relative h-[min(68dvh,40rem)] min-h-[24rem] w-full overflow-hidden bg-zinc-950"
@@ -854,8 +848,12 @@ export default function RoomPage() {
           </div>
         )}
       </div>
-        <aside aria-label="Shared files sidebar" className={`${isFilesOpen ? 'block' : 'hidden'} min-w-0 xl:block`}>
-          <FileShare meetingId={meetingId} presentationEnabled participantKey={participantKey} title="Shared files" className="room-glass-panel xl:sticky xl:top-24 xl:max-h-[calc(100dvh-7rem)] xl:overflow-y-auto" />
+        <div className="order-2 grid grid-cols-2 gap-2 xl:hidden">
+          <button type="button" onClick={() => { setIsPlaylistOpen(open => !open); setIsFilesOpen(false); }} aria-expanded={isPlaylistOpen} aria-controls="room-video-playlist" className={`button-secondary min-w-0 gap-2 px-2 text-xs ${isPlaylistOpen ? 'border-zinc-500 bg-zinc-800 text-white' : 'border-zinc-700 bg-zinc-900/75'}`}><ListVideo className="h-4 w-4 shrink-0" /> Video playlist</button>
+          <button type="button" onClick={() => { if (!isFilesOpen) window.dispatchEvent(new Event('room:open-files')); setIsFilesOpen(open => !open); setIsPlaylistOpen(false); }} aria-expanded={isFilesOpen} aria-controls="room-shared-files" className={`button-secondary relative min-w-0 gap-2 px-2 text-xs ${isFilesOpen ? 'border-zinc-500 bg-zinc-800 text-white' : 'border-zinc-700 bg-zinc-900/75'}`}><Files className="h-4 w-4 shrink-0" /> Shared files{unreadFiles > 0 && !isFilesOpen && <span aria-label={`${unreadFiles} unread shared files`} className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-400" />}</button>
+        </div>
+        <aside id="room-shared-files" aria-label="Shared files sidebar" className={`${isFilesOpen ? 'block' : 'hidden'} order-4 min-w-0 xl:order-none xl:block`}>
+          <FileShare meetingId={meetingId} presentationEnabled participantKey={participantKey} title="Shared files" className="room-glass-panel max-h-[min(70dvh,32rem)] overflow-y-auto xl:sticky xl:top-24 xl:h-[min(24rem,calc(100dvh-7rem))] xl:max-h-none" />
         </aside>
       </div>
       {presentationError && <p role="alert" className="mx-auto mb-3 max-w-5xl rounded-lg border border-rose-500/40 bg-rose-950 px-4 py-2 text-sm text-rose-100">{presentationError}</p>}

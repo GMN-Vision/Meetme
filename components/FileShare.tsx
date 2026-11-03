@@ -5,6 +5,7 @@ import FileAllowance, { useFileAllowance } from './FileAllowance'
 import { uploadSharedFile, formatFileBytes } from '@/lib/file-upload-client'
 import { JITSI_PRESENT_EVENT } from '@/lib/jitsi-features'
 import { getPresentationKind, PREVIEW_TYPES, sharedFileExtension } from '@/lib/shared-file-types'
+import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
 
 export default function FileShare({
   meetingId,
@@ -120,10 +121,14 @@ export default function FileShare({
   const officePreviewUrl = previewFile && meetingId && participantKey ? `/present?${new URLSearchParams({ path: previewFile.path, name: previewFile.name, meetingId, participantKey, embedded: '1' })}` : ''
 
   return (
-    <div className={className || 'rounded-2xl border border-zinc-800 bg-zinc-900 p-4'}>
-      <div className="mb-3 flex items-center justify-between">
-        <div className="text-sm font-semibold text-zinc-100">{title}</div>
-        <div className="text-xs text-zinc-400">{loadingList ? 'Syncing...' : `${files.length} files`}</div>
+    <div className={className || 'rounded-3xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 p-5'}>
+      <div className="mb-5 flex items-start justify-between gap-3 border-b border-zinc-700/70 pb-4">
+        <div className="min-w-0">
+          <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-zinc-100"><FileText className="h-5 w-5" /></span>
+          <h2 className="text-base font-semibold tracking-tight text-white">{title}</h2>
+          <p className="mt-1 text-xs leading-5 text-zinc-400">Files and previews shared in this room.</p>
+        </div>
+        <span className="shrink-0 rounded-full border border-zinc-700 bg-zinc-950/60 px-2.5 py-1 text-xs text-zinc-300">{loadingList ? 'Syncing...' : `${files.length} files`}</span>
       </div>
 
       {notice ? (
@@ -139,40 +144,40 @@ export default function FileShare({
       {syncNotice && <p className="mb-3 text-xs text-amber-300" role="status">{syncNotice}</p>}
       {selected && <p className="mb-2 text-xs text-zinc-400">Selected: {formatFileBytes(selected.size)}</p>}
       <div className="mb-3 flex flex-col gap-2">
-        <input ref={fileInputRef} type="file" disabled={uploading} onChange={handleChange} className="block w-full text-sm text-zinc-100 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-800 file:px-3 file:py-2 file:text-xs file:font-medium file:text-zinc-100 hover:file:bg-zinc-800" />
-        <button
+        <input ref={fileInputRef} type="file" disabled={uploading} onChange={handleChange} className="block w-full min-w-0 rounded-xl border border-zinc-700 bg-zinc-950/60 p-2 text-xs text-zinc-300 file:mr-2 file:rounded-lg file:border-0 file:bg-zinc-800 file:px-2 file:py-2 file:text-xs file:font-medium file:text-zinc-100 hover:file:bg-zinc-700" />
+        <HoverBorderGradient
           onClick={handleUpload}
           disabled={!selected || uploading || !isReady || !allowance.limits || selected.size > allowance.limits.availableFileBytes}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Upload className="h-4 w-4" />
           {uploading ? `Uploading ${progress}%` : 'Share'}
-        </button>
+        </HoverBorderGradient>
       </div>
 
       <ul className="space-y-2" aria-label="Shared files">
         {files.map((f) => (
-          <li key={f.path} className={`rounded-xl border p-2.5 ${previewPath === f.path ? 'border-sky-400/40 bg-sky-400/10' : 'border-white/10 bg-white/[.04]'}`}>
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0 flex flex-1 items-center gap-2">
+          <li key={f.path} className={`rounded-xl border p-2.5 transition-colors ${previewPath === f.path ? 'border-zinc-500 bg-zinc-800/70' : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-600 hover:bg-zinc-900/70'}`}>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between xl:flex-col xl:items-stretch">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
               {PREVIEW_TYPES[sharedFileExtension(f.name)]?.startsWith('audio/') ? <Music2 className="h-4 w-4 shrink-0 text-sky-300" /> : PREVIEW_TYPES[sharedFileExtension(f.name)]?.startsWith('video/') ? <Video className="h-4 w-4 shrink-0 text-sky-300" /> : PREVIEW_TYPES[sharedFileExtension(f.name)]?.startsWith('image/') ? <ImageIcon className="h-4 w-4 shrink-0 text-sky-300" /> : getPresentationKind(f.name) === 'slides' ? <Presentation className="h-4 w-4 shrink-0 text-sky-300" /> : <FileText className="h-4 w-4 shrink-0 text-sky-300" />}
-              <button type="button" onClick={() => setPreviewPath(path => path === f.path ? '' : f.path)} className="min-w-0 truncate text-left text-sm text-zinc-100 hover:text-sky-200" aria-expanded={previewPath === f.path}>
+              <button type="button" onClick={() => setPreviewPath(path => path === f.path ? '' : f.path)} className="min-w-0 truncate text-left text-sm text-zinc-100 hover:text-white hover:underline" aria-expanded={previewPath === f.path}>
                 {f.name.split('/').pop()}
               </button>
             </div>
-            <div className="flex shrink-0 items-center gap-1.5">
+            <div className="flex items-center justify-end gap-1.5 border-t border-zinc-800 pt-2 sm:shrink-0 sm:border-0 sm:pt-0 xl:border-t xl:pt-2">
               {presentationEnabled && meetingId && getPresentationKind(f.name) && (
                 <button type="button" onClick={() => {
                   const detail = { meetingId, path: f.path, name: f.name, message: '' }
                   const event = new CustomEvent(JITSI_PRESENT_EVENT, { cancelable: true, detail })
                   window.dispatchEvent(event)
                   setNotice(detail.message || (event.defaultPrevented ? 'Media sent to the Jitsi stage. Return to the meeting to control playback.' : 'Join the meeting before presenting this file.'))
-                }} aria-label={`Present ${f.name} in meeting`} className="rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-100">Present</button>
+                }} aria-label={`Present ${f.name} in meeting`} className="min-h-10 rounded-lg border border-zinc-700 px-3 text-xs text-zinc-100 transition hover:bg-zinc-800 sm:min-h-8">Present</button>
               )}
-              <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-800" title="Download">
+              <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 sm:h-8 sm:w-8" title="Download" aria-label={`Download ${f.name}`}>
                 <Download className="h-4 w-4" />
               </a>
-              <button onClick={() => handleDelete(f.path)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-100 text-rose-700 hover:bg-rose-200" title="Delete">
+              <button onClick={() => handleDelete(f.path)} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-700 text-zinc-400 transition hover:border-rose-400/50 hover:bg-rose-500/10 hover:text-rose-300 sm:h-8 sm:w-8" title="Delete" aria-label={`Delete ${f.name}`}>
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
@@ -181,8 +186,8 @@ export default function FileShare({
             {previewType?.startsWith('image/') ? <img src={previewUrl} alt={f.name} className="max-h-52 w-full rounded object-contain" /> :
               previewType?.startsWith('audio/') ? <audio key={previewUrl} src={previewUrl} controls preload="metadata" className="w-full" /> :
               previewType?.startsWith('video/') ? <video key={previewUrl} src={previewUrl} controls preload="metadata" className="max-h-52 w-full rounded bg-black" /> :
-              previewType === 'application/pdf' ? <iframe src={previewUrl} title={`Preview ${f.name}`} className="h-64 w-full rounded bg-white" /> :
-              officePreviewUrl && getPresentationKind(f.name) ? <iframe src={officePreviewUrl} title={`Preview ${f.name}`} className="h-64 w-full rounded bg-white" /> :
+              previewType === 'application/pdf' ? <iframe src={previewUrl} title={`Preview ${f.name}`} className="h-48 w-full rounded bg-white sm:h-64" /> :
+              officePreviewUrl && getPresentationKind(f.name) ? <iframe src={officePreviewUrl} title={`Preview ${f.name}`} className="h-48 w-full rounded bg-white sm:h-64" /> :
               <p className="px-2 py-3 text-xs text-zinc-400">Preview is unavailable for this format. Download the file to open it.</p>}
             <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-sky-300 hover:text-sky-200"><ExternalLink className="h-3 w-3" /> Open or download</a>
           </div>}
@@ -190,11 +195,6 @@ export default function FileShare({
         ))}
       </ul>
 
-      {files.length === 0 ? (
-        <div className="mt-3 rounded-lg border border-dashed border-zinc-800 bg-zinc-900 px-3 py-4 text-center text-xs text-zinc-400">
-          No shared files yet. Upload once and everyone in this room can view/download here.
-        </div>
-      ) : null}
     </div>
   )
 }

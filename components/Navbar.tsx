@@ -6,8 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Copy, LockKeyhole, PencilLine, ShieldCheck, Sparkles, Upload } from 'lucide-react';
-import SharedFileNotifications from './SharedFileNotifications';
+import { Copy, LockKeyhole, PencilLine, ShieldCheck, Sparkles } from 'lucide-react';
 import { DesignSwitcher } from './DesignTheme';
 import { AudioCapture } from './AudioCapture';
 import Whiteboard from './Whiteboard';
@@ -39,8 +38,6 @@ export function Navbar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isFilesOpen, setIsFilesOpen] = useState(false);
-  const [unreadFiles, setUnreadFiles] = useState(0);
   const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
   const [whiteboardCloseRequestId, setWhiteboardCloseRequestId] = useState(0);
   const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState(false);
@@ -67,7 +64,6 @@ export function Navbar() {
 
   useEffect(() => {
     setIsWhiteboardOpen(false);
-    setIsFilesOpen(false);
     setIsDropdownOpen(false);
     setIsYouTubeModalOpen(false);
   }, [pathname]);
@@ -272,8 +268,6 @@ export function Navbar() {
     'inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-transparent bg-transparent px-0 text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white lg:w-auto lg:px-3';
   const copyInviteHoverClass =
     'hover:border-[#d4d4d8] hover:text-[#d4d4d8]';
-  const uploadMediaHoverClass =
-    'hover:border-[#34d399] hover:text-[#34d399]';
   const whiteboardHoverClass =
     'hover:border-[#f2b84b] hover:text-[#f2b84b]';
   const livestreamHoverClass =
@@ -281,7 +275,6 @@ export function Navbar() {
 
   return (
     <nav aria-label="Meeting navigation" className={isRoomPage ? 'fixed left-1/2 top-4 z-[1000] w-[calc(100%-2rem)] max-w-4xl -translate-x-1/2' : 'fixed inset-x-0 top-0 z-[1000] px-3 pt-3 sm:px-5 sm:pt-5'}>
-      {isRoomPage && roomMeetingId && <SharedFileNotifications meetingId={roomMeetingId} filesOpen={isFilesOpen} onUnreadChange={setUnreadFiles} />}
       <div className={`app-navbar-shell mx-auto max-w-[80rem] rounded-2xl border border-white/10 bg-black/70 shadow-xl backdrop-blur-xl ${pathname === '/' ? 'app-navbar-shell--landing' : ''} ${isRoomPage ? 'app-navbar-shell--room' : ''}`}>
         <div className="flex h-14 items-center justify-between gap-3">
           <div className="flex items-center gap-3 sm:gap-4">
@@ -383,22 +376,6 @@ export function Navbar() {
                   <PencilLine className="h-4 w-4" />
                   <span className="hidden lg:inline">Whiteboard</span>
                 </button>
-                <div className="relative">
-                  <button
-                    onClick={() => { setIsFilesOpen(true); window.dispatchEvent(new Event('room:open-files')); }}
-                    className={`relative ${navActionButtonClass} ${
-                      isFilesOpen
-                        ? 'border-emerald-200 bg-emerald-50/85 text-emerald-950 shadow-xl'
-                        : uploadMediaHoverClass
-                    }`}
-                    aria-label="Open shared files"
-                    title="View and upload shared files"
-                  >
-                    <Upload className="h-4 w-4" />
-                    <span className="hidden lg:inline">Files</span>
-                    {unreadFiles > 0 && !isFilesOpen && <span aria-label={`${unreadFiles} unread shared files`} className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-zinc-950">{unreadFiles > 9 ? '9+' : unreadFiles}</span>}
-                  </button>
-                </div>
               </div>
             )}
           </div>

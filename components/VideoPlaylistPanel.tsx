@@ -18,7 +18,8 @@ import {
   JITSI_PLAYLIST_PLAY_EVENT,
   JITSI_PLAYLIST_STOP_EVENT,
 } from '@/lib/jitsi-features';
-import { parseVideoUrls } from '@/lib/video-playlist';
+import { normalizeVideoUrl } from '@/lib/video-playlist';
+import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
 
 type PlaylistItem = {
   id: string;
@@ -174,13 +175,13 @@ export default function VideoPlaylistPanel({
   };
 
   const addVideos = async () => {
-    const { urls, invalid } = parseVideoUrls(input);
+    const url = normalizeVideoUrl(input);
     setNotice('');
 
-    if (!urls.length) {
-      setNotice(invalid.length
-        ? 'No supported video links found. Use YouTube links or direct MP4/WebM URLs.'
-        : 'Paste one or more video links first.');
+    if (!url) {
+      setNotice(input.trim()
+        ? 'Use a YouTube link or a direct MP4/WebM video link.'
+        : 'Paste a video link first.');
       return;
     }
 
@@ -189,7 +190,7 @@ export default function VideoPlaylistPanel({
       const response = await fetch('/api/video-playlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ meetingId, urls, addedBy }),
+        body: JSON.stringify({ meetingId, urls: [url], addedBy }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || 'Videos could not be added');
@@ -197,7 +198,7 @@ export default function VideoPlaylistPanel({
       setInput('');
 
       const skipped = Array.isArray(data.skipped) ? data.skipped.length : 0;
-      const unsupported = Array.isArray(data.invalid) ? data.invalid.length : invalid.length;
+      const unsupported = Array.isArray(data.invalid) ? data.invalid.length : 0;
       const messages = [`Added ${data.added || 0} video${data.added === 1 ? '' : 's'} to the playlist.`];
       if (skipped) messages.push(`${skipped} already in the playlist.`);
       if (unsupported) messages.push(`${unsupported} unsupported link${unsupported === 1 ? '' : 's'} skipped.`);
@@ -233,12 +234,11 @@ export default function VideoPlaylistPanel({
   const working = Boolean(busy);
 
   return (
-    <div className={`rounded-2xl border border-zinc-800 bg-zinc-900 p-4 ${className}`}>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div>
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-100">
-            <ListVideo className="h-4 w-4" /> Video playlist
-          </h2>
+    <div className={`rounded-3xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 p-5 ${className}`}>
+      <div className="mb-5 flex items-start justify-between gap-3 border-b border-zinc-700/70 pb-4">
+        <div className="min-w-0">
+          <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-zinc-100"><ListVideo className="h-5 w-5" /></span>
+          <h2 className="text-base font-semibold tracking-tight text-white">Video playlist</h2>
           <p className="mt-0.5 text-xs text-zinc-400">Queue videos once and play them for everyone in the room.</p>
         </div>
         <span className="shrink-0 text-xs text-zinc-400">{loading ? 'Syncing…' : `${playlist.items.length} video${playlist.items.length === 1 ? '' : 's'}`}</span>
@@ -261,34 +261,35 @@ export default function VideoPlaylistPanel({
       ) : null}
 
       <label htmlFor={`video-playlist-input-${meetingId}`} className="mb-1 block text-xs font-medium text-zinc-300">
-        Paste video links — one per line
+        Video link
       </label>
-      <textarea
+      <input
+        type="url"
         id={`video-playlist-input-${meetingId}`}
         value={input}
         onChange={event => setInput(event.target.value)}
-        rows={3}
+        onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (!working) void addVideos(); } }}
         disabled={working}
-        placeholder={'https://www.youtube.com/watch?v=…\nhttps://youtu.be/…\nhttps://example.com/clip.mp4'}
-        className="mb-2 block w-full resize-y rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none disabled:opacity-60"
+        placeholder="Paste a YouTube or video link"
+        className="input-modern mb-3 block w-full text-sm disabled:opacity-60"
       />
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <button
+        <HoverBorderGradient
           type="button"
           onClick={addVideos}
           disabled={working || !input.trim()}
-          aria-label="Add videos to the playlist"
-          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+          aria-label="Add video to the playlist"
+          className="w-full gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
         >
           {busy === 'add' ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          {busy === 'add' ? 'Adding…' : 'Add to playlist'}
-        </button>
+          {busy === 'add' ? 'Adding…' : playlist.items.length ? 'Add another video' : 'Add video'}
+        </HoverBorderGradient>
         <span className="text-xs text-zinc-500">YouTube or direct MP4/WebM links</span>
       </div>
 
       {current ? (
-        <div className="mb-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
+        <div className="mb-3 rounded-xl border border-sky-400/25 bg-sky-400/5 p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-300">
             {playlist.playing ? 'Now playing' : 'Selected video'}
           </p>
           <p className="mt-1 break-words text-sm font-medium text-zinc-100">{itemLabel(current)}</p>
@@ -339,9 +340,9 @@ export default function VideoPlaylistPanel({
           return (
             <li
               key={item.id}
-              className={`flex items-start gap-2 rounded-xl border px-2.5 py-2 ${
+              className={`flex flex-wrap items-start gap-2 rounded-xl border px-2.5 py-2 ${
                 isCurrent
-                  ? 'border-emerald-500/40 bg-emerald-500/5'
+                  ? 'border-sky-400/30 bg-sky-400/5'
                   : 'border-zinc-800 bg-zinc-950/40'
               }`}
             >
@@ -349,7 +350,7 @@ export default function VideoPlaylistPanel({
                 type="button"
                 onClick={() => playItem(item)}
                 disabled={working}
-                className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-zinc-700 text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-60"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-700 text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-60 sm:h-8 sm:w-8"
                 aria-label={`Play ${itemLabel(item)}`}
                 title="Play in meeting"
               >
@@ -361,12 +362,12 @@ export default function VideoPlaylistPanel({
                 <p className="mt-0.5 truncate text-[11px] text-zinc-500" title={item.url}>{item.url}</p>
               </div>
 
-              <div className="flex shrink-0 items-center gap-0.5">
+              <div className="flex w-full items-center justify-end gap-1 border-t border-zinc-800 pt-1 sm:w-auto sm:border-0 sm:pt-0 xl:w-full xl:border-t xl:pt-1">
                 <button
                   type="button"
                   onClick={() => moveItem(item, 'up')}
                   disabled={working || index === 0}
-                  className="rounded p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-30"
+                  className="rounded p-2.5 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-30 sm:p-1.5 xl:p-2.5"
                   aria-label={`Move ${itemLabel(item)} up`}
                   title="Move up"
                 >
@@ -376,7 +377,7 @@ export default function VideoPlaylistPanel({
                   type="button"
                   onClick={() => moveItem(item, 'down')}
                   disabled={working || index === playlist.items.length - 1}
-                  className="rounded p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-30"
+                  className="rounded p-2.5 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-30 sm:p-1.5 xl:p-2.5"
                   aria-label={`Move ${itemLabel(item)} down`}
                   title="Move down"
                 >
@@ -386,7 +387,7 @@ export default function VideoPlaylistPanel({
                   type="button"
                   onClick={() => removeItem(item)}
                   disabled={working}
-                  className="rounded p-1.5 text-rose-300 hover:bg-rose-500/10 hover:text-rose-200 disabled:opacity-60"
+                  className="rounded p-2.5 text-rose-300 hover:bg-rose-500/10 hover:text-rose-200 disabled:opacity-60 sm:p-1.5 xl:p-2.5"
                   aria-label={`Remove ${itemLabel(item)} from the playlist`}
                   title="Remove"
                 >
@@ -397,12 +398,6 @@ export default function VideoPlaylistPanel({
           );
         })}
       </ul>
-
-      {!playlist.items.length && !loading ? (
-        <div className="mt-3 rounded-lg border border-dashed border-zinc-700 bg-zinc-950/40 px-3 py-4 text-center text-xs text-zinc-400">
-          No videos queued yet. Paste several links above to build the meeting playlist.
-        </div>
-      ) : null}
 
       {playlist.items.length > 0 ? (
         <div className="mt-3 flex items-center justify-between gap-2 text-xs text-zinc-500">
