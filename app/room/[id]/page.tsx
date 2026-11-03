@@ -753,7 +753,7 @@ export default function RoomPage() {
       <SharedFileNotifications meetingId={meetingId} onUnreadChange={setUnreadFiles} />
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,19rem)_minmax(0,1fr)_minmax(0,19rem)]">
         <aside id="room-video-playlist" aria-label="Video playlist sidebar" className={`${isPlaylistOpen ? 'block' : 'hidden'} order-3 min-w-0 xl:order-none xl:block`}>
-          <VideoPlaylistPanel meetingId={meetingId} addedBy={userEmail || guestName} className="room-glass-panel xl:sticky xl:top-24 xl:min-h-96" onClose={() => setIsPlaylistOpen(false)} />
+          <VideoPlaylistPanel meetingId={meetingId} addedBy={userEmail || guestName} className="room-glass-panel max-h-[min(70dvh,27rem)] overflow-y-auto overscroll-contain xl:sticky xl:top-24 xl:h-[min(27rem,calc(100dvh-7rem))] xl:max-h-none" onClose={() => setIsPlaylistOpen(false)} />
         </aside>
       <div className="meeting-stage relative order-1 min-h-[24rem] min-w-0 w-full overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-[0_24px_70px_rgba(0,0,0,.35)] xl:order-none">
         <div
@@ -853,7 +853,7 @@ export default function RoomPage() {
           <button type="button" onClick={() => { if (!isFilesOpen) window.dispatchEvent(new Event('room:open-files')); setIsFilesOpen(open => !open); setIsPlaylistOpen(false); }} aria-expanded={isFilesOpen} aria-controls="room-shared-files" className={`button-secondary relative min-w-0 gap-2 px-2 text-xs ${isFilesOpen ? 'border-zinc-500 bg-zinc-800 text-white' : 'border-zinc-700 bg-zinc-900/75'}`}><Files className="h-4 w-4 shrink-0" /> Shared files{unreadFiles > 0 && !isFilesOpen && <span aria-label={`${unreadFiles} unread shared files`} className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-400" />}</button>
         </div>
         <aside id="room-shared-files" aria-label="Shared files sidebar" className={`${isFilesOpen ? 'block' : 'hidden'} order-4 min-w-0 xl:order-none xl:block`}>
-          <FileShare meetingId={meetingId} presentationEnabled participantKey={participantKey} title="Shared files" showHeader={false} className="room-glass-panel xl:sticky xl:top-24 xl:min-h-96" />
+          <FileShare meetingId={meetingId} presentationEnabled participantKey={participantKey} title="Shared files" showHeader={false} className="room-glass-panel max-h-[min(70dvh,27rem)] overflow-y-auto overscroll-contain xl:sticky xl:top-24 xl:h-[min(27rem,calc(100dvh-7rem))] xl:max-h-none" />
         </aside>
       </div>
       {presentationError && <p role="alert" className="mx-auto mb-3 max-w-5xl rounded-lg border border-rose-500/40 bg-rose-950 px-4 py-2 text-sm text-rose-100">{presentationError}</p>}

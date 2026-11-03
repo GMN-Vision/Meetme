@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
+import { IconBrandYoutube } from '@tabler/icons-react';
 import {
   ChevronDown,
   ChevronUp,
-  ListVideo,
+  CircleCheck,
   LoaderCircle,
   Play,
   Plus,
@@ -20,6 +22,8 @@ import {
 } from '@/lib/jitsi-features';
 import { normalizeVideoUrl } from '@/lib/video-playlist';
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
+import { GridPattern } from '@/components/ui/file-upload';
+import { useHoverCapable } from '@/hooks/useHoverCapable';
 
 type PlaylistItem = {
   id: string;
@@ -64,9 +68,10 @@ export default function VideoPlaylistPanel({
   const [playlist, setPlaylist] = useState<Playlist>(() => EMPTY_PLAYLIST(meetingId));
   const [input, setInput] = useState('');
   const [notice, setNotice] = useState('');
-  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState('');
   const busyRef = useRef(false);
+  const reduceMotion = useReducedMotion();
+  const canHover = useHoverCapable();
 
   useEffect(() => {
     let stopped = false;
@@ -85,7 +90,6 @@ export default function VideoPlaylistPanel({
         if (!stopped && !busyRef.current) setNotice('The playlist is temporarily unavailable. Retrying automatically…');
       } finally {
         polling = false;
-        if (!stopped) setLoading(false);
       }
     };
 
@@ -232,27 +236,11 @@ export default function VideoPlaylistPanel({
 
   const current = playlist.currentIndex !== null ? playlist.items[playlist.currentIndex] : null;
   const working = Boolean(busy);
+  const linkReady = Boolean(input.trim() && normalizeVideoUrl(input));
 
   return (
-    <div className={`rounded-3xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 p-5 ${className}`}>
-      <div className="mb-5 flex items-start justify-between gap-3 border-b border-zinc-700/70 pb-4">
-        <div className="min-w-0">
-          <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-zinc-100"><ListVideo className="h-5 w-5" /></span>
-          <h2 className="text-base font-semibold tracking-tight text-white">Video playlist</h2>
-          <p className="mt-0.5 text-xs text-zinc-400">Queue videos once and play them for everyone in the room.</p>
-        </div>
-        <span className="shrink-0 text-xs text-zinc-400">{loading ? 'Syncing…' : `${playlist.items.length} video${playlist.items.length === 1 ? '' : 's'}`}</span>
-        {onClose ? (
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 rounded-lg p-1.5 text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-100"
-            aria-label="Close video playlist"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        ) : null}
-      </div>
+    <div className={`relative rounded-3xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 p-5 ${className}`}>
+      {onClose ? <button type="button" onClick={onClose} className="absolute right-2 top-2 z-30 rounded-lg p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-white" aria-label="Close video playlist"><X className="h-4 w-4" /></button> : null}
 
       {notice ? (
         <div className="mb-3 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs text-zinc-300" role="status">
@@ -260,19 +248,34 @@ export default function VideoPlaylistPanel({
         </div>
       ) : null}
 
-      <label htmlFor={`video-playlist-input-${meetingId}`} className="mb-1 block text-xs font-medium text-zinc-300">
-        Video link
-      </label>
-      <input
-        type="url"
-        id={`video-playlist-input-${meetingId}`}
-        value={input}
-        onChange={event => setInput(event.target.value)}
-        onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (!working) void addVideos(); } }}
-        disabled={working}
-        placeholder="Paste a YouTube or video link"
-        className="input-modern mb-3 block w-full text-sm disabled:opacity-60"
-      />
+      <motion.div animate="initial" whileHover={reduceMotion || !canHover ? undefined : 'animate'} className="relative mb-3 overflow-hidden rounded-xl border border-dashed border-zinc-700 p-5">
+        <div className="pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]"><GridPattern /></div>
+        <div className="relative z-10 flex flex-col items-center text-center">
+          <p className="font-sans text-base font-bold text-neutral-200">Share a video</p>
+          <p className="mt-2 text-xs leading-5 text-neutral-400">Queue a link for everyone in the room</p>
+          <div className="relative mx-auto mt-5 w-full max-w-xl">
+            <motion.div variants={{ initial: { x: 0, y: 0 }, animate: { x: 20, y: -20, opacity: 0.9 } }} transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 20 }} className="relative z-20 mx-auto mt-4 flex h-20 w-full max-w-[8rem] items-center justify-center rounded-md bg-neutral-900 shadow-[0px_10px_50px_rgba(0,0,0,0.1)]">
+              <IconBrandYoutube className="h-5 w-5 text-neutral-300" />
+            </motion.div>
+            <motion.div variants={{ initial: { opacity: 0 }, animate: { opacity: 1 } }} className="absolute inset-0 z-10 mx-auto mt-4 h-20 w-full max-w-[8rem] rounded-md border border-dashed border-zinc-500 opacity-0" />
+          </div>
+          <label htmlFor={`video-playlist-input-${meetingId}`} className="sr-only">Video link</label>
+          <div className="relative mt-5 w-full">
+            <input
+              type="url"
+              id={`video-playlist-input-${meetingId}`}
+              value={input}
+              onChange={event => setInput(event.target.value)}
+              onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (!working) void addVideos(); } }}
+              disabled={working}
+              placeholder="Paste a YouTube or video link"
+              className="input-modern relative z-20 block w-full !pl-3 !pr-10 text-xs disabled:opacity-60"
+            />
+            {linkReady && <CircleCheck className="pointer-events-none absolute right-3 top-1/2 z-30 h-4 w-4 -translate-y-1/2 text-zinc-300" aria-hidden="true" />}
+          </div>
+          <p className="mt-2 text-[11px] text-zinc-500">{linkReady ? 'Ready to add' : 'YouTube or direct MP4/WebM link'}</p>
+        </div>
+      </motion.div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <HoverBorderGradient
           type="button"
@@ -284,7 +287,6 @@ export default function VideoPlaylistPanel({
           {busy === 'add' ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           {busy === 'add' ? 'Adding…' : playlist.items.length ? 'Add another video' : 'Add video'}
         </HoverBorderGradient>
-        <span className="text-xs text-zinc-500">YouTube or direct MP4/WebM links</span>
       </div>
 
       {current ? (

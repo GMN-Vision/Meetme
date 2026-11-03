@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { IconUpload } from '@tabler/icons-react'
 import { useDropzone } from 'react-dropzone'
 import { cn } from '@/lib/utils'
+import { useHoverCapable } from '@/hooks/useHoverCapable'
 
 const mainVariant = {
   initial: { x: 0, y: 0 },
@@ -25,6 +26,7 @@ export function FileUpload({ onChange, value, disabled = false, compact = false 
   const [localFiles, setLocalFiles] = useState<File[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const reduceMotion = useReducedMotion()
+  const canHover = useHoverCapable()
   const files = value === undefined ? localFiles : value ? [value] : []
 
   const handleFiles = (newFiles: File[]) => {
@@ -52,8 +54,8 @@ export function FileUpload({ onChange, value, disabled = false, compact = false 
       onClick={openPicker}
       onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openPicker() } }}
       animate={isDragActive && !reduceMotion ? 'animate' : 'initial'}
-      whileHover={reduceMotion || disabled ? undefined : 'animate'}
-      className={cn('group/file relative block w-full overflow-hidden rounded-lg border border-dashed', isDragActive ? 'border-sky-400 bg-sky-400/5' : 'border-zinc-700', disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer', compact ? 'p-5' : 'p-10')}
+      whileHover={reduceMotion || disabled || !canHover ? undefined : 'animate'}
+      className={cn('group/file relative block w-full overflow-hidden rounded-lg border border-dashed', isDragActive ? 'border-zinc-500 bg-zinc-800/30' : 'border-zinc-700', disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer', compact ? 'p-5' : 'p-10')}
     >
       <input
         ref={inputRef}
@@ -88,11 +90,11 @@ export function FileUpload({ onChange, value, disabled = false, compact = false 
             layoutId="file-upload"
             variants={mainVariant}
             transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 20 }}
-            className={cn('relative z-40 mx-auto mt-4 flex w-full max-w-[8rem] items-center justify-center rounded-md bg-white shadow-[0px_10px_50px_rgba(0,0,0,0.1)] group-hover/file:shadow-2xl dark:bg-neutral-900', compact ? 'h-20' : 'h-32')}
+            className={cn('relative z-40 mx-auto mt-4 flex w-full max-w-[8rem] items-center justify-center rounded-md bg-white shadow-[0px_10px_50px_rgba(0,0,0,0.1)] dark:bg-neutral-900', compact ? 'h-20' : 'h-32')}
           >
             {isDragActive ? <motion.p initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center text-neutral-600">Drop it<IconUpload className="h-4 w-4 text-neutral-600 dark:text-neutral-400" /></motion.p> : <IconUpload className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />}
           </motion.div>}
-          {!files.length && <motion.div variants={secondaryVariant} className={cn('absolute inset-0 z-30 mx-auto mt-4 flex w-full max-w-[8rem] items-center justify-center rounded-md border border-dashed border-sky-400 bg-transparent opacity-0', compact ? 'h-20' : 'h-32')} />}
+          {!files.length && <motion.div variants={secondaryVariant} className={cn('absolute inset-0 z-30 mx-auto mt-4 flex w-full max-w-[8rem] items-center justify-center rounded-md border border-dashed border-zinc-500 bg-transparent opacity-0', compact ? 'h-20' : 'h-32')} />}
         </div>
       </div>
     </motion.div>

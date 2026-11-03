@@ -29,7 +29,7 @@ export function SiteNavbar() {
     return () => { document.removeEventListener('keydown', escape); document.removeEventListener('pointerdown', outside); };
   }, [open]);
   return <header ref={header} className="site-header fixed left-1/2 top-4 z-[1000] w-[calc(100%-2rem)] max-w-4xl -translate-x-1/2">
-    <nav aria-label="Main navigation" className="site-navigation flex items-center justify-between gap-3 rounded-[1.5rem] border border-zinc-800 bg-zinc-900/60 px-4 py-3 backdrop-blur-md">
+    <nav aria-label="Main navigation" className="site-navigation flex items-center justify-between gap-3 rounded-[1.875rem] border border-zinc-800 bg-zinc-900/60 px-4 py-3 backdrop-blur-md">
       <Brand />
       {!inWorkspace && pathname !== '/pricing' && <DesignSwitcher menu={pathname === '/'} />}
       {links.length > 0 && <div className="hidden items-center gap-1 lg:flex">
