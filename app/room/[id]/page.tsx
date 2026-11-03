@@ -14,6 +14,8 @@ import { startMeetingAccessHeartbeat } from '../../../lib/meeting-access-client'
 import { getJitsiToolbarButtons } from '@/lib/jitsi-features';
 import JitsiPresentationControls from '@/components/JitsiPresentationControls';
 import VideoPlaylistPanel from '@/components/VideoPlaylistPanel';
+import FileShare from '@/components/FileShare';
+import { Files, ListVideo } from 'lucide-react';
 import { useRecording } from '@/hooks/useRecording';
 
 interface MeetingDetails {
@@ -63,6 +65,7 @@ export default function RoomPage() {
   const [aiResults, setAiResults] = useState<any | null>(null);
   const [captionPortalTarget, setCaptionPortalTarget] = useState<HTMLElement | null>(null);
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
+  const [isFilesOpen, setIsFilesOpen] = useState(false);
   const [sharedPresentation, setSharedPresentation] = useState<{ path: string; name: string; updatedAt: string } | null>(null);
   const [presentationError, setPresentationError] = useState('');
   const apiRef = useRef<any>(null);
@@ -617,6 +620,12 @@ export default function RoomPage() {
   }, []);
 
   useEffect(() => {
+    const openFiles = () => setIsFilesOpen(true);
+    window.addEventListener('room:open-files', openFiles);
+    return () => window.removeEventListener('room:open-files', openFiles);
+  }, []);
+
+  useEffect(() => {
     if (!isPlaylistOpen) return;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setIsPlaylistOpen(false);
@@ -744,8 +753,15 @@ export default function RoomPage() {
         onRecordingRequested={handleRecordingRequested}
         onHangupRequested={handleHangupRequested}
       />
-      {/* Preserve the original centered stage width and its desktop side gutters. */}
-      <div className="meeting-stage relative mx-auto mb-4 min-h-[24rem] w-full overflow-hidden rounded-lg border border-[#27272a] bg-zinc-950 lg:w-[calc(100%_-_22rem)] lg:max-w-[61.5rem]">
+      <div className="mb-3 flex gap-2 xl:hidden">
+        <button type="button" onClick={() => setIsPlaylistOpen(open => !open)} aria-expanded={isPlaylistOpen} className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[.07] px-4 py-2 text-sm backdrop-blur-xl"><ListVideo className="h-4 w-4" /> Video playlist</button>
+        <button type="button" onClick={() => setIsFilesOpen(open => !open)} aria-expanded={isFilesOpen} className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[.07] px-4 py-2 text-sm backdrop-blur-xl"><Files className="h-4 w-4" /> Shared files</button>
+      </div>
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,19rem)_minmax(0,1fr)_minmax(0,19rem)]">
+        <aside aria-label="Video playlist sidebar" className={`${isPlaylistOpen ? 'block' : 'hidden'} min-w-0 xl:block`}>
+          <VideoPlaylistPanel meetingId={meetingId} addedBy={userEmail || guestName} className="room-glass-panel xl:sticky xl:top-24 xl:max-h-[calc(100dvh-7rem)] xl:overflow-y-auto" onClose={() => setIsPlaylistOpen(false)} />
+        </aside>
+      <div className="meeting-stage relative mb-4 min-h-[24rem] min-w-0 w-full overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-[0_24px_70px_rgba(0,0,0,.35)]">
         <div
           ref={handleVideoStageRef}
           className="relative h-[min(68dvh,40rem)] min-h-[24rem] w-full overflow-hidden bg-zinc-950"
@@ -837,28 +853,10 @@ export default function RoomPage() {
             </div>
           </div>
         )}
-        {isPlaylistOpen && (
-          <div
-            className="fixed inset-0 z-[1200] flex items-start justify-center overflow-y-auto bg-zinc-950/70 p-3 backdrop-blur-sm sm:items-center"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Video playlist"
-          >
-            <button
-              type="button"
-              aria-label="Close video playlist backdrop"
-              onClick={() => setIsPlaylistOpen(false)}
-              className="absolute inset-0 h-full w-full cursor-default bg-transparent"
-            />
-            <div className="relative z-10 my-auto w-full max-w-[520px]">
-              <VideoPlaylistPanel
-                meetingId={meetingId}
-                addedBy={userEmail || guestName}
-                onClose={() => setIsPlaylistOpen(false)}
-              />
-            </div>
-          </div>
-        )}
+      </div>
+        <aside aria-label="Shared files sidebar" className={`${isFilesOpen ? 'block' : 'hidden'} min-w-0 xl:block`}>
+          <FileShare meetingId={meetingId} presentationEnabled participantKey={participantKey} title="Shared files" className="room-glass-panel xl:sticky xl:top-24 xl:max-h-[calc(100dvh-7rem)] xl:overflow-y-auto" />
+        </aside>
       </div>
       {presentationError && <p role="alert" className="mx-auto mb-3 max-w-5xl rounded-lg border border-rose-500/40 bg-rose-950 px-4 py-2 text-sm text-rose-100">{presentationError}</p>}
       {sharedPresentation && (

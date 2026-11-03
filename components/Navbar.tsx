@@ -7,7 +7,6 @@ import { signOut, useSession } from 'next-auth/react';
 import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Copy, LockKeyhole, PencilLine, ShieldCheck, Sparkles, Upload } from 'lucide-react';
-import FileShare from './FileShare';
 import SharedFileNotifications from './SharedFileNotifications';
 import { DesignSwitcher } from './DesignTheme';
 import { AudioCapture } from './AudioCapture';
@@ -50,7 +49,6 @@ export function Navbar() {
   const [membership, setMembership] = useState<Membership | null>(null);
   const [membershipResolved, setMembershipResolved] = useState(false);
   const [upgradePrompt, setUpgradePrompt] = useState<UpgradePrompt>(null);
-  const filesPopoverRef = useRef<HTMLDivElement | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const profileButtonRef = useRef<HTMLButtonElement | null>(null);
   const roomMatch = pathname?.match(/^\/room\/([^/]+)$/);
@@ -139,20 +137,6 @@ export function Navbar() {
       cancelled = true;
     };
   }, [status]);
-
-  useEffect(() => {
-    if (!isFilesOpen) return;
-
-    const handlePointerDown = (event: MouseEvent) => {
-      if (filesPopoverRef.current && !filesPopoverRef.current.contains(event.target as Node)) {
-        setIsFilesOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handlePointerDown);
-    return () => document.removeEventListener('mousedown', handlePointerDown);
-  }, [isFilesOpen]);
-
 
   useEffect(() => {
 
@@ -399,32 +383,21 @@ export function Navbar() {
                   <PencilLine className="h-4 w-4" />
                   <span className="hidden lg:inline">Whiteboard</span>
                 </button>
-                <div ref={filesPopoverRef} className="relative">
+                <div className="relative">
                   <button
-                    onClick={() => setIsFilesOpen(open => !open)}
+                    onClick={() => { setIsFilesOpen(true); window.dispatchEvent(new Event('room:open-files')); }}
                     className={`relative ${navActionButtonClass} ${
                       isFilesOpen
                         ? 'border-emerald-200 bg-emerald-50/85 text-emerald-950 shadow-xl'
                         : uploadMediaHoverClass
                     }`}
-                    aria-label={isFilesOpen ? 'Close upload media' : 'Open upload media'}
-                    title={isFilesOpen ? 'Close upload media' : 'View and download shared files'}
+                    aria-label="Open shared files"
+                    title="View and upload shared files"
                   >
                     <Upload className="h-4 w-4" />
                     <span className="hidden lg:inline">Files</span>
                     {unreadFiles > 0 && !isFilesOpen && <span aria-label={`${unreadFiles} unread shared files`} className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-zinc-950">{unreadFiles > 9 ? '9+' : unreadFiles}</span>}
                   </button>
-                  {isFilesOpen && (
-                    <div className="fixed left-1/2 top-20 z-[1010] max-h-[min(28rem,calc(100dvh-7rem))] w-[calc(100vw-1.5rem)] max-w-[440px] -translate-x-1/2 overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-900 p-3 shadow-xl sm:absolute sm:left-0 sm:top-auto sm:mt-3 sm:w-[440px] sm:max-w-[calc(100vw-2rem)] sm:translate-x-0">
-                      <FileShare
-                        meetingId={roomMeetingId}
-                        presentationEnabled
-                        scopeType="meeting"
-                        title="Shared Files"
-                        className="border-0 bg-transparent p-0"
-                      />
-                    </div>
-                  )}
                 </div>
               </div>
             )}

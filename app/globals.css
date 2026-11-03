@@ -89,6 +89,9 @@
 .app-navbar-shell--room { max-width: 896px; padding: .75rem 1rem; border-radius: 9999px; background: rgba(24,24,27,.6); backdrop-filter: blur(12px); box-shadow: none; }
 .app-navbar-shell--room > div { height: 40px; }
 .app-navbar-shell--room > div > div:first-child { min-width: 0; }
+.room-glass-panel { padding: 1rem; border: 1px solid rgba(255,255,255,.13); border-radius: 1.25rem; background: linear-gradient(145deg,rgba(39,39,42,.78),rgba(9,9,11,.72)); box-shadow: inset 0 1px rgba(255,255,255,.07),0 20px 55px rgba(0,0,0,.25); backdrop-filter: blur(22px) saturate(140%); }
+.room-glass-panel textarea, .room-glass-panel li, .room-glass-panel [role='status'] { background-color: rgba(9,9,11,.42); }
+@media (min-width: 1280px) { .room-glass-panel button[aria-label='Close video playlist'] { display: none; } }
 .app-brand-mark { display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 32px; height: 32px; border-radius: 8px; background: #fafafa; }
 .app-brand-mark i { width: 3px; height: 12px; background: #09090b; border-radius: 4px; }
 .app-brand-mark i:first-child { height: 8px; }.app-brand-mark i:last-child { height: 16px; }

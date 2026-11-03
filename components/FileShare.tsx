@@ -1,10 +1,10 @@
 "use client"
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Download, Upload, Trash2, FileText } from 'lucide-react'
+import { Download, Upload, Trash2, FileText, Music2, Video, Image as ImageIcon, Presentation, ExternalLink } from 'lucide-react'
 import FileAllowance, { useFileAllowance } from './FileAllowance'
 import { uploadSharedFile, formatFileBytes } from '@/lib/file-upload-client'
 import { JITSI_PRESENT_EVENT } from '@/lib/jitsi-features'
-import { getPresentationKind } from '@/lib/shared-file-types'
+import { getPresentationKind, PREVIEW_TYPES, sharedFileExtension } from '@/lib/shared-file-types'
 
 export default function FileShare({
   meetingId,
@@ -13,6 +13,7 @@ export default function FileShare({
   title = 'Meeting Files',
   className,
   presentationEnabled = false,
+  participantKey = '',
 }: {
   meetingId?: string
   scopeId?: string
@@ -20,6 +21,7 @@ export default function FileShare({
   title?: string
   className?: string
   presentationEnabled?: boolean
+  participantKey?: string
 }) {
   const [files, setFiles] = useState<Array<{ name: string; path: string }>>([])
   const [syncNotice, setSyncNotice] = useState('')
@@ -29,6 +31,7 @@ export default function FileShare({
   const allowance = useFileAllowance()
   const [notice, setNotice] = useState('')
   const [loadingList, setLoadingList] = useState(false)
+  const [previewPath, setPreviewPath] = useState('')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const resolvedScopeId = scopeId || meetingId || ''
   const isReady = useMemo(() => Boolean(resolvedScopeId), [resolvedScopeId])
@@ -111,6 +114,11 @@ export default function FileShare({
     return `/api/files/download?path=${encodeURIComponent(path)}`
   }
 
+  const previewFile = files.find(file => file.path === previewPath)
+  const previewType = previewFile ? PREVIEW_TYPES[sharedFileExtension(previewFile.name)] : ''
+  const previewUrl = previewFile ? `${getDownloadHref(previewFile.path)}&preview=1` : ''
+  const officePreviewUrl = previewFile && meetingId && participantKey ? `/present?${new URLSearchParams({ path: previewFile.path, name: previewFile.name, meetingId, participantKey, embedded: '1' })}` : ''
+
   return (
     <div className={className || 'rounded-2xl border border-zinc-800 bg-zinc-900 p-4'}>
       <div className="mb-3 flex items-center justify-between">
@@ -130,7 +138,7 @@ export default function FileShare({
       </details>
       {syncNotice && <p className="mb-3 text-xs text-amber-300" role="status">{syncNotice}</p>}
       {selected && <p className="mb-2 text-xs text-zinc-400">Selected: {formatFileBytes(selected.size)}</p>}
-      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="mb-3 flex flex-col gap-2">
         <input ref={fileInputRef} type="file" disabled={uploading} onChange={handleChange} className="block w-full text-sm text-zinc-100 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-800 file:px-3 file:py-2 file:text-xs file:font-medium file:text-zinc-100 hover:file:bg-zinc-800" />
         <button
           onClick={handleUpload}
@@ -142,14 +150,15 @@ export default function FileShare({
         </button>
       </div>
 
-      <ul className="max-h-40 space-y-1.5 overflow-y-auto">
+      <ul className="space-y-2" aria-label="Shared files">
         {files.map((f) => (
-          <li key={f.path} className="flex items-center justify-between gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+          <li key={f.path} className={`rounded-xl border p-2.5 ${previewPath === f.path ? 'border-sky-400/40 bg-sky-400/10' : 'border-white/10 bg-white/[.04]'}`}>
+          <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 flex flex-1 items-center gap-2">
-              <FileText className="h-4 w-4 shrink-0 text-zinc-400" />
-              <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="truncate text-sm text-zinc-100 hover:text-zinc-300 hover:underline">
+              {PREVIEW_TYPES[sharedFileExtension(f.name)]?.startsWith('audio/') ? <Music2 className="h-4 w-4 shrink-0 text-sky-300" /> : PREVIEW_TYPES[sharedFileExtension(f.name)]?.startsWith('video/') ? <Video className="h-4 w-4 shrink-0 text-sky-300" /> : PREVIEW_TYPES[sharedFileExtension(f.name)]?.startsWith('image/') ? <ImageIcon className="h-4 w-4 shrink-0 text-sky-300" /> : getPresentationKind(f.name) === 'slides' ? <Presentation className="h-4 w-4 shrink-0 text-sky-300" /> : <FileText className="h-4 w-4 shrink-0 text-sky-300" />}
+              <button type="button" onClick={() => setPreviewPath(path => path === f.path ? '' : f.path)} className="min-w-0 truncate text-left text-sm text-zinc-100 hover:text-sky-200" aria-expanded={previewPath === f.path}>
                 {f.name.split('/').pop()}
-              </a>
+              </button>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
               {presentationEnabled && meetingId && getPresentationKind(f.name) && (
@@ -167,6 +176,16 @@ export default function FileShare({
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
+          </div>
+          {previewPath === f.path && previewFile && <div className="mt-3 overflow-hidden rounded-lg border border-white/10 bg-black/30 p-2">
+            {previewType?.startsWith('image/') ? <img src={previewUrl} alt={f.name} className="max-h-52 w-full rounded object-contain" /> :
+              previewType?.startsWith('audio/') ? <audio key={previewUrl} src={previewUrl} controls preload="metadata" className="w-full" /> :
+              previewType?.startsWith('video/') ? <video key={previewUrl} src={previewUrl} controls preload="metadata" className="max-h-52 w-full rounded bg-black" /> :
+              previewType === 'application/pdf' ? <iframe src={previewUrl} title={`Preview ${f.name}`} className="h-64 w-full rounded bg-white" /> :
+              officePreviewUrl && getPresentationKind(f.name) ? <iframe src={officePreviewUrl} title={`Preview ${f.name}`} className="h-64 w-full rounded bg-white" /> :
+              <p className="px-2 py-3 text-xs text-zinc-400">Preview is unavailable for this format. Download the file to open it.</p>}
+            <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-sky-300 hover:text-sky-200"><ExternalLink className="h-3 w-3" /> Open or download</a>
+          </div>}
           </li>
         ))}
       </ul>
