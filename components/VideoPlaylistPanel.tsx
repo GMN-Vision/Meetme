@@ -334,7 +334,7 @@ export default function VideoPlaylistPanel({
         </div>
       ) : null}
 
-      <ul className="max-h-[min(22rem,42dvh)] space-y-1.5 overflow-y-auto" aria-label="Video playlist">
+      <ul className="space-y-1.5" aria-label="Video playlist">
         {playlist.items.map((item, index) => {
           const isCurrent = playlist.currentIndex === index;
           return (

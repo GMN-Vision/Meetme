@@ -1,11 +1,12 @@
 "use client"
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Download, Upload, Trash2, FileText, Music2, Video, Image as ImageIcon, Presentation, ExternalLink } from 'lucide-react'
 import FileAllowance, { useFileAllowance } from './FileAllowance'
 import { uploadSharedFile, formatFileBytes } from '@/lib/file-upload-client'
 import { JITSI_PRESENT_EVENT } from '@/lib/jitsi-features'
 import { getPresentationKind, PREVIEW_TYPES, sharedFileExtension } from '@/lib/shared-file-types'
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
+import { FileUpload } from '@/components/ui/file-upload'
 
 export default function FileShare({
   meetingId,
@@ -15,6 +16,7 @@ export default function FileShare({
   className,
   presentationEnabled = false,
   participantKey = '',
+  showHeader = true,
 }: {
   meetingId?: string
   scopeId?: string
@@ -23,6 +25,7 @@ export default function FileShare({
   className?: string
   presentationEnabled?: boolean
   participantKey?: string
+  showHeader?: boolean
 }) {
   const [files, setFiles] = useState<Array<{ name: string; path: string }>>([])
   const [syncNotice, setSyncNotice] = useState('')
@@ -33,7 +36,6 @@ export default function FileShare({
   const [notice, setNotice] = useState('')
   const [loadingList, setLoadingList] = useState(false)
   const [previewPath, setPreviewPath] = useState('')
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const resolvedScopeId = scopeId || meetingId || ''
   const isReady = useMemo(() => Boolean(resolvedScopeId), [resolvedScopeId])
 
@@ -65,10 +67,6 @@ export default function FileShare({
     return () => window.clearInterval(interval)
   }, [resolvedScopeId, scopeType])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) setSelected(e.target.files[0])
-  }
-
   const handleUpload = async () => {
     if (!selected || !resolvedScopeId) {
       console.log('[FileShare] Missing selected or scopeId', { selected, resolvedScopeId })
@@ -85,7 +83,6 @@ export default function FileShare({
     try {
       await uploadSharedFile(selected, resolvedScopeId, setProgress)
       setSelected(null)
-      if (fileInputRef.current) fileInputRef.current.value = ''
       setNotice('File shared with everyone in this room')
       await fetchFiles()
     } catch (err) {
@@ -122,14 +119,14 @@ export default function FileShare({
 
   return (
     <div className={className || 'rounded-3xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 p-5'}>
-      <div className="mb-5 flex items-start justify-between gap-3 border-b border-zinc-700/70 pb-4">
+      {showHeader && <div className="mb-5 flex items-start justify-between gap-3 border-b border-zinc-700/70 pb-4">
         <div className="min-w-0">
           <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-zinc-100"><FileText className="h-5 w-5" /></span>
           <h2 className="text-base font-semibold tracking-tight text-white">{title}</h2>
           <p className="mt-1 text-xs leading-5 text-zinc-400">Files and previews shared in this room.</p>
         </div>
         <span className="shrink-0 rounded-full border border-zinc-700 bg-zinc-950/60 px-2.5 py-1 text-xs text-zinc-300">{loadingList ? 'Syncing...' : `${files.length} files`}</span>
-      </div>
+      </div>}
 
       {notice ? (
         <div className="mb-3 rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-xs text-zinc-300">
@@ -142,9 +139,8 @@ export default function FileShare({
         <FileAllowance allowance={allowance} />
       </details>
       {syncNotice && <p className="mb-3 text-xs text-amber-300" role="status">{syncNotice}</p>}
-      {selected && <p className="mb-2 text-xs text-zinc-400">Selected: {formatFileBytes(selected.size)}</p>}
       <div className="mb-3 flex flex-col gap-2">
-        <input ref={fileInputRef} type="file" disabled={uploading} onChange={handleChange} className="block w-full min-w-0 rounded-xl border border-zinc-700 bg-zinc-950/60 p-2 text-xs text-zinc-300 file:mr-2 file:rounded-lg file:border-0 file:bg-zinc-800 file:px-2 file:py-2 file:text-xs file:font-medium file:text-zinc-100 hover:file:bg-zinc-700" />
+        <FileUpload compact value={selected} disabled={uploading} onChange={files => setSelected(files[0] || null)} />
         <HoverBorderGradient
           onClick={handleUpload}
           disabled={!selected || uploading || !isReady || !allowance.limits || selected.size > allowance.limits.availableFileBytes}
