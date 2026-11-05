@@ -37,6 +37,8 @@ export default function UploadMedia({
   const [files, setFiles] = useState<MediaFile[]>([])
   const [syncNotice, setSyncNotice] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const uploadController = useRef<AbortController | null>(null)
   const [progress, setProgress] = useState(0)
   const allowance = useFileAllowance()
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
@@ -100,6 +102,8 @@ export default function UploadMedia({
     return () => window.clearInterval(interval)
   }, [meetingId])
 
+  useEffect(() => () => uploadController.current?.abort(), [])
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     const file = e.dataTransfer.files?.[0] || null
@@ -121,10 +125,14 @@ export default function UploadMedia({
       pushNotice('You can send up to ' + formatFileBytes(allowance.limits.availableFileBytes) + ' with your current plan and storage')
       return
     }
+    const controller = new AbortController()
+    uploadController.current = controller
     setUploading(true)
+    setCancelling(false)
     setProgress(0)
     try {
-        const body = await uploadSharedFile(file, meetingId, setProgress)
+        const body = await uploadSharedFile(file, meetingId, setProgress, controller.signal)
+        uploadController.current = null
         const uploadedName = file.name
         pushNotice(`Shared media: ${uploadedName}`)
 
@@ -146,12 +154,17 @@ export default function UploadMedia({
           console.log('[UploadMedia] uploaded:', body.path)
         }
     } catch (err) {
-      console.error('[UploadMedia] upload error:', err)
-      pushNotice(err instanceof Error ? err.message : 'Upload error. Try again.')
+      if (controller.signal.aborted && (err as Error)?.name === 'AbortError') pushNotice('Upload cancelled')
+      else {
+        console.error('[UploadMedia] upload error:', err)
+        pushNotice(err instanceof Error ? err.message : 'Upload error. Try again.')
+      }
+    } finally {
+      uploadController.current = null
+      await allowance.refresh()
+      setUploading(false)
+      setCancelling(false)
     }
-
-    await allowance.refresh()
-    setUploading(false)
   }
 
   const handleDelete = async (path: string) => {
@@ -193,7 +206,7 @@ export default function UploadMedia({
 
       <FileAllowance allowance={allowance} />
       {syncNotice && <p className="mb-3 text-xs text-amber-300" role="status">{syncNotice}</p>}
-      {uploading && <p className="mb-3 text-sm text-zinc-300" role="status">Uploading {progress}%</p>}
+      {uploading && <div className="mb-3 flex items-center justify-between gap-3"><p className="text-sm text-zinc-300" role="status">{cancelling ? 'Cancelling upload…' : `Uploading ${progress}%`}</p><button type="button" onClick={() => { setCancelling(true); uploadController.current?.abort() }} disabled={cancelling || !uploadController.current} className="rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-800 disabled:opacity-60">Cancel upload</button></div>}
       <div className="mb-4 space-y-2">
         {notifications.map((notification) => (
           <div
@@ -212,7 +225,7 @@ export default function UploadMedia({
       </div>
 
       <div className="mb-4">
-        <FileUpload onChange={handleFileUpload} />
+        <FileUpload onChange={handleFileUpload} disabled={uploading} />
       </div>
 
       {files.length > 0 ? (

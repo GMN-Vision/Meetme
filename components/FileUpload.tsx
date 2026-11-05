@@ -29,24 +29,28 @@ const secondaryVariant = {
 
 export const FileUpload = ({
   onChange,
+  disabled = false,
 }: {
   onChange?: (files: File[]) => void;
+  disabled?: boolean;
 }) => {
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = (newFiles: File[]) => {
+    if (disabled) return
     setFiles((prevFiles) => [...prevFiles, ...newFiles])
     onChange && onChange(newFiles)
   }
 
   const handleClick = () => {
-    fileInputRef.current?.click()
+    if (!disabled) fileInputRef.current?.click()
   }
 
   const { getRootProps, isDragActive } = useDropzone({
     multiple: false,
     noClick: true,
+    disabled,
     onDrop: handleFileChange,
     onDropRejected: (error) => {
       console.log(error)
@@ -57,13 +61,14 @@ export const FileUpload = ({
     <div className="w-full" {...getRootProps()}>
       <motion.div
         onClick={handleClick}
-        whileHover="animate"
-        className="group/file relative block w-full cursor-pointer overflow-hidden rounded-lg p-10"
+        whileHover={disabled ? undefined : 'animate'}
+        className={cn('group/file relative block w-full overflow-hidden rounded-lg p-10', disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer')}
       >
         <input
           ref={fileInputRef}
           id="file-upload-handle"
           type="file"
+          disabled={disabled}
           onChange={(e) => handleFileChange(Array.from(e.target.files || []))}
           className="hidden"
         />

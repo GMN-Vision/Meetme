@@ -18,7 +18,9 @@ async function uploadResponse(response: Response, fallback: string) {
   return result;
 }
 
-export async function uploadSharedFile(file: File, meetingId: string, progress: (percent: number) => void) {
+export async function uploadSharedFile(file: File, meetingId: string, progress: (percent: number) => void, signal?: AbortSignal) {
+  // Let the reservation request finish so a cancellation can always remove it.
+  if (signal?.aborted) throw new DOMException('Upload cancelled', 'AbortError');
   const start = await fetch('/api/files/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name: file.name, size: file.size, meetingId }) });
   const upload = await uploadResponse(start, 'Unable to start upload');
@@ -28,10 +30,12 @@ export async function uploadSharedFile(file: File, meetingId: string, progress: 
     }
     let chunkBytes = upload.chunkBytes;
     for (let offset = 0; offset < file.size;) {
+      if (signal?.aborted) throw new DOMException('Upload cancelled', 'AbortError');
       const end = Math.min(file.size, offset + chunkBytes);
       const response = await fetch(`/api/files/upload?path=${encodeURIComponent(upload.path)}&offset=${offset}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/octet-stream' },
         body: file.slice(offset, end),
+        signal,
       });
       // A proxy may have a lower request-body limit than the app. A 413 means
       // this request was rejected; retry the same offset with fewer bytes.
@@ -45,11 +49,18 @@ export async function uploadSharedFile(file: File, meetingId: string, progress: 
       offset = result.offset;
       progress(Math.round(result.offset / file.size * 100));
     }
+    if (signal?.aborted) throw new DOMException('Upload cancelled', 'AbortError');
     return upload;
   } catch (error) {
     // Release reserved storage after a cancelled or failed upload.
-    await fetch('/api/files/delete', { method: 'DELETE', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ path: upload.path }) }).catch(() => null);
+    let removed = false;
+    for (let attempt = 0; attempt < 6 && !removed; attempt++) {
+      if (attempt) await new Promise(resolve => setTimeout(resolve, attempt * 100));
+      const response = await fetch('/api/files/delete', { method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: upload.path }) }).catch(() => null);
+      removed = response?.ok || response?.status === 404 || false;
+    }
+    if (!removed) throw new Error('Upload stopped, but its partial file could not be removed. Please try again shortly.');
     throw error;
   }
 }

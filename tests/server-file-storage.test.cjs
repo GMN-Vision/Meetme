@@ -109,6 +109,46 @@ test('client splits files into small requests and cleans up reservations after e
   } finally { global.fetch = originalFetch; }
 });
 
+test('cancelling an active upload stops later chunks and removes the reservation', async t => {
+  const { uploadSharedFile } = load('lib/file-upload-client.ts');
+  const controller = new AbortController();
+  const calls = [];
+  t.mock.method(global, 'fetch', async (_url, init) => {
+    calls.push(init.method);
+    if (init.method === 'POST') return Response.json({ path: 'local/room/cancelled', chunkBytes: 4 });
+    if (init.method === 'DELETE') return Response.json({ ok: true });
+    assert.equal(init.signal, controller.signal);
+    return new Promise((_resolve, reject) => {
+      init.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true });
+    });
+  });
+  const file = new Blob(['0123456789']); file.name = 'video.mp4';
+  const pending = uploadSharedFile(file, 'room', () => {}, controller.signal);
+  while (!calls.includes('PUT')) await new Promise(resolve => setTimeout(resolve, 0));
+  controller.abort();
+  await assert.rejects(pending, error => error.name === 'AbortError');
+  assert.deepEqual(calls, ['POST', 'PUT', 'DELETE']);
+});
+
+test('cancelling while the upload reservation is pending still releases it', async t => {
+  const { uploadSharedFile } = load('lib/file-upload-client.ts');
+  const controller = new AbortController();
+  const calls = [];
+  let finishReservation;
+  t.mock.method(global, 'fetch', async (_url, init) => {
+    calls.push(init.method);
+    if (init.method === 'POST') return new Promise(resolve => { finishReservation = resolve; });
+    if (init.method === 'DELETE') return Response.json({ ok: true });
+    throw new Error('No chunk should start after cancellation');
+  });
+  const file = new Blob(['12345']); file.name = 'notes.pdf';
+  const pending = uploadSharedFile(file, 'room', () => {}, controller.signal);
+  controller.abort();
+  finishReservation(Response.json({ path: 'local/room/pending', chunkBytes: 4 }));
+  await assert.rejects(pending, error => error.name === 'AbortError');
+  assert.deepEqual(calls, ['POST', 'DELETE']);
+});
+
 test('media uploads negotiate proxy request limits without skipping or duplicating bytes', async t => {
   const { uploadSharedFile } = load('lib/file-upload-client.ts');
   const accepted = [], sizes = [], progress = [];

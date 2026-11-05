@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Download, Upload, Trash2, FileText, Music2, Video, Image as ImageIcon, Presentation, ExternalLink } from 'lucide-react'
 import FileAllowance, { useFileAllowance } from './FileAllowance'
 import { uploadSharedFile, formatFileBytes } from '@/lib/file-upload-client'
@@ -31,6 +31,8 @@ export default function FileShare({
   const [syncNotice, setSyncNotice] = useState('')
   const [selected, setSelected] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const uploadController = useRef<AbortController | null>(null)
   const [progress, setProgress] = useState(0)
   const allowance = useFileAllowance()
   const [notice, setNotice] = useState('')
@@ -67,6 +69,8 @@ export default function FileShare({
     return () => window.clearInterval(interval)
   }, [resolvedScopeId, scopeType])
 
+  useEffect(() => () => uploadController.current?.abort(), [])
+
   const handleUpload = async () => {
     if (!selected || !resolvedScopeId) {
       console.log('[FileShare] Missing selected or scopeId', { selected, resolvedScopeId })
@@ -78,19 +82,30 @@ export default function FileShare({
       setNotice('You can send up to ' + formatFileBytes(allowance.limits.availableFileBytes) + ' with your current plan and storage')
       return
     }
+    const controller = new AbortController()
+    uploadController.current = controller
     setUploading(true)
+    setCancelling(false)
     setProgress(0)
     try {
-      await uploadSharedFile(selected, resolvedScopeId, setProgress)
+      await uploadSharedFile(selected, resolvedScopeId, setProgress, controller.signal)
+      uploadController.current = null
       setSelected(null)
       setNotice('File shared with everyone in this room')
       await fetchFiles()
     } catch (err) {
-      console.error('[FileShare] Upload error:', err)
-      setNotice('Upload error: ' + String(err))
+      if (controller.signal.aborted && (err as Error)?.name === 'AbortError') {
+        setNotice('Upload cancelled')
+      } else {
+        console.error('[FileShare] Upload error:', err)
+        setNotice('Upload error: ' + String(err))
+      }
+    } finally {
+      uploadController.current = null
+      await allowance.refresh()
+      setUploading(false)
+      setCancelling(false)
     }
-    await allowance.refresh()
-    setUploading(false)
   }
 
   const handleDelete = async (path: string) => {
@@ -147,8 +162,9 @@ export default function FileShare({
           className="w-full gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Upload className="h-4 w-4" />
-          {uploading ? `Uploading ${progress}%` : 'Share'}
+          {cancelling ? 'Cancelling…' : uploading ? uploadController.current ? `Uploading ${progress}%` : 'Finishing…' : 'Share'}
         </HoverBorderGradient>
+        {uploading && <button type="button" onClick={() => { setCancelling(true); uploadController.current?.abort() }} disabled={cancelling || !uploadController.current} className="min-h-10 rounded-lg border border-zinc-600 px-3 text-sm text-zinc-100 hover:bg-zinc-800 disabled:cursor-wait disabled:opacity-60">{cancelling ? 'Cancelling…' : 'Cancel upload'}</button>}
       </div>
 
       <ul className="space-y-2" aria-label="Shared files">
