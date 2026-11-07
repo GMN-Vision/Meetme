@@ -44,7 +44,7 @@ export default function DocumentationPage() {
           'Whiteboard in the top navigation opens the shared Excalidraw board.',
           'Jitsi native whiteboards and shared documents appear in the meeting menu when their server services are configured.',
           'Files opens the file sharing panel; access may require an active plan.',
-          'Subtitle in the top navigation turns live captions on or off and may require a Pro plan.'
+          'Subtitles in the top navigation turn live captions on or off and may require a Pro plan.'
         ]
       },
       {

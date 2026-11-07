@@ -476,7 +476,7 @@ export function AudioCapture({
         <div
           className={`h-2.5 w-2.5 rounded-full ${ isListening ? 'animate-pulse bg-red-500' : 'bg-zinc-700' }`}
         />
-        <span className={labelClassName}>Subtitle</span>
+        <span className={labelClassName}>Subtitles</span>
       </button>
 
       {error && (

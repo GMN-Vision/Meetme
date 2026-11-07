@@ -42,8 +42,18 @@ export default function JitsiPresentationControls({
     if (!api) return;
     let joinedMeeting = false;
     let meetingClosed = false;
+    let sharingVideo = false;
     const joined = () => { joinedMeeting = true; meetingClosed = false; };
-    const closed = () => { joinedMeeting = false; meetingClosed = true; };
+    const closed = () => { joinedMeeting = false; meetingClosed = true; sharingVideo = false; };
+    const startVideo = (url: string) => {
+      if (sharingVideo) {
+        api.executeCommand('stopShareVideo');
+        sharingVideo = false;
+      }
+      api.executeCommand('startShareVideo', url);
+      sharingVideo = true;
+      api.executeCommand('setTileView', false);
+    };
     const present = (event: Event) => {
       const detail = (event as CustomEvent).detail;
       if (!joinedMeeting || detail?.meetingId !== meetingId || typeof detail?.path !== 'string') return;
@@ -57,9 +67,8 @@ export default function JitsiPresentationControls({
           event.preventDefault();
           return;
         }
-        api.executeCommand('startShareVideo', getSharedVideoUrl(detail.path, window.location.origin));
+        startVideo(getSharedVideoUrl(detail.path, window.location.origin));
         event.preventDefault();
-        api.executeCommand('setTileView', false);
       } catch {
         // The Files panel reports an unhandled request to the participant.
       }
@@ -78,8 +87,7 @@ export default function JitsiPresentationControls({
       const url = normalizeVideoUrl(detail.url);
       if (!url) return;
       try {
-        api.executeCommand('startShareVideo', url);
-        api.executeCommand('setTileView', false);
+        startVideo(url);
         detail.message = 'Video started in the meeting.';
         event.preventDefault();
       } catch {
@@ -91,6 +99,7 @@ export default function JitsiPresentationControls({
       if (meetingClosed || detail?.meetingId !== meetingId) return;
       try {
         api.executeCommand('stopShareVideo');
+        sharingVideo = false;
         event.preventDefault();
       } catch { /* The meeting reports that shared video is unavailable. */ }
     };

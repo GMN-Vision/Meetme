@@ -333,7 +333,7 @@ export function Navbar() {
                     title="Subtitles require Pro"
                   >
                     <LockKeyhole className="h-4 w-4" />
-                    <span className="hidden lg:inline">Subtitle</span>
+                    <span className="hidden lg:inline">Subtitles</span>
                   </button>
                 )}
                 {/* Livestream is temporarily hidden until the server-side streaming setup is ready.

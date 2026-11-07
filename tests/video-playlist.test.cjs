@@ -65,9 +65,10 @@ test('playlist playback uses Jitsi shared video whenever the meeting API is open
   assert.deepEqual(calls[1], ['setTileView', false]);
 
   act(() => listeners.get('videoConferenceJoined')());
-  assert.equal(play('https://youtu.be/dQw4w9WgXcQ'), true);
-  assert.deepEqual(calls[2], ['startShareVideo', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ']);
-  assert.deepEqual(calls[3], ['setTileView', false]);
+  assert.equal(play('https://media.example.com/next.mp4'), true);
+  assert.deepEqual(calls[2], ['stopShareVideo']);
+  assert.deepEqual(calls[3], ['startShareVideo', 'https://media.example.com/next.mp4']);
+  assert.deepEqual(calls[4], ['setTileView', false]);
 
   const stop = new Event(JITSI_PLAYLIST_STOP_EVENT, { cancelable: true });
   stop.detail = { meetingId: 'room' };
@@ -85,11 +86,12 @@ test('playlist playback uses Jitsi shared video whenever the meeting API is open
   assert.equal(listeners.size, 0);
 });
 
-test('the meeting playlist panel adds several links and starts the selected video', async t => {
+test('the meeting playlist panel adds a link and starts the selected video', async t => {
   const previousWindow = global.window;
   const browser = new EventTarget();
   browser.setInterval = () => 1;
   browser.clearInterval = () => {};
+  browser.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
   global.window = browser;
   t.after(() => { global.window = previousWindow; });
   t.mock.method(console, 'error', () => {});
@@ -143,15 +145,14 @@ test('the meeting playlist panel adds several links and starts the selected vide
   });
 
   const input = view.root.findByProps({ id: 'video-playlist-input-room' });
-  act(() => input.props.onChange({ target: { value: 'https://youtu.be/dQw4w9WgXcQ\nhttps://media.example.com/class/intro.mp4' } }));
+  act(() => input.props.onChange({ target: { value: 'https://youtu.be/dQw4w9WgXcQ' } }));
   await act(async () => {
-    view.root.findByProps({ 'aria-label': 'Add videos to the playlist' }).props.onClick();
+    view.root.findByProps({ 'aria-label': 'Add video to the playlist' }).props.onClick();
   });
 
   assert.equal(calls[0].method, 'POST');
   assert.deepEqual(calls[0].body.urls, [
     'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    'https://media.example.com/class/intro.mp4',
   ]);
   assert.equal(calls[0].body.addedBy, 'host@example.com');
 
