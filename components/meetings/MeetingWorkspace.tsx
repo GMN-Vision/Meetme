@@ -3,12 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { FileVideo, Sparkles, Video } from 'lucide-react';
+import { FileVideo, Video } from 'lucide-react';
 
 const navigation = [
   { href: '/meetings', label: 'Meetings', icon: Video },
   { href: '/meetings/recordings', label: 'Recordings', icon: FileVideo },
-  { href: '/meetings/notes', label: 'Meeting notes', icon: Sparkles },
 ];
 
 export function MeetingWorkspace({ children }: { children: React.ReactNode }) {
@@ -54,7 +53,7 @@ export function MeetingWorkspace({ children }: { children: React.ReactNode }) {
         </div>
         <Link href="/pricing" className="mt-1 shrink-0 rounded-full border border-zinc-800 px-3 py-2 text-xs text-zinc-400 transition hover:bg-zinc-800 hover:text-white sm:px-4 sm:text-sm">Manage plan</Link>
       </header>
-      <nav aria-label="Meeting navigation" className="mb-7 grid grid-cols-3 gap-1 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-1.5 sm:mb-8 sm:flex sm:w-fit">
+      <nav aria-label="Meeting navigation" className="mb-7 grid grid-cols-2 gap-1 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-1.5 sm:mb-8 sm:flex sm:w-fit">
         {navigation.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} aria-current={pathname === href ? 'page' : undefined}
             className={`inline-flex min-w-0 flex-col items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2 py-3 text-xs font-medium transition sm:flex-row sm:gap-2 sm:px-5 sm:text-sm ${pathname === href ? 'bg-white text-zinc-950' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>

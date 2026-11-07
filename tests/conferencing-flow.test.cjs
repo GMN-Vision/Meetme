@@ -116,8 +116,9 @@ for (const subscription of [null, { plan: 'pro', active: true }, { plan: 'busine
     assert.equal(requests.filter(r => r.options?.method === 'POST').length, subscription ? 0 : 1);
     assert.equal(tree.root.findByType('main').children[0], 'Meeting content');
     const links = tree.root.findAllByType('a').map(link => link.props.href);
+    assert.ok(links.includes('/meetings'));
     assert.ok(links.includes('/meetings/recordings'));
-    assert.ok(links.includes('/meetings/notes'));
+    assert.ok(!links.includes('/meetings/notes'));
   });
 }
 
