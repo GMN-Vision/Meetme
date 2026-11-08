@@ -82,8 +82,13 @@ test('server uploads reserve quota, enforce ownership and offsets, stream downlo
   assert.equal((await init()).status, 200, 'deletion releases quota');
   // A second writer cannot enter the same workspace reservation section.
   await storage.withStorageLock('quota', async () => {
-    await assert.rejects(storage.withStorageLock('quota', async () => {}), /Another upload/);
+    await assert.rejects(storage.withStorageLock('quota', async () => {}, 0), /Another upload/);
   });
+  // Independent devices reserving space in the same workspace wait their turn.
+  documents.splice(0);
+  const simultaneous = await Promise.all([init(5), init(5)]);
+  assert.deepEqual(simultaneous.map(result => result.status), [200, 200]);
+  assert.equal((await init(3)).status, 402, 'concurrent reservations still enforce the workspace limit');
 });
 
 test('client splits files into small requests and cleans up reservations after errors', async () => {

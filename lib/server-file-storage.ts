@@ -18,15 +18,20 @@ export function diskPath(key: string) {
 
 // Exclusive filesystem locks coordinate quota reservations and writes across Node workers.
 // All application instances must use the same persistent volume.
-export async function withStorageLock<T>(key: string, action: () => Promise<T>): Promise<T> {
+export async function withStorageLock<T>(key: string, action: () => Promise<T>, waitMs = 30_000): Promise<T> {
   const directory = path.join(storageRoot(), '.locks');
   await mkdir(directory, { recursive: true });
   const lockPath = path.join(directory, createHash('sha256').update(key).digest('hex'));
   let lock;
-  try { lock = await open(lockPath, 'wx'); }
-  catch (error: any) {
-    if (error.code === 'EEXIST') throw new Error('Another upload is being processed. Please try again.');
-    throw error;
+  const deadline = Date.now() + waitMs;
+  while (!lock) {
+    try { lock = await open(lockPath, 'wx'); }
+    catch (error: any) {
+      if (error.code !== 'EEXIST') throw error;
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) throw new Error('Another upload is being processed. Please try again.');
+      await new Promise(resolve => setTimeout(resolve, Math.min(100, remaining)));
+    }
   }
   try { return await action(); }
   finally { await lock.close(); await unlink(lockPath); }
@@ -42,7 +47,7 @@ export async function cleanupExpiredUploads() {
         if (!stillExpired) return;
         await unlink(diskPath(file.path)).catch((error) => { if (error.code !== 'ENOENT') throw error; });
         await SharedFile.deleteOne({ _id: file._id, ready: false });
-      });
+      }, 0);
     } catch { /* An active writer owns the lock; retry on the next upload. */ }
   }
 }
