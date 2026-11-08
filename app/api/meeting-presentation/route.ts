@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import { verifyActiveMeetingDocumentToken } from '@/lib/meeting-document-access';
-import { resolveOnlyOfficeFile, ONLYOFFICE_EXTENSIONS } from '@/lib/onlyoffice-server';
+import { resolveSharedPresentationFile } from '@/lib/onlyoffice-server';
+import { getPresentationKind } from '@/lib/shared-file-types';
 import Meeting from '@/models/Meeting';
 
 export const runtime = 'nodejs';
@@ -44,9 +45,10 @@ export async function POST(request: Request) {
       if (typeof body.path !== 'string' || !body.path) {
         return NextResponse.json({ error: 'A shared file is required.' }, { status: 400 });
       }
-      const file = await resolveOnlyOfficeFile(body.path, meetingId);
-      if (!ONLYOFFICE_EXTENSIONS.has(file.extension)) {
-        return NextResponse.json({ error: 'Unsupported document type.' }, { status: 415 });
+      const file = await resolveSharedPresentationFile(body.path, meetingId);
+      const kind = getPresentationKind(file.name);
+      if (!kind || kind === 'media') {
+        return NextResponse.json({ error: 'This file cannot be presented in the document viewer.' }, { status: 415 });
       }
       presentation = { path: file.path, name: file.name, updatedAt: new Date() };
     }

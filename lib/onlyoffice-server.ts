@@ -112,7 +112,7 @@ export function signOnlyOfficeConfig(config: Record<string, any>) {
   return `${message}.${signature}`;
 }
 
-export async function resolveOnlyOfficeFile(
+export async function resolveSharedPresentationFile(
   key: string,
   meetingId: string,
 ): Promise<OnlyOfficeFile> {
@@ -160,10 +160,6 @@ export async function resolveOnlyOfficeFile(
 
     const extension = sharedFileExtension(file.name);
 
-    if (!ONLYOFFICE_EXTENSIONS.has(extension)) {
-      throw new Error('This file type is not supported by the document viewer.');
-    }
-
     return {
       path: key,
       meetingId,
@@ -186,10 +182,6 @@ export async function resolveOnlyOfficeFile(
   const name = path.posix.basename(key);
   const extension = sharedFileExtension(name);
 
-  if (!name || !ONLYOFFICE_EXTENSIONS.has(extension)) {
-    throw new Error('This file type is not supported by the document viewer.');
-  }
-
   return {
     path: key,
     meetingId,
@@ -199,6 +191,14 @@ export async function resolveOnlyOfficeFile(
     modifiedAt: null,
     storage: 'supabase',
   };
+}
+
+export async function resolveOnlyOfficeFile(key: string, meetingId: string) {
+  const file = await resolveSharedPresentationFile(key, meetingId);
+  if (!ONLYOFFICE_EXTENSIONS.has(file.extension)) {
+    throw new Error('This file type is not supported by the document viewer.');
+  }
+  return file;
 }
 
 export async function openOnlyOfficeFile(file: OnlyOfficeFile) {
