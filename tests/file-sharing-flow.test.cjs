@@ -165,6 +165,8 @@ test('multi-chunk upload becomes visible in another participant view and downloa
     ['slides.ppt', 'application/vnd.ms-powerpoint', 'application/octet-stream'],
     ['slides.PPTX', '', 'application/octet-stream'],
     ['notes.docx', '', 'application/octet-stream'],
+    ['local-page.html', 'text/html', 'application/octet-stream'],
+    ['local-page.HTM', '', 'application/octet-stream'],
     ['files.zip', 'application/zip', 'application/octet-stream'],
   ]) {
     const content = randomBytes(1031);
@@ -174,6 +176,7 @@ test('multi-chunk upload becomes visible in another participant view and downloa
     const response = await participantFetch(`/api/files/download?path=${encodeURIComponent(uploadPath)}&preview=1`);
     assert.equal(response.status, 200, name);
     assert.equal(response.headers.get('content-type'), previewType, name);
+    if (/\.html?$/i.test(name)) assert.match(response.headers.get('content-disposition'), /^attachment;/, `${name} downloads safely`);
     assert.deepEqual(Buffer.from(await response.arrayBuffer()), content, `${name} retains all bytes`);
   }
 });

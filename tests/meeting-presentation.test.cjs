@@ -33,6 +33,8 @@ test('joined participants can present a validated document in the room and stop 
   assert.equal((await post('files/photo.JPG')).status, 200);
   assert.equal((await (await route.GET(new Request('https://app.example/api/meeting-presentation?meetingId=room', { headers }))).json()).presentation.name, 'photo.JPG');
   assert.equal((await post('files/photo.jpeg')).status, 200);
+  assert.equal((await post('files/local-page.html')).status, 200);
+  assert.equal((await post('files/local-page.HTM')).status, 200);
   assert.equal((await post('files/audio.mp3')).status, 415);
   assert.equal((await post('files/virus.exe')).status, 415);
   assert.equal((await post(null)).status, 200);
