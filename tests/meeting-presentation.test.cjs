@@ -9,7 +9,8 @@ test('joined participants can present a validated document in the room and stop 
     '@/lib/db': async () => {},
     '@/lib/meeting-document-access': {
       verifyActiveMeetingDocumentToken: async (token, meetingId) => {
-        if (token !== 'valid' || meetingId !== 'room') throw new Error('Access denied');
+        if (!['valid', 'viewer'].includes(token) || meetingId !== 'room') throw new Error('Access denied');
+        return { meetingId, participantKey: token === 'valid' ? 'participant:presenter' : 'participant:viewer' };
       },
     },
     '@/lib/onlyoffice-server': {
@@ -30,6 +31,12 @@ test('joined participants can present a validated document in the room and stop 
   assert.equal((await post('files/Slides.pptx')).status, 200);
   const view = await route.GET(new Request('https://app.example/api/meeting-presentation?meetingId=room', { headers }));
   assert.equal((await view.json()).presentation.path, 'files/Slides.pptx');
+  const presenterView = (await (await route.GET(new Request('https://app.example/api/meeting-presentation?meetingId=room', { headers }))).json()).presentation;
+  assert.equal(presenterView.isPresenter, true);
+  assert.equal('presenterKey' in presenterView, false, 'the presenter participant key stays on the server');
+  const attendeeView = (await (await route.GET(new Request('https://app.example/api/meeting-presentation?meetingId=room', { headers: { Authorization: 'Bearer viewer' } }))).json()).presentation;
+  assert.equal(attendeeView.isPresenter, false);
+  assert.equal('note' in sharedPresentation, false, 'speech notes never enter meeting state');
   assert.equal((await post('files/photo.JPG')).status, 200);
   assert.equal((await (await route.GET(new Request('https://app.example/api/meeting-presentation?meetingId=room', { headers }))).json()).presentation.name, 'photo.JPG');
   assert.equal((await post('files/photo.jpeg')).status, 200);

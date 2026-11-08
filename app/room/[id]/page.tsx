@@ -16,6 +16,7 @@ import JitsiPresentationControls from '@/components/JitsiPresentationControls';
 import VideoPlaylistPanel from '@/components/VideoPlaylistPanel';
 import FileShare from '@/components/FileShare';
 import SharedFileNotifications from '@/components/SharedFileNotifications';
+import PresenterNotes, { SPEECH_NOTE_PATH } from '@/components/PresenterNotes';
 import { Files, ListVideo } from 'lucide-react';
 import { useRecording } from '@/hooks/useRecording';
 
@@ -68,7 +69,7 @@ export default function RoomPage() {
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
   const [isFilesOpen, setIsFilesOpen] = useState(false);
   const [unreadFiles, setUnreadFiles] = useState(0);
-  const [sharedPresentation, setSharedPresentation] = useState<{ path: string; name: string; updatedAt: string } | null>(null);
+  const [sharedPresentation, setSharedPresentation] = useState<{ path: string; name: string; isPresenter: boolean; updatedAt: string } | null>(null);
   const [presentationError, setPresentationError] = useState('');
   const apiRef = useRef<any>(null);
   const [jitsiApi, setJitsiApi] = useState<any>(null);
@@ -853,7 +854,7 @@ export default function RoomPage() {
           <button type="button" onClick={() => { if (!isFilesOpen) window.dispatchEvent(new Event('room:open-files')); setIsFilesOpen(open => !open); setIsPlaylistOpen(false); }} aria-expanded={isFilesOpen} aria-controls="room-shared-files" className={`button-secondary relative min-w-0 gap-2 px-2 text-xs ${isFilesOpen ? 'border-zinc-500 bg-zinc-800 text-white' : 'border-zinc-700 bg-zinc-900/75'}`}><Files className="h-4 w-4 shrink-0" /> Shared files{unreadFiles > 0 && !isFilesOpen && <span aria-label={`${unreadFiles} unread shared files`} className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-400" />}</button>
         </div>
         <aside id="room-shared-files" aria-label="Shared files sidebar" className={`${isFilesOpen ? 'block' : 'hidden'} order-4 min-w-0 xl:order-none xl:block`}>
-          <FileShare meetingId={meetingId} presentationEnabled participantKey={participantKey} title="Shared files" showHeader={false} className="room-glass-panel xl:min-h-[clamp(24rem,68dvh,40rem)]" />
+          <FileShare meetingId={meetingId} presentationEnabled participantKey={participantKey} noteOwner={userEmail || guestName} title="Shared files" showHeader={false} className="room-glass-panel xl:min-h-[clamp(24rem,68dvh,40rem)]" />
         </aside>
       </div>
       {presentationError && <p role="alert" className="mx-auto mb-3 max-w-5xl rounded-lg border border-rose-500/40 bg-rose-950 px-4 py-2 text-sm text-rose-100">{presentationError}</p>}
@@ -864,6 +865,7 @@ export default function RoomPage() {
             <button type="button" onClick={() => { void updatePresentation(null).catch(error => setPresentationError(error.message)); }} className="shrink-0 rounded-lg bg-zinc-800 px-3 py-1.5 hover:bg-zinc-700">Stop presenting</button>
           </div>
           <iframe key={`${sharedPresentation.path}:${sharedPresentation.updatedAt}`} title={`Shared presentation: ${sharedPresentation.name}`} src={presentationUrl} className="h-[min(70dvh,46rem)] min-h-[28rem] w-full border-0 bg-white" />
+          {sharedPresentation.isPresenter && <PresenterNotes meetingId={meetingId} filePath={SPEECH_NOTE_PATH} owner={userEmail || guestName} />}
         </section>
       )}
     </div>

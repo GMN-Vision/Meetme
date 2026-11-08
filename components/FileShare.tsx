@@ -7,6 +7,7 @@ import { JITSI_PRESENT_EVENT } from '@/lib/jitsi-features'
 import { getPresentationKind, PREVIEW_TYPES, sharedFileExtension } from '@/lib/shared-file-types'
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
 import { FileUpload } from '@/components/ui/file-upload'
+import PresenterNotes, { SPEECH_NOTE_PATH } from './PresenterNotes'
 
 export default function FileShare({
   meetingId,
@@ -16,6 +17,7 @@ export default function FileShare({
   className,
   presentationEnabled = false,
   participantKey = '',
+  noteOwner = '',
   showHeader = true,
 }: {
   meetingId?: string
@@ -25,6 +27,7 @@ export default function FileShare({
   className?: string
   presentationEnabled?: boolean
   participantKey?: string
+  noteOwner?: string
   showHeader?: boolean
 }) {
   const [files, setFiles] = useState<Array<{ name: string; path: string }>>([])
@@ -38,6 +41,7 @@ export default function FileShare({
   const [notice, setNotice] = useState('')
   const [loadingList, setLoadingList] = useState(false)
   const [previewPath, setPreviewPath] = useState('')
+  const [showSpeechNote, setShowSpeechNote] = useState(false)
   const resolvedScopeId = scopeId || meetingId || ''
   const isReady = useMemo(() => Boolean(resolvedScopeId), [resolvedScopeId])
 
@@ -164,6 +168,8 @@ export default function FileShare({
           <Upload className="h-4 w-4" />
           {cancelling ? 'Cancelling…' : uploading ? uploadController.current ? `Uploading ${progress}%` : 'Finishing…' : 'Share'}
         </HoverBorderGradient>
+        {presentationEnabled && meetingId && noteOwner && <button type="button" onClick={() => setShowSpeechNote(open => !open)} aria-expanded={showSpeechNote} aria-controls="room-speech-note" className="min-h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm font-medium text-zinc-100 transition hover:bg-zinc-800">Speech Note</button>}
+        {showSpeechNote && presentationEnabled && meetingId && noteOwner && <div id="room-speech-note" className="overflow-hidden rounded-lg border border-zinc-700"><PresenterNotes meetingId={meetingId} filePath={SPEECH_NOTE_PATH} owner={noteOwner} /></div>}
         {uploading && <button type="button" onClick={() => { setCancelling(true); uploadController.current?.abort() }} disabled={cancelling || !uploadController.current} className="min-h-10 rounded-lg border border-zinc-600 px-3 text-sm text-zinc-100 hover:bg-zinc-800 disabled:cursor-wait disabled:opacity-60">{cancelling ? 'Cancelling…' : 'Cancel upload'}</button>}
       </div>
 
