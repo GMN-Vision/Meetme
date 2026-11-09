@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { IconUpload } from '@tabler/icons-react'
 import { useDropzone } from 'react-dropzone'
@@ -28,6 +28,23 @@ export function FileUpload({ onChange, value, disabled = false, compact = false 
   const reduceMotion = useReducedMotion()
   const canHover = useHoverCapable()
   const files = value === undefined ? localFiles : value ? [value] : []
+  const previewFile = files[0]
+  const [previewUrl, setPreviewUrl] = useState('')
+
+  useEffect(() => {
+    if (!previewFile) {
+      setPreviewUrl('')
+      return
+    }
+    const url = URL.createObjectURL(previewFile)
+    setPreviewUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [previewFile])
+
+  const extension = previewFile?.name.split('.').pop()?.toLowerCase() || ''
+  const isImage = Boolean(previewFile && (previewFile.type.startsWith('image/') || /^(png|jpe?g|gif|webp|avif)$/.test(extension)))
+  const isVideo = Boolean(previewFile && (previewFile.type.startsWith('video/') || /^(mp4|webm|ogv|ogg)$/.test(extension)))
+  const isPdf = Boolean(previewFile && (previewFile.type === 'application/pdf' || extension === 'pdf'))
 
   const handleFiles = (newFiles: File[]) => {
     if (disabled || !newFiles.length) return
@@ -72,6 +89,27 @@ export function FileUpload({ onChange, value, disabled = false, compact = false 
           Drag or drop your file here or click to upload
         </p>
         <div className={cn('relative mx-auto w-full max-w-xl', compact ? 'mt-5' : 'mt-10')}>
+          <motion.div
+            variants={mainVariant}
+            transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 20 }}
+            className={cn('relative z-40 mx-auto flex w-full max-w-[8rem] items-center justify-center overflow-hidden rounded-md bg-white text-neutral-600 shadow-[0px_10px_50px_rgba(0,0,0,0.1)] dark:bg-neutral-900 dark:text-neutral-300', compact ? 'h-20' : 'h-32')}
+          >
+            {previewUrl && isImage ? (
+              // Local object URLs let the user inspect the file before uploading it.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={previewUrl} alt={`Preview of ${previewFile?.name}`} className="h-full w-full object-contain" />
+            ) : previewUrl && isVideo ? (
+              <video src={previewUrl} muted playsInline preload="metadata" aria-label={`Preview of ${previewFile?.name}`} className="h-full w-full object-contain" />
+            ) : previewUrl && isPdf ? (
+              <iframe src={`${previewUrl}#toolbar=0&navpanes=0`} title={`Preview of ${previewFile?.name}`} tabIndex={-1} className="pointer-events-none h-full w-full border-0 bg-white" />
+            ) : previewFile ? (
+              <span className="max-w-full truncate px-2 text-xs font-semibold uppercase">{extension || 'File'}</span>
+            ) : isDragActive ? (
+              <span className="flex flex-col items-center text-xs">Drop it<IconUpload className="h-4 w-4" /></span>
+            ) : (
+              <IconUpload className="h-4 w-4" />
+            )}
+          </motion.div>
           {files.map((file, index) => <motion.div
             key={`${file.name}-${file.lastModified}-${index}`}
             layoutId={index === 0 ? 'file-upload' : `file-upload-${index}`}
@@ -86,14 +124,6 @@ export function FileUpload({ onChange, value, disabled = false, compact = false 
               <motion.p initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} layout={!reduceMotion}>modified {new Date(file.lastModified).toLocaleDateString()}</motion.p>
             </div>
           </motion.div>)}
-          {!files.length && <motion.div
-            layoutId="file-upload"
-            variants={mainVariant}
-            transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 20 }}
-            className={cn('relative z-40 mx-auto mt-4 flex w-full max-w-[8rem] items-center justify-center rounded-md bg-white shadow-[0px_10px_50px_rgba(0,0,0,0.1)] dark:bg-neutral-900', compact ? 'h-20' : 'h-32')}
-          >
-            {isDragActive ? <motion.p initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center text-neutral-600">Drop it<IconUpload className="h-4 w-4 text-neutral-600 dark:text-neutral-400" /></motion.p> : <IconUpload className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />}
-          </motion.div>}
           {!files.length && <motion.div variants={secondaryVariant} className={cn('absolute inset-0 z-30 mx-auto mt-4 flex w-full max-w-[8rem] items-center justify-center rounded-md border border-dashed border-zinc-500 bg-transparent opacity-0', compact ? 'h-20' : 'h-32')} />}
         </div>
       </div>

@@ -20,7 +20,7 @@ import {
   JITSI_PLAYLIST_PLAY_EVENT,
   JITSI_PLAYLIST_STOP_EVENT,
 } from '@/lib/jitsi-features';
-import { normalizeVideoUrl } from '@/lib/video-playlist';
+import { isYouTubeVideoUrl, normalizeVideoUrl } from '@/lib/video-playlist';
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
 import { GridPattern } from '@/components/ui/file-upload';
 import { useHoverCapable } from '@/hooks/useHoverCapable';
@@ -339,6 +339,7 @@ export default function VideoPlaylistPanel({
       <ul className="space-y-1.5" aria-label="Video playlist">
         {playlist.items.map((item, index) => {
           const isCurrent = playlist.currentIndex === index;
+          const youtubeId = isYouTubeVideoUrl(item.url) ? new URL(item.url).searchParams.get('v') : null;
           return (
             <li
               key={item.id}
@@ -360,7 +361,16 @@ export default function VideoPlaylistPanel({
               </button>
 
               <div className="min-w-0 flex-1">
-                <p className="break-words text-sm text-zinc-100">{itemLabel(item)}</p>
+                <div className="aspect-video w-full overflow-hidden rounded-lg bg-zinc-900">
+                  {youtubeId ? (
+                    // Each playlist entry previews its own YouTube video.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img loading="lazy" src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} alt={`Preview of ${itemLabel(item)}`} className="h-full w-full object-cover" />
+                  ) : (
+                    <video src={`${item.url}#t=0.1`} muted playsInline preload="metadata" aria-label={`Preview of ${itemLabel(item)}`} className="h-full w-full object-cover" />
+                  )}
+                </div>
+                <p className="mt-1.5 break-words text-sm text-zinc-100">{itemLabel(item)}</p>
                 <p className="mt-0.5 truncate text-[11px] text-zinc-500" title={item.url}>{item.url}</p>
               </div>
 
