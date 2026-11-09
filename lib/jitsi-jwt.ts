@@ -23,6 +23,7 @@ export function createJitsiJwt(params: {
   issuer?: string;
   ttlSeconds?: number;
   moderator?: boolean;
+  features?: Record<string, boolean>;
 }) {
   const {
     roomName,
@@ -32,6 +33,7 @@ export function createJitsiJwt(params: {
     issuer = 'melanam',
     ttlSeconds = 4 * 60 * 60,
     moderator = true,
+    features,
   } = params;
 
   const now = Math.floor(Date.now() / 1000);
@@ -49,6 +51,7 @@ export function createJitsiJwt(params: {
         name: user.name,
         email: user.email,
       },
+      features,
     },
     moderator,
   };

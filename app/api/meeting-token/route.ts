@@ -74,6 +74,7 @@ export async function GET(req: NextRequest) {
       // transport recovery. Access heartbeats still enforce the plan limit.
       ttlSeconds: remainingSeconds + 5 * 60,
       moderator: Boolean(userEmail) && (userEmail === meeting.hostEmail || userEmail === meeting.hostId),
+      features: { 'file-upload': true },
     });
 
     return NextResponse.json(
