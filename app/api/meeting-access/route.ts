@@ -8,7 +8,6 @@ import { isMeetingHost } from '@/lib/recording-policy';
 import { getWorkspaceQuota } from '@/lib/workspace-usage';
 import { signMeetingDocumentAccessToken } from '@/lib/meeting-document-access';
 import { signMeetingApprovalToken } from '@/lib/meeting-approval-access';
-import { stopServerRecording } from '@/lib/server-recording';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,17 +41,6 @@ export async function POST(request: NextRequest) {
 
     if (action === 'leave') {
       await MeetingParticipant.deleteOne({ meetingId, participantKey });
-      if (isMeetingHost(meeting, email)) {
-        // The host owns the server recorder. Ending admission before requesting
-        // the stop keeps a browser close from leaving an active capture behind.
-        await Meeting.updateOne({ meetingId, endedAt: null }, { $set: { endedAt: new Date(), activeSessionEndsAt: new Date() } });
-        try {
-          await stopServerRecording(meetingId);
-        } catch (error) {
-          // The worker stores stop intent and retries it after transient outages.
-          console.warn('[meeting-access] Recording stop pending', { meetingId, error });
-        }
-      }
       return NextResponse.json({ success: true });
     }
 

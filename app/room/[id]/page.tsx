@@ -75,6 +75,10 @@ export default function RoomPage() {
   const [unreadFiles, setUnreadFiles] = useState(0);
   const [sharedPresentation, setSharedPresentation] = useState<{ path: string; name: string; isPresenter: boolean; updatedAt: string } | null>(null);
   const [presentationError, setPresentationError] = useState('');
+  const [showExitOptions, setShowExitOptions] = useState(false);
+  const [endingForAll, setEndingForAll] = useState(false);
+  const [exitError, setExitError] = useState('');
+  const endForAllRef = useRef(false);
   const apiRef = useRef<any>(null);
   const [jitsiApi, setJitsiApi] = useState<any>(null);
   const videoStageRef = useRef<HTMLDivElement | null>(null);
@@ -94,22 +98,16 @@ export default function RoomPage() {
   const fallbackRoute = session?.user?.email ? '/meetings' : '/';
   const isMeetingHost = Boolean(userEmail && meeting?.hostEmail?.toLowerCase() === userEmail.toLowerCase());
 
-  const endMeetingForHost = useCallback(async (keepalive = false) => {
-    if (!isMeetingHost) return;
-    const body = JSON.stringify({ meetingId });
-    try {
-      if (keepalive && typeof navigator !== 'undefined' && navigator.sendBeacon) {
-        const sent = navigator.sendBeacon('/api/meeting-end', new Blob([body], { type: 'application/json' }));
-        if (sent) return;
-      }
-      await fetch('/api/meeting-end', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
-        keepalive,
-      });
-    } catch (error) {
-      console.warn('[meeting] recording stop request failed', error);
+  const endMeetingForHost = useCallback(async () => {
+    if (!isMeetingHost) throw new Error('Only the host can end the meeting for everyone.');
+    const response = await fetch('/api/meeting-end', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ meetingId }),
+    });
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({}));
+      throw new Error(result.error || 'Could not end the meeting. Please try again.');
     }
   }, [isMeetingHost, meetingId]);
 
@@ -314,7 +312,6 @@ export default function RoomPage() {
       } catch {
         // The server-side participant expiry remains authoritative.
       }
-      void endMeetingForHost(true);
       void fetch('/api/meeting-access', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -333,7 +330,7 @@ export default function RoomPage() {
       window.removeEventListener('pagehide', leave);
       leave();
     };
-  }, [accessGranted, endMeetingForHost, meetingId, participantKey]);
+  }, [accessGranted, meetingId, participantKey]);
 
   useEffect(() => {
     if (!sessionEndsAt) return;
@@ -514,7 +511,10 @@ export default function RoomPage() {
   );
 
   const handleMeetingReadyToClose = useCallback(async () => {
-    await endMeetingForHost();
+    if (!endForAllRef.current) {
+      router.push(fallbackRoute);
+      return;
+    }
     try {
       const { resolveMeetingAiHttpUrl } = await import('../../../lib/meeting-ai-client');
       const baseUrl = resolveMeetingAiHttpUrl();
@@ -546,7 +546,7 @@ export default function RoomPage() {
       await persistAIResults(undefined, { generateSummary: true });
       router.push(fallbackRoute);
     }
-  }, [endMeetingForHost, fallbackRoute, meetingId, persistAIResults, router]);
+  }, [fallbackRoute, meetingId, persistAIResults, router]);
 
   // Open AI results panel when caption overlay dispatches event
   useEffect(() => {
@@ -653,8 +653,29 @@ export default function RoomPage() {
   }, [canStop, meetingId, recordingLoading, recordingStatus, startRecording, stopRecording]);
 
   const handleHangupRequested = useCallback(() => {
-    apiRef.current?.executeCommand?.('hangup');
-  }, []);
+    if (isMeetingHost) {
+      setExitError('');
+      setShowExitOptions(true);
+    } else {
+      apiRef.current?.executeCommand?.('hangup');
+    }
+  }, [isMeetingHost]);
+
+  const handleEndForAll = useCallback(async () => {
+    if (endingForAll) return;
+    setEndingForAll(true);
+    setExitError('');
+    try {
+      await endMeetingForHost();
+      endForAllRef.current = true;
+      setShowExitOptions(false);
+      apiRef.current?.executeCommand?.('hangup');
+    } catch (error) {
+      setExitError(error instanceof Error ? error.message : 'Could not end the meeting. Please try again.');
+    } finally {
+      setEndingForAll(false);
+    }
+  }, [endMeetingForHost, endingForAll]);
 
   const handleScreenRequested = useCallback(async () => {
     try {
@@ -788,7 +809,19 @@ export default function RoomPage() {
         onScreenRequested={handleScreenRequested}
       />
       <SharedFileNotifications meetingId={meetingId} onUnreadChange={setUnreadFiles} />
-      {isMeetingHost && <div className="mb-3 flex justify-end"><button type="button" onClick={() => { void endMeetingForHost().then(() => apiRef.current?.executeCommand?.('hangup')); }} className="rounded-lg border border-rose-400/40 bg-rose-950/50 px-3 py-2 text-xs font-semibold text-rose-100 hover:bg-rose-900/70">End meeting for all</button></div>}
+      {showExitOptions && isMeetingHost && <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 p-4" onMouseDown={event => { if (event.target === event.currentTarget && !endingForAll) setShowExitOptions(false); }}>
+        <div role="dialog" aria-modal="true" aria-labelledby="meeting-exit-title" className="w-full max-w-sm rounded-2xl border border-zinc-700 bg-zinc-950 p-5 shadow-2xl">
+          <h2 id="meeting-exit-title" className="text-lg font-semibold text-white">Leave this meeting?</h2>
+          <p className="mt-2 text-sm text-zinc-400">You can leave while everyone else stays, or end the meeting for all participants.</p>
+          {isRecording && <p className="mt-2 text-xs text-amber-300">The active recording continues if you leave the meeting open.</p>}
+          {exitError && <p role="alert" className="mt-3 text-sm text-rose-300">{exitError}</p>}
+          <div className="mt-5 grid gap-2">
+            <button type="button" autoFocus disabled={endingForAll} onClick={() => { setShowExitOptions(false); apiRef.current?.executeCommand?.('hangup'); }} className="rounded-lg border border-zinc-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50">Leave meeting</button>
+            <button type="button" disabled={endingForAll} onClick={() => void handleEndForAll()} className="rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-50">{endingForAll ? 'Ending meeting…' : 'End meeting for all'}</button>
+            <button type="button" disabled={endingForAll} onClick={() => setShowExitOptions(false)} className="rounded-lg px-4 py-2 text-sm text-zinc-400 hover:text-white disabled:opacity-50">Cancel</button>
+          </div>
+        </div>
+      </div>}
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,19rem)_minmax(0,1fr)_minmax(0,19rem)]">
         <aside id="room-video-playlist" aria-label="Video playlist sidebar" className={`${isPlaylistOpen ? 'block' : 'hidden'} order-3 min-w-0 xl:order-none xl:block`}>
           <VideoPlaylistPanel meetingId={meetingId} addedBy={userEmail || guestName} isHost={isMeetingHost} className="room-glass-panel room-side-scroll" onClose={() => setIsPlaylistOpen(false)} />

@@ -103,12 +103,30 @@ test('leaving releases only that tab and invalid actions cannot change presence'
   assert.equal(room.recordingStops(), 0);
 });
 
-test('the host leaving ends the meeting and requests a recording stop', async () => {
+test('the host can leave without ending the meeting for everyone', async () => {
   const room = accessRoute();
   await room.request('host-tab', 'join');
   await room.request('host-tab', 'leave');
-  assert.ok(room.meeting.endedAt instanceof Date);
-  assert.equal(room.recordingStops(), 1);
+  assert.equal(room.meeting.endedAt, undefined);
+  assert.equal(room.recordingStops(), 0);
+});
+
+test('end meeting for all closes admission even if recording stop is pending', async t => {
+  t.mock.method(console, 'warn', () => {});
+  let update;
+  const route = load('app/api/meeting-end/route.ts', {
+    '@/models/Meeting': { updateOne: async (_query, change) => { update = change.$set; } },
+    '@/lib/server-recording': {
+      recordingUser: async () => 'host@example.com',
+      hostMeeting: async () => ({ hostEmail: 'host@example.com' }),
+      stopServerRecording: async () => { throw new Error('recorder unavailable'); },
+      recordingErrorResponse: error => Response.json({ error: error.message }, { status: 500 }),
+    },
+  });
+  const response = await route.POST({ json: async () => ({ meetingId: 'room' }) });
+  assert.equal(response.status, 200);
+  assert.ok(update.endedAt instanceof Date);
+  assert.ok(update.activeSessionEndsAt instanceof Date);
 });
 
 test('only the host starts the room, and ended rooms cannot reopen', async () => {

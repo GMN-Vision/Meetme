@@ -8,7 +8,12 @@ export async function POST(request: NextRequest) {
     await hostMeeting(meetingId, email);
     // Close admission first; retries still attempt to stop a pending recording.
     await Meeting.updateOne({ meetingId, endedAt: null }, { $set: { endedAt: new Date(), activeSessionEndsAt: new Date(), sharedPresentation: null } });
-    await stopServerRecording(meetingId);
+    try {
+      await stopServerRecording(meetingId);
+    } catch (error) {
+      // The room is already ended. Recording stop can be retried separately.
+      console.warn('[meeting-end] Recording stop pending', { meetingId, error });
+    }
     return NextResponse.json({ success: true });
   } catch (error) { return recordingErrorResponse(error); }
 }
