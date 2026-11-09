@@ -7,7 +7,7 @@ import {
   JITSI_HANGUP_BUTTON,
   JITSI_PRESENT_EVENT,
   JITSI_RECORDING_BUTTON,
-  JITSI_SCREEN_PRESENT_EVENT,
+  JITSI_SCREEN_SHARE_BUTTON,
   JITSI_SHARED_VIDEO_BUTTON,
   getSharedVideoUrl,
 } from '@/lib/jitsi-features';
@@ -25,7 +25,8 @@ interface Props {
   /** Leave through the app so the host can finish the meeting safely. */
   onHangupRequested?: () => void;
   /** Publish a document to the in-room viewer. */
-  onDocumentRequested?: (path: string) => Promise<void>;
+  onDocumentRequested?: (path: string, approvalId?: string) => Promise<void>;
+  onScreenRequested?: () => void;
 }
 
 /** Connect uploads to Jitsi's native stage without adding another toolbar. */
@@ -37,6 +38,7 @@ export default function JitsiPresentationControls({
   onRecordingRequested,
   onHangupRequested,
   onDocumentRequested,
+  onScreenRequested,
 }: Props) {
   useEffect(() => {
     if (!api) return;
@@ -62,7 +64,7 @@ export default function JitsiPresentationControls({
         if (!kind) return;
         if (kind !== 'media') {
           if (!onDocumentRequested) return;
-          void onDocumentRequested(detail.path);
+          void onDocumentRequested(detail.path, detail.approvalId);
           detail.message = 'Opening the document in the meeting for everyone.';
           event.preventDefault();
           return;
@@ -72,14 +74,6 @@ export default function JitsiPresentationControls({
       } catch {
         // The Files panel reports an unhandled request to the participant.
       }
-    };
-    const shareScreen = (event: Event) => {
-      if (!joinedMeeting || (event as CustomEvent).detail?.meetingId !== meetingId) return;
-      try {
-        api.executeCommand('setTileView', false);
-        api.executeCommand('toggleShareScreen', { enable: true });
-        event.preventDefault();
-      } catch { /* The viewer reports that the meeting is unavailable. */ }
     };
     const playPlaylistVideo = (event: Event) => {
       const detail = (event as CustomEvent).detail;
@@ -110,12 +104,12 @@ export default function JitsiPresentationControls({
       if (key === JITSI_SHARED_VIDEO_BUTTON) onPlaylistRequested?.();
       if (key === JITSI_RECORDING_BUTTON) onRecordingRequested?.();
       if (key === JITSI_HANGUP_BUTTON) onHangupRequested?.();
+      if (key === JITSI_SCREEN_SHARE_BUTTON) onScreenRequested?.();
     };
     api.addEventListener('videoConferenceJoined', joined);
     api.addEventListener('readyToClose', closed);
     api.addEventListener('toolbarButtonClicked', toolbarButtonClicked);
     window.addEventListener(JITSI_PRESENT_EVENT, present);
-    window.addEventListener(JITSI_SCREEN_PRESENT_EVENT, shareScreen);
     window.addEventListener(JITSI_PLAYLIST_PLAY_EVENT, playPlaylistVideo);
     window.addEventListener(JITSI_PLAYLIST_STOP_EVENT, stopPlaylistVideo);
     return () => {
@@ -123,11 +117,10 @@ export default function JitsiPresentationControls({
       api.removeListener?.('readyToClose', closed);
       api.removeListener?.('toolbarButtonClicked', toolbarButtonClicked);
       window.removeEventListener(JITSI_PRESENT_EVENT, present);
-      window.removeEventListener(JITSI_SCREEN_PRESENT_EVENT, shareScreen);
       window.removeEventListener(JITSI_PLAYLIST_PLAY_EVENT, playPlaylistVideo);
       window.removeEventListener(JITSI_PLAYLIST_STOP_EVENT, stopPlaylistVideo);
     };
-  }, [api, meetingId, participantKey, onPlaylistRequested, onRecordingRequested, onHangupRequested, onDocumentRequested]);
+  }, [api, meetingId, participantKey, onPlaylistRequested, onRecordingRequested, onHangupRequested, onDocumentRequested, onScreenRequested]);
 
   return null;
 }

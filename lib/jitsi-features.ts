@@ -2,6 +2,7 @@
 export const JITSI_SHARED_VIDEO_BUTTON = 'sharedvideo';
 export const JITSI_RECORDING_BUTTON = 'recording';
 export const JITSI_HANGUP_BUTTON = 'hangup';
+export const JITSI_SCREEN_SHARE_BUTTON = 'desktop';
 
 /** Native Jitsi controls, shared by the room and the standalone embed. */
 export function getJitsiToolbarButtons(chatEnabled = true, recordingEnabled = false) {
@@ -22,12 +23,16 @@ interface JitsiFeatureOptions {
   recordingEnabled?: boolean;
   /** Route Hang up through the host page so only the app host can end the room. */
   controlledHangup?: boolean;
+  controlledScreenShare?: boolean;
+  isHost?: boolean;
 }
 
 export function getJitsiFeatureConfig({
   sharedVideoPlaylist = false,
   recordingEnabled = false,
   controlledHangup = false,
+  controlledScreenShare = false,
+  isHost = false,
 }: JitsiFeatureOptions = {}) {
   const etherpad = process.env.NEXT_PUBLIC_JITSI_ETHERPAD_URL;
   const whiteboard = process.env.NEXT_PUBLIC_JITSI_WHITEBOARD_URL;
@@ -35,6 +40,7 @@ export function getJitsiFeatureConfig({
   // Object form is only understood by newer Jitsi releases, so keep strings.
   const interceptedButtons = [
     ...(controlledHangup ? [JITSI_HANGUP_BUTTON] : []),
+    ...(controlledScreenShare ? [JITSI_SCREEN_SHARE_BUTTON] : []),
     ...(sharedVideoPlaylist ? [JITSI_SHARED_VIDEO_BUTTON] : []),
     ...(recordingEnabled ? [JITSI_RECORDING_BUTTON] : []),
   ];
@@ -44,6 +50,7 @@ export function getJitsiFeatureConfig({
       'youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtu.be',
       ...(typeof window !== 'undefined' && window.location?.hostname ? [window.location.hostname] : []),
     ],
+    ...(!isHost ? { fileSharing: { enabled: false } } : {}),
     filmstrip: { disabled: false, disableResizable: false, disableStageFilmstrip: false },
     tileView: { disabled: false },
     disableVirtualBackground: false,
@@ -52,7 +59,7 @@ export function getJitsiFeatureConfig({
     disablePolls: false,
     hideAddRoomButton: false,
     breakoutRooms: { hideAddRoomButton: false, hideAutoAssignButton: false, hideJoinRoomButton: false },
-    participantsPane: { enabled: true, hideModeratorSettingsTab: false, hideMoreActionsButton: false, hideMuteAllButton: false },
+    participantsPane: { enabled: true, hideModeratorSettingsTab: !isHost, hideMoreActionsButton: !isHost, hideMuteAllButton: !isHost },
     ...(interceptedButtons.length ? { buttonsWithNotifyClick: interceptedButtons } : {}),
     // Melanam performs the recording server-side; Jitsi only needs to show the
     // native button so participants can trigger it from the meeting toolbar.
@@ -64,6 +71,7 @@ export function getJitsiFeatureConfig({
 
 export const JITSI_PRESENT_EVENT = 'melanam:jitsi-present';
 export const JITSI_SCREEN_PRESENT_EVENT = 'melanam:jitsi-present-screen';
+export const JITSI_SCREEN_REQUEST_EVENT = 'melanam:jitsi-request-screen';
 export const JITSI_PLAYLIST_PLAY_EVENT = 'melanam:jitsi-playlist-play';
 export const JITSI_PLAYLIST_STOP_EVENT = 'melanam:jitsi-playlist-stop';
 

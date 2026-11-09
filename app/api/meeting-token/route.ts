@@ -48,6 +48,7 @@ export async function GET(req: NextRequest) {
     const issuer = process.env.JITSI_JWT_ISSUER || 'melanam';
     const resolvedName = userEmail || guestName;
     const resolvedId = userEmail || `guest:${resolvedName}`;
+    const isHost = Boolean(userEmail) && (userEmail === meeting.hostEmail || userEmail === meeting.hostId);
     const roomName = normalizeJitsiRoomName(meetingId);
     const remainingSeconds = meeting.activeSessionEndsAt
       ? Math.ceil((meeting.activeSessionEndsAt.getTime() - Date.now()) / 1000)
@@ -73,8 +74,8 @@ export async function GET(req: NextRequest) {
       // Cover the room's allowance plus a short grace period for native
       // transport recovery. Access heartbeats still enforce the plan limit.
       ttlSeconds: remainingSeconds + 5 * 60,
-      moderator: Boolean(userEmail) && (userEmail === meeting.hostEmail || userEmail === meeting.hostId),
-      features: { 'file-upload': true },
+      moderator: isHost,
+      features: { 'file-upload': isHost },
     });
 
     return NextResponse.json(

@@ -13,7 +13,7 @@ test('uploaded videos use the joined room, native playback and safe URLs; listen
   global.document = {};
   t.after(() => { global.window = previousWindow; global.document = previousDocument; });
   const calls = [], listeners = new Map();
-  const documents = [];
+  const documents = [], screenRequests = [];
   browser.open = () => { throw new Error('Presenting must stay in the meeting tab'); };
   const api = {
     getSupportedCommands: () => ['showPiP', 'hidePiP'],
@@ -26,6 +26,7 @@ test('uploaded videos use the joined room, native playback and safe URLs; listen
   let view;
   await act(async () => { view = create(React.createElement(Component, {
     api, meetingId: 'room', onDocumentRequested: async path => { documents.push(path); },
+    onScreenRequested: () => screenRequests.push('requested'),
   })); });
   const present = (meetingId, name = 'clip.mp4') => {
     const event = new Event(JITSI_PRESENT_EVENT, { cancelable: true });
@@ -50,12 +51,9 @@ test('uploaded videos use the joined room, native playback and safe URLs; listen
     act(() => assert.equal(present('room', name), true));
     assert.equal(documents.at(-1), 'local/room/a b&video');
   }
-  const { JITSI_SCREEN_PRESENT_EVENT } = load('lib/jitsi-features.ts');
-  const share = new Event(JITSI_SCREEN_PRESENT_EVENT, { cancelable: true });
-  share.detail = { meetingId: 'room' };
-  browser.dispatchEvent(share);
-  assert.equal(share.defaultPrevented, true);
-  assert.deepEqual(calls.at(-1), ['toggleShareScreen', { enable: true }]);
+  act(() => listeners.get('toolbarButtonClicked')({ key: 'desktop' }));
+  assert.deepEqual(screenRequests, ['requested'], 'screen sharing asks the room for permission');
+  assert.equal(calls.some(([command]) => command === 'toggleShareScreen'), false);
   assert.equal(view.toJSON(), null, 'presentation integration adds no toolbar or help panel');
   act(() => listeners.get('readyToClose')());
   assert.equal(present('room'), false, 'closed conferences cannot present');

@@ -141,7 +141,7 @@ test('the meeting playlist panel adds a link and starts the selected video', asy
   const Component = load('components/VideoPlaylistPanel.tsx').default;
   let view;
   await act(async () => {
-    view = create(React.createElement(Component, { meetingId: 'room', addedBy: 'host@example.com' }));
+    view = create(React.createElement(Component, { meetingId: 'room', addedBy: 'host@example.com', isHost: true }));
   });
 
   const input = view.root.findByProps({ id: 'video-playlist-input-room' });
@@ -163,7 +163,7 @@ test('the meeting playlist panel adds a link and starts the selected video', asy
   assert.deepEqual(calls.at(-1), {
     url: '/api/video-playlist',
     method: 'PATCH',
-    body: { meetingId: 'room', action: 'play', updatedBy: 'host@example.com', itemId: 'video-1' },
+    body: { meetingId: 'room', action: 'play', updatedBy: 'host@example.com', itemId: 'video-1', approvalId: '' },
   });
 
   act(() => view.unmount());

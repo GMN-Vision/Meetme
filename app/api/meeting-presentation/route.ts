@@ -4,6 +4,9 @@ import { verifyActiveMeetingDocumentToken } from '@/lib/meeting-document-access'
 import { resolveSharedPresentationFile } from '@/lib/onlyoffice-server';
 import { getPresentationKind } from '@/lib/shared-file-types';
 import Meeting from '@/models/Meeting';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-options';
+import { consumeMeetingApproval } from '@/lib/meeting-approval-access';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -53,6 +56,11 @@ export async function POST(request: Request) {
     const body = await request.json();
     const meetingId = typeof body.meetingId === 'string' ? body.meetingId : '';
     const access = await authorize(request, meetingId);
+    await dbConnect();
+    const activeMeeting = await Meeting.findOne({ meetingId, endedAt: null }).select('hostEmail');
+    if (!activeMeeting) return NextResponse.json({ error: 'The meeting is unavailable.' }, { status: 404 });
+    const session = await getServerSession(authOptions);
+    const isHost = String(session?.user?.email || '').toLowerCase() === String(activeMeeting.hostEmail).toLowerCase();
     let presentation: { path: string; name: string; presenterKey: string; updatedAt: Date } | null = null;
     if (body.path !== null) {
       if (typeof body.path !== 'string' || !body.path) {
@@ -63,9 +71,14 @@ export async function POST(request: Request) {
       if (!kind || kind === 'media') {
         return NextResponse.json({ error: 'This file cannot be presented in the document viewer.' }, { status: 415 });
       }
+      if (!isHost) {
+        const approved = await consumeMeetingApproval({ meetingId, approvalId: String(body.approvalId || ''), type: 'present', requesterKey: access.participantKey, payload: { path: file.path } });
+        if (!approved) return NextResponse.json({ error: 'Host approval is required to present this file.' }, { status: 403 });
+      }
       presentation = { path: file.path, name: file.name, presenterKey: access.participantKey, updatedAt: new Date() };
+    } else if (!isHost) {
+      return NextResponse.json({ error: 'Only the host can stop the shared presentation.' }, { status: 403 });
     }
-    await dbConnect();
     const meeting = await Meeting.findOneAndUpdate(
       { meetingId, endedAt: null },
       { $set: { sharedPresentation: presentation } },

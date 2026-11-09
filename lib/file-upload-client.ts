@@ -18,11 +18,11 @@ async function uploadResponse(response: Response, fallback: string) {
   return result;
 }
 
-export async function uploadSharedFile(file: File, meetingId: string, progress: (percent: number) => void, signal?: AbortSignal) {
+export async function uploadSharedFile(file: File, meetingId: string, progress: (percent: number) => void, signal?: AbortSignal, approvalId?: string) {
   // Let the reservation request finish so a cancellation can always remove it.
   if (signal?.aborted) throw new DOMException('Upload cancelled', 'AbortError');
   const start = await fetch('/api/files/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: file.name, size: file.size, meetingId }) });
+    body: JSON.stringify({ name: file.name, size: file.size, meetingId, approvalId }) });
   const upload = await uploadResponse(start, 'Unable to start upload');
   try {
     if (typeof upload.path !== 'string' || !Number.isSafeInteger(upload.chunkBytes) || upload.chunkBytes < 1) {

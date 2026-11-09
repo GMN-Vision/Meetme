@@ -11,7 +11,8 @@ import { JitsiMeeting } from '../../../components/JitsiMeeting';
 import { useSession } from 'next-auth/react';
 import { normalizeJitsiRoomName } from '../../../lib/jitsi-room';
 import { startMeetingAccessHeartbeat } from '../../../lib/meeting-access-client';
-import { getJitsiToolbarButtons } from '@/lib/jitsi-features';
+import { getJitsiToolbarButtons, JITSI_SCREEN_REQUEST_EVENT } from '@/lib/jitsi-features';
+import { consumeClientApproval, requestMeetingApproval, waitForMeetingApproval } from '@/lib/meeting-approval-client';
 import JitsiPresentationControls from '@/components/JitsiPresentationControls';
 import VideoPlaylistPanel from '@/components/VideoPlaylistPanel';
 import FileShare from '@/components/FileShare';
@@ -214,6 +215,13 @@ export default function RoomPage() {
           } catch {
             // Meeting access still works if browser storage is unavailable.
           }
+        }
+        if (typeof accessData.approvalToken === 'string' && accessData.approvalToken) {
+          try { localStorage.setItem(`melanam:meeting-approval:${meetingId}`, accessData.approvalToken); }
+          catch { /* The approval request will explain if browser storage is unavailable. */ }
+        } else {
+          try { localStorage.removeItem(`melanam:meeting-approval:${meetingId}`); }
+          catch { /* Browser storage is optional. */ }
         }
         setSessionEndsAt(accessData.sessionEndsAt || null);
         setAccessGranted(true);
@@ -648,13 +656,37 @@ export default function RoomPage() {
     apiRef.current?.executeCommand?.('hangup');
   }, []);
 
-  const updatePresentation = useCallback(async (path: string | null) => {
+  const handleScreenRequested = useCallback(async () => {
+    try {
+      if (!isMeetingHost) {
+        setPresentationError('Waiting for the host to approve screen sharing.');
+        const approvalId = await requestMeetingApproval(meetingId, 'screen', {}, userEmail || guestName);
+        await waitForMeetingApproval(meetingId, approvalId);
+        await consumeClientApproval(meetingId, approvalId, 'screen');
+      }
+      setPresentationError('');
+      apiRef.current?.executeCommand?.('setTileView', false);
+      apiRef.current?.executeCommand?.('toggleShareScreen', { enable: true });
+    } catch (error: any) { setPresentationError(error?.message || 'Could not request screen sharing.'); }
+  }, [guestName, isMeetingHost, meetingId, userEmail]);
+
+  useEffect(() => {
+    const request = (event: Event) => {
+      if ((event as CustomEvent).detail?.meetingId !== meetingId) return;
+      event.preventDefault();
+      void handleScreenRequested();
+    };
+    window.addEventListener(JITSI_SCREEN_REQUEST_EVENT, request);
+    return () => window.removeEventListener(JITSI_SCREEN_REQUEST_EVENT, request);
+  }, [handleScreenRequested, meetingId]);
+
+  const updatePresentation = useCallback(async (path: string | null, approvalId?: string) => {
     const token = localStorage.getItem(`melanam:meeting-document-access:${meetingId}:${participantKey}`);
     if (!token) throw new Error('Your meeting document access has expired. Rejoin and try again.');
     const response = await fetch('/api/meeting-presentation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ meetingId, path }),
+      body: JSON.stringify({ meetingId, path, approvalId }),
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Could not update the presentation.');
@@ -662,9 +694,9 @@ export default function RoomPage() {
     setPresentationError('');
   }, [meetingId, participantKey]);
 
-  const handleDocumentRequested = useCallback(async (path: string) => {
+  const handleDocumentRequested = useCallback(async (path: string, approvalId?: string) => {
     try {
-      await updatePresentation(path);
+      await updatePresentation(path, approvalId);
     } catch (error) {
       setPresentationError(error instanceof Error ? error.message : 'Could not present the document.');
     }
@@ -708,8 +740,8 @@ export default function RoomPage() {
   const recordingEnabled = meeting?.recordingEnabled !== false;
 
   const roomToolbarButtons = useMemo(
-    () => [...getJitsiToolbarButtons(meeting?.chatEnabled !== false, recordingEnabled), 'videoquality'],
-    [meeting?.chatEnabled, recordingEnabled]
+    () => [...getJitsiToolbarButtons(meeting?.chatEnabled !== false, recordingEnabled && isMeetingHost).filter(button => isMeetingHost || button !== 'security'), 'videoquality'],
+    [meeting?.chatEnabled, recordingEnabled, isMeetingHost]
   );
   const canMountJitsi = Boolean(
     meeting &&
@@ -753,11 +785,13 @@ export default function RoomPage() {
         onPlaylistRequested={handlePlaylistRequested}
         onRecordingRequested={handleRecordingRequested}
         onHangupRequested={handleHangupRequested}
+        onScreenRequested={handleScreenRequested}
       />
       <SharedFileNotifications meetingId={meetingId} onUnreadChange={setUnreadFiles} />
+      {isMeetingHost && <div className="mb-3 flex justify-end"><button type="button" onClick={() => { void endMeetingForHost().then(() => apiRef.current?.executeCommand?.('hangup')); }} className="rounded-lg border border-rose-400/40 bg-rose-950/50 px-3 py-2 text-xs font-semibold text-rose-100 hover:bg-rose-900/70">End meeting for all</button></div>}
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,19rem)_minmax(0,1fr)_minmax(0,19rem)]">
         <aside id="room-video-playlist" aria-label="Video playlist sidebar" className={`${isPlaylistOpen ? 'block' : 'hidden'} order-3 min-w-0 xl:order-none xl:block`}>
-          <VideoPlaylistPanel meetingId={meetingId} addedBy={userEmail || guestName} className="room-glass-panel room-side-scroll" onClose={() => setIsPlaylistOpen(false)} />
+          <VideoPlaylistPanel meetingId={meetingId} addedBy={userEmail || guestName} isHost={isMeetingHost} className="room-glass-panel room-side-scroll" onClose={() => setIsPlaylistOpen(false)} />
         </aside>
       <div className="meeting-stage relative order-1 h-[clamp(24rem,68dvh,40rem)] min-w-0 w-full overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-[0_24px_70px_rgba(0,0,0,.35)] xl:order-none">
         <div
@@ -785,6 +819,8 @@ export default function RoomPage() {
                 sharedVideoPlaylist
                 recordingEnabled={recordingEnabled}
                 controlledHangup
+                controlledScreenShare
+                isHost={isMeetingHost}
               />
               <CaptionOverlay
                 meetingId={meetingId}
@@ -857,7 +893,7 @@ export default function RoomPage() {
           <button type="button" onClick={() => { if (!isFilesOpen) window.dispatchEvent(new Event('room:open-files')); setIsFilesOpen(open => !open); setIsPlaylistOpen(false); }} aria-expanded={isFilesOpen} aria-controls="room-shared-files" className={`button-secondary relative min-w-0 gap-2 px-2 text-xs ${isFilesOpen ? 'border-zinc-500 bg-zinc-800 text-white' : 'border-zinc-700 bg-zinc-900/75'}`}><Files className="h-4 w-4 shrink-0" /> Shared files{unreadFiles > 0 && !isFilesOpen && <span aria-label={`${unreadFiles} unread shared files`} className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-400" />}</button>
         </div>
         <aside id="room-shared-files" aria-label="Shared files sidebar" className={`${isFilesOpen ? 'block' : 'hidden'} order-4 min-w-0 xl:order-none xl:block`}>
-          <FileShare meetingId={meetingId} presentationEnabled participantKey={participantKey} noteOwner={userEmail || guestName} title="Shared files" showHeader={false} className="room-glass-panel room-side-scroll" />
+          <FileShare meetingId={meetingId} presentationEnabled participantKey={participantKey} noteOwner={userEmail || guestName} isHost={isMeetingHost} title="Shared files" showHeader={false} className="room-glass-panel room-side-scroll" />
         </aside>
       </div>
       {presentationError && <p role="alert" className="mx-auto mb-3 max-w-5xl rounded-lg border border-rose-500/40 bg-rose-950 px-4 py-2 text-sm text-rose-100">{presentationError}</p>}
@@ -865,7 +901,7 @@ export default function RoomPage() {
         <section ref={presentationPanelRef} aria-label="Shared presentation" className="mx-auto mb-6 mt-6 flex w-full max-w-6xl flex-col overflow-hidden rounded-lg border border-zinc-700 bg-zinc-950">
           <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-2 text-sm">
             <span className="min-w-0 truncate font-medium">Presenting: {sharedPresentation.name}</span>
-            <button type="button" onClick={() => { void updatePresentation(null).catch(error => setPresentationError(error.message)); }} className="shrink-0 rounded-lg bg-zinc-800 px-3 py-1.5 hover:bg-zinc-700">Stop presenting</button>
+            {isMeetingHost && <button type="button" onClick={() => { void updatePresentation(null).catch(error => setPresentationError(error.message)); }} className="shrink-0 rounded-lg bg-zinc-800 px-3 py-1.5 hover:bg-zinc-700">Stop presenting</button>}
           </div>
           <PresentationWorkspace notes={sharedPresentation.isPresenter ? <PresenterNotes meetingId={meetingId} filePath={SPEECH_NOTE_PATH} owner={userEmail || guestName} sidePanel /> : undefined}>
             <iframe key={`${sharedPresentation.path}:${sharedPresentation.updatedAt}`} title={`Shared presentation: ${sharedPresentation.name}`} src={presentationUrl} className="h-full w-full border-0 bg-white" />

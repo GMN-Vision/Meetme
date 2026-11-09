@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getPresentationKind } from '@/lib/shared-file-types';
 import {
-  JITSI_SCREEN_PRESENT_EVENT,
+  JITSI_SCREEN_REQUEST_EVENT,
   getSharedVideoUrl,
 } from '@/lib/jitsi-features';
 
@@ -246,7 +246,7 @@ export default function PresentPage() {
     try {
       if (!window.opener || window.opener.closed) throw new Error();
 
-      const event = new CustomEvent(JITSI_SCREEN_PRESENT_EVENT, {
+      const event = new CustomEvent(JITSI_SCREEN_REQUEST_EVENT, {
         cancelable: true,
         detail: { meetingId: file.meetingId },
       });
@@ -255,7 +255,7 @@ export default function PresentPage() {
 
       setNotice(
         event.defaultPrevented
-          ? 'Select this presentation tab or window in the browser sharing picker.'
+          ? 'The meeting will request host approval before opening the browser sharing picker.'
           : 'Join the meeting before presenting.',
       );
     } catch {

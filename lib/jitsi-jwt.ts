@@ -50,6 +50,8 @@ export function createJitsiJwt(params: {
         id: user.id,
         name: user.name,
         email: user.email,
+        moderator,
+        affiliation: moderator ? 'owner' : 'member',
       },
       features,
     },

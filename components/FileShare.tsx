@@ -9,6 +9,7 @@ import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
 import { FileUpload } from '@/components/ui/file-upload'
 import PresenterNotes, { SPEECH_NOTE_PATH } from './PresenterNotes'
 import UpgradeCallout, { isPlanUpgradeError } from '@/components/UpgradeCallout'
+import { consumeClientApproval, requestMeetingApproval, waitForMeetingApproval } from '@/lib/meeting-approval-client'
 
 export default function FileShare({
   meetingId,
@@ -20,6 +21,7 @@ export default function FileShare({
   participantKey = '',
   noteOwner = '',
   showHeader = true,
+  isHost = false,
 }: {
   meetingId?: string
   scopeId?: string
@@ -30,11 +32,13 @@ export default function FileShare({
   participantKey?: string
   noteOwner?: string
   showHeader?: boolean
+  isHost?: boolean
 }) {
   const [files, setFiles] = useState<Array<{ name: string; path: string }>>([])
   const [syncNotice, setSyncNotice] = useState('')
   const [selected, setSelected] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [awaitingApproval, setAwaitingApproval] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const uploadController = useRef<AbortController | null>(null)
   const [progress, setProgress] = useState(0)
@@ -93,13 +97,27 @@ export default function FileShare({
       setUpgradeReason('This file exceeds your current upload allowance of ' + formatFileBytes(allowance.limits.availableFileBytes) + '. Choose a higher plan for larger files or more storage.')
       return
     }
+    let approvalId = ''
+    if (presentationEnabled && !isHost && meetingId) {
+      setAwaitingApproval(true)
+      setNotice('Waiting for the host to approve this file.')
+      try {
+        approvalId = await requestMeetingApproval(meetingId, 'file', { name: selected.name, size: selected.size }, noteOwner)
+        await waitForMeetingApproval(meetingId, approvalId)
+      } catch (error: any) {
+        setNotice(error?.message || 'Could not get host approval.')
+        setAwaitingApproval(false)
+        return
+      }
+      setAwaitingApproval(false)
+    }
     const controller = new AbortController()
     uploadController.current = controller
     setUploading(true)
     setCancelling(false)
     setProgress(0)
     try {
-      await uploadSharedFile(selected, resolvedScopeId, setProgress, controller.signal)
+      await uploadSharedFile(selected, resolvedScopeId, setProgress, controller.signal, approvalId)
       uploadController.current = null
       setSelected(null)
       setUpgradeReason('')
@@ -173,14 +191,14 @@ export default function FileShare({
       </details>
       {syncNotice && <p className="mb-3 text-xs text-amber-300" role="status">{syncNotice}</p>}
       <div className="mb-3 flex flex-col gap-2">
-        <FileUpload compact value={selected} disabled={uploading} onChange={files => { setSelected(files[0] || null); setUpgradeReason('') }} />
+        <FileUpload compact value={selected} disabled={uploading || awaitingApproval} onChange={files => { setSelected(files[0] || null); setUpgradeReason('') }} />
         <HoverBorderGradient
           onClick={handleUpload}
-          disabled={!selected || uploading || !isReady}
+          disabled={!selected || uploading || awaitingApproval || !isReady}
           className="w-full gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Upload className="h-4 w-4" />
-          {cancelling ? 'Cancelling…' : uploading ? uploadController.current ? `Uploading ${progress}%` : 'Finishing…' : 'Share'}
+          {awaitingApproval ? 'Waiting for host…' : cancelling ? 'Cancelling…' : uploading ? uploadController.current ? `Uploading ${progress}%` : 'Finishing…' : 'Share'}
         </HoverBorderGradient>
         {presentationEnabled && meetingId && noteOwner && <button type="button" onClick={() => setShowSpeechNote(open => !open)} aria-expanded={showSpeechNote} aria-controls="room-speech-note" className="min-h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm font-medium text-zinc-100 transition hover:bg-zinc-800">Speech Note</button>}
         {showSpeechNote && presentationEnabled && meetingId && noteOwner && <div id="room-speech-note" className="overflow-hidden rounded-lg border border-zinc-700"><PresenterNotes meetingId={meetingId} filePath={SPEECH_NOTE_PATH} owner={noteOwner} /></div>}
@@ -230,12 +248,21 @@ export default function FileShare({
             </div>
             <div className="flex items-center justify-end gap-1.5 border-t border-zinc-800 pt-2 sm:shrink-0 sm:border-0 sm:pt-0 xl:border-t xl:pt-2">
               {presentationEnabled && meetingId && getPresentationKind(f.name) && (
-                <button type="button" onClick={() => {
-                  const detail = { meetingId, path: f.path, name: f.name, message: '' }
+                <button type="button" onClick={async () => {
+                  let approvalId = ''
+                  if (!isHost) {
+                    setNotice('Waiting for the host to approve this presentation.')
+                    try {
+                      approvalId = await requestMeetingApproval(meetingId, 'present', { path: f.path }, noteOwner)
+                      await waitForMeetingApproval(meetingId, approvalId)
+                      if (getPresentationKind(f.name) === 'media') await consumeClientApproval(meetingId, approvalId, 'present', { path: f.path })
+                    } catch (error: any) { setNotice(error?.message || 'Could not get host approval.'); return }
+                  }
+                  const detail = { meetingId, path: f.path, name: f.name, approvalId, message: '' }
                   const event = new CustomEvent(JITSI_PRESENT_EVENT, { cancelable: true, detail })
                   window.dispatchEvent(event)
                   setNotice(detail.message || (event.defaultPrevented ? 'Media sent to the Jitsi stage. Return to the meeting to control playback.' : 'Join the meeting before presenting this file.'))
-                }} aria-label={`Present ${f.name} in meeting`} className="min-h-10 rounded-lg border border-zinc-700 px-3 text-xs text-zinc-100 transition hover:bg-zinc-800 sm:min-h-8">Present</button>
+                }} aria-label={`Present ${f.name} in meeting`} className="min-h-10 rounded-lg border border-zinc-700 px-3 text-xs text-zinc-100 transition hover:bg-zinc-800 sm:min-h-8">{isHost ? 'Present' : 'Request to present'}</button>
               )}
               <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 sm:h-8 sm:w-8" title="Download" aria-label={`Download ${f.name}`}>
                 <Download className="h-4 w-4" />

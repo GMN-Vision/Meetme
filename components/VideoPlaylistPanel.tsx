@@ -24,6 +24,7 @@ import { isYouTubeVideoUrl, normalizeVideoUrl } from '@/lib/video-playlist';
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
 import { GridPattern } from '@/components/ui/file-upload';
 import { useHoverCapable } from '@/hooks/useHoverCapable';
+import { getMeetingApprovalToken, requestMeetingApproval, waitForMeetingApproval } from '@/lib/meeting-approval-client';
 
 type PlaylistItem = {
   id: string;
@@ -57,11 +58,13 @@ function itemLabel(item: PlaylistItem) {
 export default function VideoPlaylistPanel({
   meetingId,
   addedBy = '',
+  isHost = false,
   className = '',
   onClose,
 }: {
   meetingId: string;
   addedBy?: string;
+  isHost?: boolean;
   className?: string;
   onClose?: () => void;
 }) {
@@ -69,6 +72,7 @@ export default function VideoPlaylistPanel({
   const [input, setInput] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState('');
+  const [approvalPending, setApprovalPending] = useState(false);
   const busyRef = useRef(false);
   const reduceMotion = useReducedMotion();
   const canHover = useHoverCapable();
@@ -111,7 +115,7 @@ export default function VideoPlaylistPanel({
     try {
       const response = await fetch('/api/video-playlist', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getMeetingApprovalToken(meetingId)}` },
         body: JSON.stringify({ meetingId, action, updatedBy: addedBy, ...extra }),
       });
       const data = await response.json().catch(() => ({}));
@@ -149,9 +153,19 @@ export default function VideoPlaylistPanel({
   };
 
   const playItem = async (item: PlaylistItem) => {
+    if (busyRef.current || approvalPending) return;
     setNotice('');
-    if (!dispatchPlay(item)) return;
-    await updatePlaylist('play', { itemId: item.id });
+    try {
+      let approvalId = '';
+      if (!isHost) {
+        setApprovalPending(true);
+        approvalId = await requestMeetingApproval(meetingId, 'video', { itemId: item.id }, addedBy);
+        setNotice('Waiting for the host to approve this video.');
+        await waitForMeetingApproval(meetingId, approvalId);
+      }
+      if (await updatePlaylist('play', { itemId: item.id, approvalId }) && dispatchPlay(item)) setNotice('');
+    } catch (error: any) { setNotice(error?.message || 'Could not request video playback.'); }
+    finally { setApprovalPending(false); }
   };
 
   const stopPlayback = async () => {
@@ -193,7 +207,7 @@ export default function VideoPlaylistPanel({
     try {
       const response = await fetch('/api/video-playlist', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getMeetingApprovalToken(meetingId)}` },
         body: JSON.stringify({ meetingId, urls: [url], addedBy }),
       });
       const data = await response.json().catch(() => ({}));
@@ -235,7 +249,7 @@ export default function VideoPlaylistPanel({
   };
 
   const current = playlist.currentIndex !== null ? playlist.items[playlist.currentIndex] : null;
-  const working = Boolean(busy);
+  const working = Boolean(busy || approvalPending);
   const linkReady = Boolean(input.trim() && normalizeVideoUrl(input));
 
   return (
@@ -303,8 +317,9 @@ export default function VideoPlaylistPanel({
               className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2 py-1.5 text-xs text-zinc-100 hover:bg-zinc-800 disabled:opacity-60"
               aria-label="Play the selected video in the meeting"
             >
-              <Play className="h-3.5 w-3.5" /> Play
+              <Play className="h-3.5 w-3.5" /> {isHost ? 'Play' : 'Request play'}
             </button>
+            {isHost && <>
             <button
               type="button"
               onClick={stopPlayback}
@@ -332,6 +347,7 @@ export default function VideoPlaylistPanel({
             >
               Next <SkipForward className="h-3.5 w-3.5" />
             </button>
+            </>}
           </div>
         </div>
       ) : null}
@@ -364,7 +380,7 @@ export default function VideoPlaylistPanel({
                     disabled={working}
                     className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors hover:bg-black/40 focus-visible:bg-black/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-sky-300 disabled:cursor-wait disabled:opacity-60"
                     aria-label={`Play ${itemLabel(item)}`}
-                    title="Play in meeting"
+                    title={isHost ? 'Play in meeting' : 'Request host approval to play'}
                   >
                     <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/50 bg-zinc-950/80 text-white shadow-lg transition-transform group-hover:scale-110">
                       <Play className="ml-0.5 h-5 w-5 fill-current" />
@@ -376,7 +392,7 @@ export default function VideoPlaylistPanel({
                 <p className="mt-0.5 truncate text-[11px] text-zinc-500" title={item.url}>{item.url}</p>
               </div>
 
-              <div className="mt-2 flex items-center justify-end gap-1 border-t border-zinc-800 pt-1">
+              {isHost && <div className="mt-2 flex items-center justify-end gap-1 border-t border-zinc-800 pt-1">
                 <button
                   type="button"
                   onClick={() => moveItem(item, 'up')}
@@ -407,13 +423,13 @@ export default function VideoPlaylistPanel({
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
-              </div>
+              </div>}
             </li>
           );
         })}
       </ul>
 
-      {playlist.items.length > 0 ? (
+      {isHost && playlist.items.length > 0 ? (
         <div className="mt-3 flex items-center justify-between gap-2 text-xs text-zinc-500">
           <span>Use Next when a video finishes.</span>
           <button

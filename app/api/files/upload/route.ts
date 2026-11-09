@@ -9,6 +9,8 @@ import { mkdir, open, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import dbConnect from '@/lib/db';
+import Meeting from '@/models/Meeting';
+import { consumeMeetingApproval } from '@/lib/meeting-approval-access';
 
 export const runtime = 'nodejs';
 
@@ -22,11 +24,18 @@ export async function POST(req: Request) {
   try {
     const user = await identity();
     if (!user.email) return NextResponse.json({ error: 'Sign in to upload files' }, { status: 401 });
-    const { meetingId, name, size } = await req.json();
+    const { meetingId, name, size, approvalId } = await req.json();
     if (typeof name !== 'string' || !name.trim() || name.length > 255 || !Number.isSafeInteger(size) || size < 1) {
       return NextResponse.json({ error: 'A file name and positive file size are required' }, { status: 400 });
     }
     getMeetingStorageRoot('meeting', String(meetingId || ''));
+    await dbConnect();
+    const meeting = await Meeting.findOne({ meetingId });
+    if (!meeting) return NextResponse.json({ error: 'Meeting is unavailable' }, { status: 404 });
+    if (meeting.activeSessionStartedAt && !meeting.endedAt && String(meeting.hostEmail).toLowerCase() !== user.email) {
+      const approved = await consumeMeetingApproval({ meetingId, approvalId: String(approvalId || ''), type: 'file', requesterEmail: user.email, payload: { name, size } });
+      if (!approved) return NextResponse.json({ error: 'Host approval is required to share this file' }, { status: 403 });
+    }
     const quota = await getWorkspaceQuota(user.email, user.admin);
     if (!quota?.planDefinition.features.files) return NextResponse.json({ error: 'File sharing is not included in your plan' }, { status: 402 });
     if (size > FILE_LIMITS[quota.plan]) return NextResponse.json({ error: 'This file exceeds your plan\'s per-file limit' }, { status: 413 });

@@ -77,6 +77,8 @@ export interface JitsiMeetingProps {
   recordingEnabled?: boolean;
   /** Route Hang up through the host page instead of Jitsi's end-for-all UI. */
   controlledHangup?: boolean;
+  controlledScreenShare?: boolean;
+  isHost?: boolean;
   /** Optional JWT for private rooms */
   jwt?: string;
   /** Caption service room id, when it differs from the normalized Jitsi room name */
@@ -122,6 +124,8 @@ export function JitsiMeeting({
   sharedVideoPlaylist = false,
   recordingEnabled = false,
   controlledHangup = false,
+  controlledScreenShare = false,
+  isHost = false,
   jwt,
   captionMeetingId,
   onApiReady,
@@ -152,6 +156,8 @@ export function JitsiMeeting({
   const sharedVideoPlaylistRef = useRef(sharedVideoPlaylist);
   const recordingEnabledRef = useRef(recordingEnabled);
   const controlledHangupRef = useRef(controlledHangup);
+  const controlledScreenShareRef = useRef(controlledScreenShare);
+  const isHostRef = useRef(isHost);
 
   const clearJoinTimeout = () => {
     if (joinTimeoutRef.current) {
@@ -217,6 +223,8 @@ export function JitsiMeeting({
   useEffect(() => {
     controlledHangupRef.current = controlledHangup;
   }, [controlledHangup]);
+  useEffect(() => { controlledScreenShareRef.current = controlledScreenShare; }, [controlledScreenShare]);
+  useEffect(() => { isHostRef.current = isHost; }, [isHost]);
 
   // Get domain from prop or environment variable
   const cleanDomain = (() => {
@@ -392,6 +400,8 @@ export function JitsiMeeting({
             sharedVideoPlaylist: sharedVideoPlaylistRef.current,
             recordingEnabled: recordingEnabledRef.current,
             controlledHangup: controlledHangupRef.current,
+            controlledScreenShare: controlledScreenShareRef.current,
+            isHost: isHostRef.current,
           }),
           toolbarButtons: toolbarButtonsRef.current,
           startWithAudioMuted: startWithAudioMutedOnJoin,

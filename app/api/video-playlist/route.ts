@@ -2,6 +2,10 @@ import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import VideoPlaylist from '@/models/VideoPlaylist';
+import Meeting from '@/models/Meeting';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-options';
+import { consumeMeetingApproval, verifyMeetingApprovalToken } from '@/lib/meeting-approval-access';
 import {
   MAX_PLAYLIST_ITEMS,
   getVideoFallbackTitle,
@@ -14,6 +18,18 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const noStoreHeaders = { 'Cache-Control': 'no-store, max-age=0' };
+
+async function actionAccess(request: Request, meetingId: string) {
+  const meeting = await Meeting.findOne({ meetingId, endedAt: null }).select('hostEmail activeSessionStartedAt').lean();
+  if (!meeting?.activeSessionStartedAt) return { host: false, participantKey: '', error: 'Meeting is unavailable.' };
+  const session = await getServerSession(authOptions);
+  if (String(session?.user?.email || '').toLowerCase() === String(meeting.hostEmail).toLowerCase()) return { host: true, participantKey: '', error: '' };
+  try {
+    const token = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+    const access = await verifyMeetingApprovalToken(token, meetingId);
+    return { host: false, participantKey: access.participantKey, error: '' };
+  } catch { return { host: false, participantKey: '', error: 'Join the meeting before changing its playlist.' }; }
+}
 
 function json(data: unknown, init?: ResponseInit) {
   return NextResponse.json(data, {
@@ -168,6 +184,8 @@ export async function POST(request: Request) {
     }
 
     await db();
+    const access = await actionAccess(request, meetingId);
+    if (access.error) return json({ error: access.error }, { status: 403 });
     let playlist: any = await VideoPlaylist.findOne({ meetingId });
     if (!playlist) {
       playlist = new VideoPlaylist({ meetingId, items: [], currentIndex: null, playing: false });
@@ -228,6 +246,8 @@ export async function PATCH(request: Request) {
     if (!meetingId) return json({ error: 'missing meetingId' }, { status: 400 });
 
     await db();
+    const access = await actionAccess(request, meetingId);
+    if (access.error) return json({ error: access.error }, { status: 403 });
     const playlist: any = await VideoPlaylist.findOne({ meetingId });
     if (!playlist) return json({ error: 'Playlist not found' }, { status: 404 });
 
@@ -237,12 +257,18 @@ export async function PATCH(request: Request) {
     if (action === 'play') {
       const index = resolveIndex(playlist, body);
       if (index < 0) return json({ error: 'Video not found in the playlist' }, { status: 404 });
+      if (!access.host) {
+        const approved = await consumeMeetingApproval({ meetingId, approvalId: String(body.approvalId || ''), type: 'video', requesterKey: access.participantKey, payload: { itemId: items[index].id } });
+        if (!approved) return json({ error: 'Host approval is required to play this video.' }, { status: 403 });
+      }
       playlist.currentIndex = index;
       playlist.playing = true;
       markPlayed(playlist, index);
     } else if (action === 'stop') {
+      if (!access.host) return json({ error: 'Only the host can stop a shared video.' }, { status: 403 });
       playlist.playing = false;
     } else if (action === 'next' || action === 'previous') {
+      if (!access.host) return json({ error: 'Only the host can control the playlist.' }, { status: 403 });
       if (!items.length) return json({ error: 'The playlist is empty' }, { status: 400 });
 
       const current = Number.isInteger(playlist.currentIndex) ? playlist.currentIndex : -1;
@@ -254,6 +280,7 @@ export async function PATCH(request: Request) {
       playlist.playing = true;
       markPlayed(playlist, nextIndex);
     } else if (action === 'remove') {
+      if (!access.host) return json({ error: 'Only the host can edit the playlist.' }, { status: 403 });
       const index = resolveIndex(playlist, body);
       if (index < 0) return json({ error: 'Video not found in the playlist' }, { status: 404 });
 
@@ -270,6 +297,7 @@ export async function PATCH(request: Request) {
         playlist.currentIndex -= 1;
       }
     } else if (action === 'move') {
+      if (!access.host) return json({ error: 'Only the host can edit the playlist.' }, { status: 403 });
       const index = resolveIndex(playlist, body);
       if (index < 0) return json({ error: 'Video not found in the playlist' }, { status: 404 });
 
@@ -289,6 +317,7 @@ export async function PATCH(request: Request) {
         playlist.currentIndex = found >= 0 ? found : null;
       }
     } else if (action === 'clear') {
+      if (!access.host) return json({ error: 'Only the host can clear the playlist.' }, { status: 403 });
       items.splice(0, items.length);
       playlist.currentIndex = null;
       playlist.playing = false;
@@ -313,6 +342,8 @@ export async function DELETE(request: Request) {
     if (!meetingId) return json({ error: 'missing meetingId' }, { status: 400 });
 
     await db();
+    const access = await actionAccess(request, meetingId);
+    if (!access.host) return json({ error: 'Only the host can clear the playlist.' }, { status: 403 });
     await VideoPlaylist.deleteOne({ meetingId });
     return json({
       playlist: { meetingId, items: [], currentIndex: null, playing: false, updatedAt: null },

@@ -7,6 +7,7 @@ import { auth } from '@/lib/auth';
 import { isMeetingHost } from '@/lib/recording-policy';
 import { getWorkspaceQuota } from '@/lib/workspace-usage';
 import { signMeetingDocumentAccessToken } from '@/lib/meeting-document-access';
+import { signMeetingApprovalToken } from '@/lib/meeting-approval-access';
 import { stopServerRecording } from '@/lib/server-recording';
 
 export const dynamic = 'force-dynamic';
@@ -117,10 +118,14 @@ export async function POST(request: NextRequest) {
     } catch {
       documentAccessToken = null;
     }
+    let approvalToken: string | null = null;
+    try { approvalToken = signMeetingApprovalToken(meetingId, participantKey); }
+    catch { approvalToken = null; }
 
     return NextResponse.json({
       success: true,
       documentAccessToken,
+      approvalToken,
       sessionEndsAt: meeting.activeSessionEndsAt?.toISOString() || null,
       maxParticipants: meeting.maxParticipants ?? null,
       activeParticipants: existingParticipant ? activeParticipants : activeParticipants + 1,

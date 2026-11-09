@@ -43,7 +43,7 @@ test('multi-chunk upload becomes visible in another participant view and downloa
   };
   const mocks = {
     '@/lib/db': async () => {}, '@/models/SharedFile': model,
-    '@/models/Meeting': { exists: async () => false },
+    '@/models/Meeting': { exists: async () => false, findOne: async () => ({ hostEmail: 'uploader@example.com', activeSessionStartedAt: new Date(), endedAt: null }) },
     'next-auth': { getServerSession: async () => identities.getStore() ? { user: { email: identities.getStore() } } : null },
     '@/lib/auth-options': { authOptions: {} },
     '@/lib/workspace-usage': {
@@ -185,11 +185,12 @@ for (const componentName of ['FileShare', 'UploadMedia']) {
   test(`${componentName} participant polling reveals working download links and preserves files through temporary outages`, async t => {
     const React = require('react');
     const { create, act } = require('react-test-renderer');
-    const previousWindow = global.window;
+    const previousWindow = global.window, previousDocument = global.document;
     const polls = [];
     let visible = false, fail = false, callsToUrl = 0, view;
-    global.window = { setInterval: cb => { polls.push(cb); return polls.length; }, clearInterval: () => {}, setTimeout: () => 1 };
-    t.after(() => { if (view) act(() => view.unmount()); global.window = previousWindow; });
+    global.window = { setInterval: cb => { polls.push(cb); return polls.length; }, clearInterval: () => {}, setTimeout: () => 1, addEventListener: () => {}, removeEventListener: () => {}, matchMedia: () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }) };
+    global.document = { addEventListener: () => {}, removeEventListener: () => {} };
+    t.after(() => { if (view) act(() => view.unmount()); global.window = previousWindow; global.document = previousDocument; });
     t.mock.method(console, 'error', () => {});
     const key = 'local/shared-room/8fec32e9-271c-48fe-a5f1-405b2413705c';
     t.mock.method(global, 'fetch', async url => {
@@ -201,17 +202,18 @@ for (const componentName of ['FileShare', 'UploadMedia']) {
     const Component = load(`components/${componentName}.tsx`, {
       './FileAllowance': { __esModule: true, default: () => null, useFileAllowance: () => ({ limits: null, refresh: async () => {} }) },
       './FileUpload': { FileUpload: () => null },
+      './PresenterNotes': { __esModule: true, default: () => null },
     }).default;
     await act(async () => { view = create(React.createElement(Component, { meetingId: 'shared-room' })); });
     assert.equal(view.root.findAllByType('a').length, 0);
     visible = true;
     await act(async () => { polls[0](); });
-    const links = view.root.findAllByType('a'); assert.equal(links.length, 2);
+    const links = view.root.findAllByType('a'); assert.equal(links.length, componentName === 'FileShare' ? 1 : 2);
     for (const link of links) assert.equal(link.props.href, `/api/files/download?path=${encodeURIComponent(key)}`);
     assert.equal(callsToUrl, 0, 'links are immediately usable without signed-URL requests');
     fail = true;
     await act(async () => { polls[0](); });
-    assert.equal(view.root.findAllByType('a').length, 2, 'temporary polling errors do not erase shared files');
+    assert.equal(view.root.findAllByType('a').length, links.length, 'temporary polling errors do not erase shared files');
     assert.match(JSON.stringify(view.toJSON()), /Retrying automatically/);
     fail = false; visible = false;
     await act(async () => { polls[0](); });
@@ -219,7 +221,7 @@ for (const componentName of ['FileShare', 'UploadMedia']) {
   });
 }
 
-test('guests and participants without a resolved subscription can open the meeting Files panel', async t => {
+test('room navbar shows host approval control only to signed-in users', async t => {
   const React = require('react');
   const { create, act } = require('react-test-renderer');
   const previousDocument = global.document;
@@ -236,6 +238,7 @@ test('guests and participants without a resolved subscription can open the meeti
     },
     'next-auth/react': { useSession: () => authenticated ? { data: { user: { email: 'viewer@example.com' } }, status: 'authenticated' } : { data: null, status: 'unauthenticated' } },
     './FileShare': { __esModule: true, default: props => React.createElement('section', { 'data-shared-meeting': props.meetingId }, 'Shared files') },
+    '@/components/HostApprovalNotifications': { __esModule: true, default: props => React.createElement('section', { 'data-approvals-meeting': props.meetingId }, 'Host approvals') },
     './SharedFileNotifications': { __esModule: true, default: () => null },
     './DesignTheme': { DesignSwitcher: () => null },
     './AudioCapture': { AudioCapture: () => null },
@@ -248,11 +251,8 @@ test('guests and participants without a resolved subscription can open the meeti
     let view;
     try {
       await act(async () => { view = create(React.createElement(Navbar)); });
-      assert.equal(view.root.findAllByType('section').length, 0);
-      await act(async () => { view.root.findByProps({ 'aria-label': 'Open upload media' }).props.onClick(); });
-      assert.equal(view.root.findByType('section').props['data-shared-meeting'], 'shared-room');
-      await act(async () => { view.root.findByProps({ 'aria-label': 'Close upload media' }).props.onClick(); });
-      assert.equal(view.root.findAllByType('section').length, 0);
+      const approvals = view.root.findAllByProps({ 'data-approvals-meeting': 'shared-room' });
+      assert.equal(approvals.length, signedIn ? 1 : 0);
     } finally { if (view) act(() => view.unmount()); }
   }
 });

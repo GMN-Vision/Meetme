@@ -4,9 +4,13 @@ const load = require('./load-typescript.cjs');
 
 test('joined participants can present a validated document in the room and stop it', async () => {
   let sharedPresentation = null;
-  const chain = () => ({ select: () => ({ lean: async () => ({ sharedPresentation }) }) });
+  let email = 'host@example.com';
+  const chain = () => ({ select: () => ({ lean: async () => ({ sharedPresentation, hostEmail: 'host@example.com' }), hostEmail: 'host@example.com' }) });
   const route = load('app/api/meeting-presentation/route.ts', {
     '@/lib/db': async () => {},
+    'next-auth': { getServerSession: async () => ({ user: { email } }) },
+    '@/lib/auth-options': { authOptions: {} },
+    '@/lib/meeting-approval-access': { consumeMeetingApproval: async () => false },
     '@/lib/meeting-document-access': {
       verifyActiveMeetingDocumentToken: async (token, meetingId) => {
         if (!['valid', 'viewer'].includes(token) || meetingId !== 'room') throw new Error('Access denied');
@@ -44,6 +48,10 @@ test('joined participants can present a validated document in the room and stop 
   assert.equal((await post('files/local-page.HTM')).status, 200);
   assert.equal((await post('files/audio.mp3')).status, 415);
   assert.equal((await post('files/virus.exe')).status, 415);
+  email = 'participant@example.com';
+  assert.equal((await post('files/Slides.pptx')).status, 403, 'participant needs host approval');
+  assert.equal((await post(null)).status, 403, 'only the host can stop presenting');
+  email = 'host@example.com';
   assert.equal((await post(null)).status, 200);
   assert.equal((await (await route.GET(new Request('https://app.example/api/meeting-presentation?meetingId=room', { headers }))).json()).presentation, null);
   assert.equal((await route.GET(new Request('https://app.example/api/meeting-presentation?meetingId=room'))).status, 400);

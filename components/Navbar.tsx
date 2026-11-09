@@ -12,6 +12,7 @@ import { AudioCapture } from './AudioCapture';
 import Whiteboard from './Whiteboard';
 import { YouTubeStreamModal } from './YouTubeStreamModal';
 import { useLivestream } from '@/hooks/useLivestream';
+import HostApprovalNotifications from '@/components/HostApprovalNotifications';
 
 type MembershipPlan = 'free' | 'pro' | 'business' | 'enterprise';
 
@@ -381,6 +382,7 @@ export function Navbar() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+            {isRoomPage && isLoggedIn && <HostApprovalNotifications meetingId={roomMeetingId} />}
             {isLoggedIn ? (
               <div className="flex items-center gap-2 sm:gap-2.5">
                 {!isRoomPage && (
