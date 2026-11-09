@@ -23,15 +23,49 @@ test('guide answers start meeting without contacting Gemini; handles provider fa
  assert.match((await (await ask('How can I schedule a meeting?')).json()).answer, /Upcoming meetings/);
  for (const status of [429, 401, 403, 404, 500]) {
   fetchMock.mock.mockImplementation(async () => new Response('{}', { status }));
-  const response = await ask('Explain my workspace access');
+  const response = await ask('How do I export the attendee audit ledger?');
   assert.equal(response.status, 200);
   assert.equal((await response.json()).answer, guide.GUIDE_FALLBACK);
  }
  fetchMock.mock.mockImplementation(async () => { throw new Error('timeout'); });
- assert.equal((await (await ask('Explain workspace access')).json()).answer, guide.GUIDE_FALLBACK);
+ assert.equal((await (await ask('How do I export the attendee audit ledger?')).json()).answer, guide.GUIDE_FALLBACK);
  delete process.env.GEMINI_GUIDE_API_KEY;
- assert.equal((await (await ask('Explain workspace access')).json()).answer, guide.GUIDE_FALLBACK);
+ assert.equal((await (await ask('How do I export the attendee audit ledger?')).json()).answer, guide.GUIDE_FALLBACK);
  assert.equal((await route.POST({ json: async () => ({ messages: [] }) })).status, 400);
+});
+
+test('guide knows current room controls offline and sends relevant app context for follow-ups', async t => {
+ const previousKey = process.env.GEMINI_GUIDE_API_KEY;
+ t.after(() => { if (previousKey === undefined) delete process.env.GEMINI_GUIDE_API_KEY; else process.env.GEMINI_GUIDE_API_KEY = previousKey; });
+ const route = load('app/api/guide-chat/route.ts', { '@/lib/guide-answers': guide });
+ delete process.env.GEMINI_GUIDE_API_KEY;
+ const ask = (content, page = '/room/example') => route.POST({ json: async () => ({ page, messages: [{ role: 'user', content }] }) });
+ assert.match((await (await ask('How do I share my screen?')).json()).answer, /host receives an approval request/i);
+ assert.match((await (await ask('Where are presenter notes?')).json()).answer, /80%/);
+ assert.match((await (await ask('How does host approval work?')).json()).answer, /Accept or Reject/);
+ assert.match((await (await ask('What can I do on this page?')).json()).answer, /Video playlist/);
+ process.env.GEMINI_GUIDE_API_KEY = 'test-only';
+ let sent;
+ t.mock.method(global, 'fetch', async (_url, options) => {
+   sent = JSON.parse(options.body);
+   return Response.json({ candidates: [{ content: { parts: [{ text: 'Open Shared files in the room.' }] } }] });
+ });
+ const followUp = await route.POST({ json: async () => ({ page: '/room/example', messages: [
+   { role: 'user', content: 'How do I upload a file?' },
+   { role: 'assistant', content: 'Open Shared files.' },
+   { role: 'user', content: 'What if I am a participant?' },
+ ] }) });
+ assert.equal((await followUp.json()).answer, 'Open Shared files in the room.');
+ assert.match(sent.system_instruction.parts[0].text, /Host approvals/);
+ assert.match(sent.system_instruction.parts[0].text, /Video playlist and Shared files/);
+ assert.equal(sent.contents.length, 3);
+ global.fetch.mock.mockImplementation(async () => { throw new Error('provider offline'); });
+ const offlineFollowUp = await route.POST({ json: async () => ({ page: '/room/example', messages: [
+   { role: 'user', content: 'How do I upload a file?' },
+   { role: 'assistant', content: 'Open Shared files.' },
+   { role: 'user', content: 'What if I am a participant?' },
+ ] }) });
+ assert.match((await offlineFollowUp.json()).answer, /host to approve/i);
 });
 
 test('bulk deletion requires admin auth and validates a bounded explicit ID list', async () => {

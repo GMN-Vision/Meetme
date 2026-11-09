@@ -6,10 +6,12 @@ import { Bot, LoaderCircle, MessageCircle, Send, X } from 'lucide-react';
 
 type Message = { role: 'user' | 'assistant'; text: string };
 
-const suggestions = ['How do I start a meeting?', 'How do I join a room?', 'Where are my meeting notes?'];
+const workspaceSuggestions = ['How do I start a meeting?', 'How do I join a room?', 'Where are my meeting notes?'];
+const roomSuggestions = ['How do I share a file?', 'How does host approval work?', 'Where are presenter notes?'];
 
 export function AppGuideChat() {
   const pathname = usePathname();
+  const suggestions = pathname?.startsWith('/room/') ? roomSuggestions : workspaceSuggestions;
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -56,7 +58,7 @@ export function AppGuideChat() {
         </header>
         <div className="app-guide-chat__messages">
           {!messages.length && <div className="app-guide-chat__welcome">
-            <p>Hi! I can help you start or join a meeting, use room tools, and find recordings or notes.</p>
+            <p>Ask me how to use this page, share content, manage a meeting, or find recordings and notes.</p>
             <div className="app-guide-chat__suggestions">{suggestions.map(item => <button key={item} onClick={() => void sendMessage(undefined, item)}>{item}</button>)}</div>
           </div>}
           {messages.map((message, index) => <p key={index} className={`app-guide-chat__message app-guide-chat__message--${message.role}`}>{message.text}</p>)}
