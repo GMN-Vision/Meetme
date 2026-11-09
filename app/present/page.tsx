@@ -190,7 +190,7 @@ export default function PresentPage() {
             if (controller.signal.aborted) return;
 
             objectUrl = URL.createObjectURL(blob);
-            setSource(objectUrl);
+            setSource(`${objectUrl}#toolbar=0&navpanes=0`);
             setRenderMode('fallback');
             setNotice(
               'Opened using the presentation compatibility viewer.',

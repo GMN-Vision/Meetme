@@ -79,6 +79,7 @@ export async function GET(request: Request) {
     documentUrl.searchParams.set('token', fileToken);
 
     const config: Record<string, any> = {
+      type: 'embedded',
       documentType: documentType(file.extension),
       document: {
         fileType: file.extension,
@@ -87,8 +88,8 @@ export async function GET(request: Request) {
         url: documentUrl.toString(),
         permissions: {
           edit: false,
-          download: true,
-          print: true,
+          download: false,
+          print: false,
           review: false,
           comment: false,
         },
@@ -96,6 +97,22 @@ export async function GET(request: Request) {
       editorConfig: {
         mode: 'view',
         lang: 'en',
+        embedded: { autostart: 'document' },
+        customization: {
+          help: false,
+          feedback: false,
+          close: false,
+          goback: false,
+          comments: false,
+          hideRightMenu: true,
+          hideRulers: true,
+          layout: {
+            leftMenu: false,
+            rightMenu: false,
+            statusBar: false,
+            toolbar: false,
+          },
+        },
         user: {
           id: `viewer-${onlyOfficeDocumentKey(meetingId, file).slice(0, 16)}`,
           name: 'Melanam meeting participant',
