@@ -5,10 +5,11 @@ import { useEffect, useId, useState } from 'react';
 const NOTE_CHANGED_EVENT = 'melanam:presenter-note-changed';
 export const SPEECH_NOTE_PATH = 'meeting-speech-note';
 
-export default function PresenterNotes({ meetingId, filePath, owner }: {
+export default function PresenterNotes({ meetingId, filePath, owner, sidePanel = false }: {
   meetingId: string;
   filePath: string;
   owner: string;
+  sidePanel?: boolean;
 }) {
   const [note, setNote] = useState('');
   const noteId = useId();
@@ -45,7 +46,7 @@ export default function PresenterNotes({ meetingId, filePath, owner }: {
     }
   };
 
-  return <div className="border-t border-zinc-800 bg-zinc-900/80 p-4">
+  return <div className={sidePanel ? 'flex h-full min-h-0 flex-col p-3' : 'border-t border-zinc-800 bg-zinc-900/80 p-4'}>
     <label htmlFor={noteId} className="block text-sm font-semibold text-white">Private presenter notes</label>
     <p className="mb-3 mt-1 text-xs text-zinc-400">Write your speech cues here. Only you can see them; they stay in this browser.</p>
     <textarea
@@ -55,7 +56,7 @@ export default function PresenterNotes({ meetingId, filePath, owner }: {
       placeholder="Opening remarks, key points, and reminders..."
       rows={6}
       spellCheck
-      className="min-h-36 w-full resize-y rounded-lg border border-zinc-700 bg-zinc-950 p-3 text-base leading-7 text-zinc-100 outline-none placeholder:text-zinc-500 focus:border-sky-500"
+      className={`${sidePanel ? 'min-h-24 flex-1 resize-none' : 'min-h-36 resize-y'} w-full rounded-lg border border-zinc-700 bg-zinc-950 p-3 text-base leading-7 text-zinc-100 outline-none placeholder:text-zinc-500 focus:border-sky-500`}
     />
   </div>;
 }

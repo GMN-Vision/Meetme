@@ -17,6 +17,7 @@ import VideoPlaylistPanel from '@/components/VideoPlaylistPanel';
 import FileShare from '@/components/FileShare';
 import SharedFileNotifications from '@/components/SharedFileNotifications';
 import PresenterNotes, { SPEECH_NOTE_PATH } from '@/components/PresenterNotes';
+import PresentationWorkspace from '@/components/PresentationWorkspace';
 import { Files, ListVideo } from 'lucide-react';
 import { useRecording } from '@/hooks/useRecording';
 
@@ -864,8 +865,9 @@ export default function RoomPage() {
             <span className="min-w-0 truncate font-medium">Presenting: {sharedPresentation.name}</span>
             <button type="button" onClick={() => { void updatePresentation(null).catch(error => setPresentationError(error.message)); }} className="shrink-0 rounded-lg bg-zinc-800 px-3 py-1.5 hover:bg-zinc-700">Stop presenting</button>
           </div>
-          <iframe key={`${sharedPresentation.path}:${sharedPresentation.updatedAt}`} title={`Shared presentation: ${sharedPresentation.name}`} src={presentationUrl} className="h-[min(70dvh,46rem)] min-h-[28rem] w-full border-0 bg-white" />
-          {sharedPresentation.isPresenter && <PresenterNotes meetingId={meetingId} filePath={SPEECH_NOTE_PATH} owner={userEmail || guestName} />}
+          <PresentationWorkspace notes={sharedPresentation.isPresenter ? <PresenterNotes meetingId={meetingId} filePath={SPEECH_NOTE_PATH} owner={userEmail || guestName} sidePanel /> : undefined}>
+            <iframe key={`${sharedPresentation.path}:${sharedPresentation.updatedAt}`} title={`Shared presentation: ${sharedPresentation.name}`} src={presentationUrl} className="h-full w-full border-0 bg-white" />
+          </PresentationWorkspace>
         </section>
       )}
     </div>

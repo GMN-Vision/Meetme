@@ -95,6 +95,22 @@
 .room-side-scroll::-webkit-scrollbar-track { background: transparent; }
 .room-side-scroll::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(161,161,170,.3); }
 .room-side-scroll:hover::-webkit-scrollbar-thumb { background: rgba(161,161,170,.5); }
+.presentation-workspace { display: flex; flex-direction: column; }
+.presentation-workspace-stage { flex: 1 1 60%; }
+.presentation-workspace-notes { flex: 1 1 40%; border-top: 1px solid rgba(82,82,91,.75); }
+.presentation-workspace-width-handle { display: none; }
+.presentation-workspace-height-handle { display: flex; height: 12px; align-items: center; justify-content: center; cursor: ns-resize; touch-action: none; background: #18181b; }
+.presentation-workspace-height-handle::after { content: ''; width: 40px; height: 3px; border-radius: 999px; background: #71717a; }
+.presentation-workspace-height-handle:hover::after, .presentation-workspace-height-handle:focus-visible::after { background: #7dd3fc; }
+.presentation-workspace-height-handle:focus-visible, .presentation-workspace-width-handle:focus-visible { outline: 2px solid #7dd3fc; outline-offset: -2px; }
+@media (min-width: 768px) {
+  .presentation-workspace.has-notes { flex-direction: row; }
+  .presentation-workspace.has-notes .presentation-workspace-stage { flex: 0 0 calc(var(--presentation-width) - 5px); }
+  .presentation-workspace.has-notes .presentation-workspace-notes { flex: 1 1 0; border-top: 0; }
+  .presentation-workspace-width-handle { display: flex; width: 10px; flex: 0 0 10px; align-items: center; justify-content: center; cursor: ew-resize; touch-action: none; background: #18181b; }
+  .presentation-workspace-width-handle::after { content: ''; height: 40px; width: 3px; border-radius: 999px; background: #71717a; }
+  .presentation-workspace-width-handle:hover::after, .presentation-workspace-width-handle:focus-visible::after { background: #7dd3fc; }
+}
 @media (max-width: 639px) { .room-glass-panel { padding: 1rem; border-radius: 1.25rem; } }
 @media (min-width: 1280px) { .room-side-scroll { height: clamp(24rem,68dvh,40rem); max-height: none; } }
 @media (min-width: 1280px) { .room-glass-panel button[aria-label='Close video playlist'] { display: none; } }
