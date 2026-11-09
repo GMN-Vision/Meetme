@@ -343,38 +343,40 @@ export default function VideoPlaylistPanel({
           return (
             <li
               key={item.id}
-              className={`flex flex-wrap items-start gap-2 rounded-xl border px-2.5 py-2 ${
+              className={`rounded-xl border p-2.5 transition-colors ${
                 isCurrent
                   ? 'border-sky-400/30 bg-sky-400/5'
                   : 'border-zinc-800 bg-zinc-950/40'
               }`}
             >
-              <button
-                type="button"
-                onClick={() => playItem(item)}
-                disabled={working}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-700 text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-60 sm:h-8 sm:w-8"
-                aria-label={`Play ${itemLabel(item)}`}
-                title="Play in meeting"
-              >
-                <Play className="h-3.5 w-3.5" />
-              </button>
-
-              <div className="min-w-0 flex-1">
-                <div className="aspect-video w-full overflow-hidden rounded-lg bg-zinc-900">
+              <div className="min-w-0">
+                <div className="group relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-900">
                   {youtubeId ? (
                     // Each playlist entry previews its own YouTube video.
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img loading="lazy" src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} alt={`Preview of ${itemLabel(item)}`} className="h-full w-full object-cover" />
+                    <img loading="lazy" src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    <video src={`${item.url}#t=0.1`} muted playsInline preload="metadata" aria-label={`Preview of ${itemLabel(item)}`} className="h-full w-full object-cover" />
+                    <video src={`${item.url}#t=0.1`} muted playsInline preload="metadata" aria-hidden="true" className="h-full w-full object-cover" />
                   )}
+                  <button
+                    type="button"
+                    onClick={() => playItem(item)}
+                    disabled={working}
+                    className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors hover:bg-black/40 focus-visible:bg-black/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-sky-300 disabled:cursor-wait disabled:opacity-60"
+                    aria-label={`Play ${itemLabel(item)}`}
+                    title="Play in meeting"
+                  >
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/50 bg-zinc-950/80 text-white shadow-lg transition-transform group-hover:scale-110">
+                      <Play className="ml-0.5 h-5 w-5 fill-current" />
+                    </span>
+                  </button>
+                  {isCurrent && playlist.playing && <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-sky-400 px-2 py-0.5 text-[10px] font-semibold text-zinc-950">Now playing</span>}
                 </div>
-                <p className="mt-1.5 break-words text-sm text-zinc-100">{itemLabel(item)}</p>
+                <p className="mt-2 break-words text-sm font-medium text-zinc-100">{itemLabel(item)}</p>
                 <p className="mt-0.5 truncate text-[11px] text-zinc-500" title={item.url}>{item.url}</p>
               </div>
 
-              <div className="flex w-full items-center justify-end gap-1 border-t border-zinc-800 pt-1 sm:w-auto sm:border-0 sm:pt-0 xl:w-full xl:border-t xl:pt-1">
+              <div className="mt-2 flex items-center justify-end gap-1 border-t border-zinc-800 pt-1">
                 <button
                   type="button"
                   onClick={() => moveItem(item, 'up')}
