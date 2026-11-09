@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Download, Upload, Trash2, FileText, Music2, Video, Image as ImageIcon, Presentation, ExternalLink } from 'lucide-react'
+import { Download, Upload, Trash2, FileText, Music2, Video, Image as ImageIcon, Presentation, ExternalLink, Eye } from 'lucide-react'
 import FileAllowance, { useFileAllowance } from './FileAllowance'
 import { uploadSharedFile, formatFileBytes } from '@/lib/file-upload-client'
 import { JITSI_PRESENT_EVENT } from '@/lib/jitsi-features'
@@ -174,13 +174,44 @@ export default function FileShare({
       </div>
 
       <ul className="space-y-2" aria-label="Shared files">
-        {files.map((f) => (
-          <li key={f.path} className={`rounded-xl border p-2.5 transition-colors ${previewPath === f.path ? 'border-zinc-500 bg-zinc-800/70' : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-600 hover:bg-zinc-900/70'}`}>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between xl:flex-col xl:items-stretch">
+        {files.map((f) => {
+          const fileName = f.name.split('/').pop() || f.name
+          const fileType = PREVIEW_TYPES[sharedFileExtension(f.name)] || ''
+          const thumbnailUrl = `${getDownloadHref(f.path)}&preview=1`
+          const isPreviewOpen = previewPath === f.path
+          return <li key={f.path} className={`rounded-xl border p-2.5 transition-colors ${isPreviewOpen ? 'border-zinc-500 bg-zinc-800/70' : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-600 hover:bg-zinc-900/70'}`}>
+          <div className="group relative aspect-video w-full overflow-hidden rounded-lg border border-white/10 bg-zinc-900">
+            {fileType.startsWith('image/') ? (
+              // File previews use the authenticated download route.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img loading="lazy" src={thumbnailUrl} alt="" className="h-full w-full object-contain" />
+            ) : fileType.startsWith('video/') ? (
+              <video src={`${thumbnailUrl}#t=0.1`} muted playsInline preload="metadata" aria-hidden="true" className="h-full w-full object-contain" />
+            ) : fileType === 'application/pdf' ? (
+              <iframe src={`${thumbnailUrl}#toolbar=0&navpanes=0`} title={`Thumbnail of ${fileName}`} tabIndex={-1} className="pointer-events-none h-full w-full border-0 bg-white" />
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-zinc-400">
+                {fileType.startsWith('audio/') ? <Music2 className="h-8 w-8" /> : getPresentationKind(f.name) === 'slides' ? <Presentation className="h-8 w-8" /> : <FileText className="h-8 w-8" />}
+                <span className="text-xs font-semibold uppercase">{sharedFileExtension(f.name) || 'File'}</span>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => setPreviewPath(path => path === f.path ? '' : f.path)}
+              aria-label={`${isPreviewOpen ? 'Close' : 'Preview'} ${fileName}`}
+              aria-expanded={isPreviewOpen}
+              className="absolute inset-0 flex items-center justify-center bg-black/15 transition-colors hover:bg-black/35 focus-visible:bg-black/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-sky-300"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/50 bg-zinc-950/80 text-white shadow-lg transition-transform group-hover:scale-110">
+                <Eye className="h-5 w-5" />
+              </span>
+            </button>
+          </div>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between xl:flex-col xl:items-stretch">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               {PREVIEW_TYPES[sharedFileExtension(f.name)]?.startsWith('audio/') ? <Music2 className="h-4 w-4 shrink-0 text-sky-300" /> : PREVIEW_TYPES[sharedFileExtension(f.name)]?.startsWith('video/') ? <Video className="h-4 w-4 shrink-0 text-sky-300" /> : PREVIEW_TYPES[sharedFileExtension(f.name)]?.startsWith('image/') ? <ImageIcon className="h-4 w-4 shrink-0 text-sky-300" /> : getPresentationKind(f.name) === 'slides' ? <Presentation className="h-4 w-4 shrink-0 text-sky-300" /> : <FileText className="h-4 w-4 shrink-0 text-sky-300" />}
-              <button type="button" onClick={() => setPreviewPath(path => path === f.path ? '' : f.path)} className="min-w-0 truncate text-left text-sm text-zinc-100 hover:text-white hover:underline" aria-expanded={previewPath === f.path}>
-                {f.name.split('/').pop()}
+              <button type="button" onClick={() => setPreviewPath(path => path === f.path ? '' : f.path)} className="min-w-0 truncate text-left text-sm text-zinc-100 hover:text-white hover:underline" aria-expanded={isPreviewOpen}>
+                {fileName}
               </button>
             </div>
             <div className="flex items-center justify-end gap-1.5 border-t border-zinc-800 pt-2 sm:shrink-0 sm:border-0 sm:pt-0 xl:border-t xl:pt-2">
@@ -210,7 +241,7 @@ export default function FileShare({
             <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-sky-300 hover:text-sky-200"><ExternalLink className="h-3 w-3" /> Open or download</a>
           </div>}
           </li>
-        ))}
+        })}
       </ul>
 
     </div>
