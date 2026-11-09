@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { FileUpload } from './FileUpload'
 import FileAllowance, { useFileAllowance } from './FileAllowance'
 import { uploadSharedFile, formatFileBytes } from '@/lib/file-upload-client'
+import UpgradeCallout, { isPlanUpgradeError } from '@/components/UpgradeCallout'
 
 interface MediaFile {
   name: string
@@ -42,6 +43,7 @@ export default function UploadMedia({
   const [progress, setProgress] = useState(0)
   const allowance = useFileAllowance()
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [upgradeReason, setUpgradeReason] = useState('')
   const [recentActivity, setRecentActivity] = useState<MeetingActivityItem[]>([])
 
   const userLabel = useMemo(() => {
@@ -113,6 +115,7 @@ export default function UploadMedia({
   }
 
   const handleFileUpload = async (uploadedFiles: File[]) => {
+    setUpgradeReason('')
     if (uploadedFiles.length === 0 || !meetingId) {
       pushNotice('Pick a file first')
       return
@@ -120,9 +123,13 @@ export default function UploadMedia({
 
     const file = uploadedFiles[0]
     if (uploading) return
-    if (!allowance.limits) { pushNotice('Wait for your upload allowance to load'); return }
+    if (!allowance.limits) {
+      if (isPlanUpgradeError(allowance.error)) setUpgradeReason(allowance.error)
+      else pushNotice('Wait for your upload allowance to load')
+      return
+    }
     if (file.size > allowance.limits.availableFileBytes) {
-      pushNotice('You can send up to ' + formatFileBytes(allowance.limits.availableFileBytes) + ' with your current plan and storage')
+      setUpgradeReason('This file exceeds your current upload allowance of ' + formatFileBytes(allowance.limits.availableFileBytes) + '. Choose a higher plan for larger files or more storage.')
       return
     }
     const controller = new AbortController()
@@ -157,7 +164,9 @@ export default function UploadMedia({
       if (controller.signal.aborted && (err as Error)?.name === 'AbortError') pushNotice('Upload cancelled')
       else {
         console.error('[UploadMedia] upload error:', err)
-        pushNotice(err instanceof Error ? err.message : 'Upload error. Try again.')
+        const message = err instanceof Error ? err.message : 'Upload error. Try again.'
+        if (isPlanUpgradeError(message)) setUpgradeReason(message)
+        else pushNotice(message)
       }
     } finally {
       uploadController.current = null
@@ -205,6 +214,7 @@ export default function UploadMedia({
       </div>
 
       <FileAllowance allowance={allowance} />
+      {upgradeReason && <div className="mb-3"><UpgradeCallout reason={upgradeReason} /></div>}
       {syncNotice && <p className="mb-3 text-xs text-amber-300" role="status">{syncNotice}</p>}
       {uploading && <div className="mb-3 flex items-center justify-between gap-3"><p className="text-sm text-zinc-300" role="status">{cancelling ? 'Cancelling upload…' : `Uploading ${progress}%`}</p><button type="button" onClick={() => { setCancelling(true); uploadController.current?.abort() }} disabled={cancelling || !uploadController.current} className="rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-800 disabled:opacity-60">Cancel upload</button></div>}
       <div className="mb-4 space-y-2">

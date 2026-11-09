@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { isPlanUpgradeError } from '@/components/UpgradeCallout';
 
 interface AudioCaptureProps {
   meetingId: string;
@@ -481,7 +483,7 @@ export function AudioCapture({
 
       {error && (
         <div className={`${statusClassName} bg-red-900/90 text-red-100`}>
-          {error}
+          {error}{isPlanUpgradeError(error) && <> <Link href="/pricing" className="font-semibold underline underline-offset-2">View higher plans</Link></>}
         </div>
       )}
 

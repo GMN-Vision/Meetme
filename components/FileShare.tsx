@@ -8,6 +8,7 @@ import { getPresentationKind, PREVIEW_TYPES, sharedFileExtension } from '@/lib/s
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
 import { FileUpload } from '@/components/ui/file-upload'
 import PresenterNotes, { SPEECH_NOTE_PATH } from './PresenterNotes'
+import UpgradeCallout, { isPlanUpgradeError } from '@/components/UpgradeCallout'
 
 export default function FileShare({
   meetingId,
@@ -39,6 +40,7 @@ export default function FileShare({
   const [progress, setProgress] = useState(0)
   const allowance = useFileAllowance()
   const [notice, setNotice] = useState('')
+  const [upgradeReason, setUpgradeReason] = useState('')
   const [loadingList, setLoadingList] = useState(false)
   const [previewPath, setPreviewPath] = useState('')
   const [showSpeechNote, setShowSpeechNote] = useState(false)
@@ -76,14 +78,19 @@ export default function FileShare({
   useEffect(() => () => uploadController.current?.abort(), [])
 
   const handleUpload = async () => {
+    setUpgradeReason('')
     if (!selected || !resolvedScopeId) {
       console.log('[FileShare] Missing selected or scopeId', { selected, resolvedScopeId })
       setNotice('Select a file first')
       return
     }
-    if (!allowance.limits) { setNotice('Wait for your upload allowance to load'); return }
+    if (!allowance.limits) {
+      if (isPlanUpgradeError(allowance.error)) setUpgradeReason(allowance.error)
+      else setNotice('Wait for your upload allowance to load')
+      return
+    }
     if (selected.size > allowance.limits.availableFileBytes) {
-      setNotice('You can send up to ' + formatFileBytes(allowance.limits.availableFileBytes) + ' with your current plan and storage')
+      setUpgradeReason('This file exceeds your current upload allowance of ' + formatFileBytes(allowance.limits.availableFileBytes) + '. Choose a higher plan for larger files or more storage.')
       return
     }
     const controller = new AbortController()
@@ -95,6 +102,7 @@ export default function FileShare({
       await uploadSharedFile(selected, resolvedScopeId, setProgress, controller.signal)
       uploadController.current = null
       setSelected(null)
+      setUpgradeReason('')
       setNotice('File shared with everyone in this room')
       await fetchFiles()
     } catch (err) {
@@ -102,7 +110,9 @@ export default function FileShare({
         setNotice('Upload cancelled')
       } else {
         console.error('[FileShare] Upload error:', err)
-        setNotice('Upload error: ' + String(err))
+        const message = err instanceof Error ? err.message : String(err)
+        if (isPlanUpgradeError(message)) setUpgradeReason(message)
+        else setNotice('Upload error: ' + message)
       }
     } finally {
       uploadController.current = null
@@ -135,6 +145,9 @@ export default function FileShare({
   const previewType = previewFile ? PREVIEW_TYPES[sharedFileExtension(previewFile.name)] : ''
   const previewUrl = previewFile ? `${getDownloadHref(previewFile.path)}&preview=1` : ''
   const officePreviewUrl = previewFile && meetingId && participantKey ? `/present?${new URLSearchParams({ path: previewFile.path, name: previewFile.name, meetingId, participantKey, embedded: '1' })}` : ''
+  const fileUpgradeReason = upgradeReason || (selected && allowance.limits && selected.size > allowance.limits.availableFileBytes
+    ? `This file exceeds your current upload allowance of ${formatFileBytes(allowance.limits.availableFileBytes)}. Choose a higher plan for larger files or more storage.`
+    : '')
 
   return (
     <div className={className || 'rounded-3xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 p-5'}>
@@ -152,6 +165,7 @@ export default function FileShare({
           {notice}
         </div>
       ) : null}
+      {fileUpgradeReason && <div className="mb-3"><UpgradeCallout reason={fileUpgradeReason} /></div>}
 
       <details className="mb-2 text-xs text-zinc-400">
         <summary className="cursor-pointer py-1 hover:text-zinc-200">Upload allowance</summary>
@@ -159,10 +173,10 @@ export default function FileShare({
       </details>
       {syncNotice && <p className="mb-3 text-xs text-amber-300" role="status">{syncNotice}</p>}
       <div className="mb-3 flex flex-col gap-2">
-        <FileUpload compact value={selected} disabled={uploading} onChange={files => setSelected(files[0] || null)} />
+        <FileUpload compact value={selected} disabled={uploading} onChange={files => { setSelected(files[0] || null); setUpgradeReason('') }} />
         <HoverBorderGradient
           onClick={handleUpload}
-          disabled={!selected || uploading || !isReady || !allowance.limits || selected.size > allowance.limits.availableFileBytes}
+          disabled={!selected || uploading || !isReady}
           className="w-full gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Upload className="h-4 w-4" />

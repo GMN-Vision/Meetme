@@ -4,6 +4,7 @@ import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import UpgradeCallout, { isPlanUpgradeError } from '@/components/UpgradeCallout';
 
 interface CreateMeetingModalProps {
   isOpen: boolean;
@@ -115,11 +116,9 @@ export function CreateMeetingModal({ isOpen, onClose, onCreate, scheduled = fals
             <input type="datetime-local" required value={scheduledTime} onChange={e => setScheduledTime(e.target.value)} className="input-modern mt-2" />
             <span className="mt-2 block text-xs font-normal text-zinc-400">Timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}. Save now and share the invite link; invitations are not sent automatically.</span>
           </label>}
-          {error && (
-            <div role="alert" className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-              {error}
-            </div>
-          )}
+          {error && (isPlanUpgradeError(error)
+            ? <UpgradeCallout reason={error} />
+            : <div role="alert" className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>)}
 
           <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row">
             <button

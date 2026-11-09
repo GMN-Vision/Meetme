@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, CalendarDays, LogIn, Plus, Video } from 'lucide-react';
 import { CreateMeetingModal } from '@/components/CreateMeetingModal';
 import { JoinModal } from '@/components/JoinModal';
+import UpgradeCallout, { isPlanUpgradeError } from '@/components/UpgradeCallout';
 
 export function MeetingActions({ onScheduled }: { onScheduled?: () => void }) {
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
@@ -49,7 +50,9 @@ export function MeetingActions({ onScheduled }: { onScheduled?: () => void }) {
     <>
       <section id="live-sessions" aria-label="Start or join a meeting" className="scroll-mt-28">
         {scheduledMessage && <p role="status" className="mb-4 text-sm text-sky-300">{scheduledMessage}</p>}
-        {error ? <p role="alert" className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p> : null}
+        {error ? (isPlanUpgradeError(error)
+          ? <div className="mb-4"><UpgradeCallout reason={error} /></div>
+          : <p role="alert" className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>) : null}
         <div className="grid gap-3 lg:grid-cols-[1.35fr_1fr] lg:gap-4">
           <div className="meeting-start-card relative isolate overflow-hidden rounded-3xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 p-6 sm:p-8">
             <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 -z-10 h-80 w-80 rounded-full border border-white/5 p-10"><div className="h-full w-full rounded-full border border-white/5 p-10"><div className="h-full w-full rounded-full border border-white/10" /></div></div>

@@ -20,6 +20,8 @@ import PresenterNotes, { SPEECH_NOTE_PATH } from '@/components/PresenterNotes';
 import PresentationWorkspace from '@/components/PresentationWorkspace';
 import { Files, ListVideo } from 'lucide-react';
 import { useRecording } from '@/hooks/useRecording';
+import Link from 'next/link';
+import { isPlanUpgradeError } from '@/components/UpgradeCallout';
 
 interface MeetingDetails {
   _id: string;
@@ -798,8 +800,8 @@ export default function RoomPage() {
           )}
         </div>
         {durationNotice && (
-          <div className="absolute inset-x-3 top-3 z-50 rounded-lg border border-amber-300/50 bg-amber-100/95 px-3 py-2 text-center text-sm font-semibold text-amber-950 shadow-lg">
-            {durationNotice}
+          <div className="absolute inset-x-3 top-3 z-50 flex flex-wrap items-center justify-center gap-2 rounded-lg border border-amber-300/50 bg-amber-100/95 px-3 py-2 text-center text-sm font-semibold text-amber-950 shadow-lg">
+            <span>{durationNotice}</span><Link href="/pricing" className="rounded bg-amber-900 px-2 py-1 text-white hover:bg-amber-800">View higher plans</Link>
           </div>
         )}
         {!durationNotice && (isRecording || recordingStatus === 'starting' || recordingStatus === 'processing') && (
@@ -814,7 +816,7 @@ export default function RoomPage() {
         )}
         {recordingError && (
           <div role="alert" className="absolute inset-x-3 bottom-3 z-50 flex items-center justify-between gap-3 rounded-lg border border-rose-500/40 bg-rose-950/95 px-3 py-2 text-sm text-rose-100 shadow-lg">
-            <span>{recordingError}</span>
+            <span>{recordingError}{isPlanUpgradeError(recordingError) && <> <Link href="/pricing" className="font-semibold underline underline-offset-2">View higher plans</Link></>}</span>
             <button type="button" onClick={clearRecordingError} className="text-rose-200 transition hover:text-white" aria-label="Dismiss recording error">
               ✕
             </button>
