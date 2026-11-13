@@ -29,6 +29,7 @@ function forParticipant(
   participantKey: string,
 ) {
   if (!presentation) return null;
+  if (typeof presentation.path !== 'string' || !presentation.path || typeof presentation.name !== 'string' || !presentation.name) return null;
   return {
     path: presentation.path,
     name: presentation.name,

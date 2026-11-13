@@ -21,8 +21,8 @@ export const PREVIEW_TYPES: Record<string, string> = {
   pdf: 'application/pdf',
 };
 
-export function sharedFileExtension(name: string) {
-  return name.split('.').pop()?.toLowerCase() || '';
+export function sharedFileExtension(name: unknown) {
+  return typeof name === 'string' ? name.split('.').pop()?.toLowerCase() || '' : '';
 }
 
 const PRESENTATION_EXTENSIONS = [
@@ -36,7 +36,7 @@ const OFFICE_EXTENSIONS = [
 ];
 
 export function getPresentationKind(
-  name: string,
+  name: unknown,
 ): 'media' | 'image' | 'slides' | 'pdf' | 'office' | null {
   const extension = sharedFileExtension(name);
 

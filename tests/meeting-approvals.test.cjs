@@ -47,6 +47,28 @@ test('only the host can approve a participant file request', async () => {
   assert.equal((await route.PATCH(request('PATCH', { meetingId: 'room', requestId, decision: 'reject' }))).status, 409);
 });
 
+test('host approval polling is empty before the meeting starts', async () => {
+  let email = 'host@example.com';
+  const route = load('app/api/meeting-approvals/route.ts', {
+    '@/lib/db': async () => {},
+    'next-auth': { getServerSession: async () => ({ user: { email } }) },
+    '@/lib/auth-options': { authOptions: {} },
+    '@/lib/meeting-approval-access': {},
+    '@/lib/video-playlist': {},
+    '@/lib/onlyoffice-server': {},
+    '@/models/Meeting': { findOne: async query => query.activeSessionStartedAt ? null : { hostEmail: 'host@example.com' } },
+    '@/models/MeetingParticipant': {},
+    '@/models/MeetingApproval': {},
+    '@/models/VideoPlaylist': {},
+  });
+  const request = new Request('https://app.example/api/meeting-approvals?meetingId=room');
+  const response = await route.GET(request);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { requests: [] });
+  email = 'participant@example.com';
+  assert.equal((await route.GET(request)).status, 404);
+});
+
 test('an approval is bound to its participant and can be used once', async () => {
   const id = '0123456789abcdef01234567';
   let status = 'approved';

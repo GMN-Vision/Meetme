@@ -61,7 +61,11 @@ export default function FileShare({
       )
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to refresh files')
-      setFiles(data.files || [])
+      setFiles(Array.isArray(data.files) ? data.files.filter((file: unknown): file is { name: string; path: string } => {
+        if (!file || typeof file !== 'object') return false
+        const { name, path } = file as { name?: unknown; path?: unknown }
+        return typeof name === 'string' && name.length > 0 && typeof path === 'string' && path.length > 0
+      }) : [])
       setSyncNotice(data.warning || '')
     } catch (err) {
       console.error('fetchFiles', err)

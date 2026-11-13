@@ -58,6 +58,10 @@ test('joined participants can present a validated document in the room and stop 
   assert.equal((await post('files/local-page.HTM')).status, 200);
   assert.equal((await post('files/audio.mp3')).status, 415);
   assert.equal((await post('files/virus.exe')).status, 415);
+  const previousPresentation = sharedPresentation;
+  sharedPresentation = { path: 'files/legacy.pdf', presenterKey: 'participant:presenter', updatedAt: new Date() };
+  assert.equal((await (await route.GET(new Request('https://app.example/api/meeting-presentation?meetingId=room', { headers }))).json()).presentation, null, 'incomplete legacy state cannot reach the room viewer');
+  sharedPresentation = previousPresentation;
   email = 'participant@example.com';
   assert.equal((await post('files/Slides.pptx')).status, 403, 'participant cannot present slides even with approval');
   assert.equal((await post(null)).status, 403, 'only the host can stop presenting');

@@ -30,7 +30,12 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const meetingId = url.searchParams.get('meetingId') || '';
     const meeting = await activeMeeting(meetingId);
-    if (!meeting) return reply({ error: 'Meeting is unavailable.' }, 404);
+    if (!meeting) {
+      const upcoming = meetingId ? await Meeting.findOne({ meetingId, endedAt: null }) : null;
+      const session = await getServerSession(authOptions);
+      if (upcoming && emailOf(session) === String(upcoming.hostEmail).toLowerCase() && !url.searchParams.get('requestId')) return reply({ requests: [] });
+      return reply({ error: 'Meeting is unavailable.' }, 404);
+    }
     const requestId = url.searchParams.get('requestId');
     if (requestId) {
       const access = await verifyMeetingApprovalToken(bearer(request), meetingId);
