@@ -776,7 +776,7 @@ export default function RoomPage() {
   const recordingEnabled = meeting?.recordingEnabled !== false;
 
   const roomToolbarButtons = useMemo(
-    () => [...getJitsiToolbarButtons(meeting?.chatEnabled !== false, recordingEnabled && isMeetingHost).filter(button => button !== 'hangup' && (isMeetingHost || !['security', 'shareaudio', 'etherpad', 'whiteboard'].includes(button))), 'videoquality'],
+    () => [...getJitsiToolbarButtons(meeting?.chatEnabled !== false, recordingEnabled && isMeetingHost).filter(button => isMeetingHost || !['security', 'shareaudio', 'etherpad', 'whiteboard'].includes(button)), 'videoquality'],
     [meeting?.chatEnabled, recordingEnabled, isMeetingHost]
   );
   const canMountJitsi = Boolean(
@@ -826,9 +826,6 @@ export default function RoomPage() {
         onScreenRequested={handleScreenRequested}
       />
       <SharedFileNotifications meetingId={meetingId} onUnreadChange={setUnreadFiles} />
-      <div className="mb-3 flex justify-end">
-        <button type="button" disabled={!jitsiApi} onClick={handleHangupRequested} className="min-h-10 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm font-medium text-zinc-100 hover:bg-zinc-800 disabled:opacity-50">{isMeetingHost ? 'Leave or end meeting' : 'Leave meeting'}</button>
-      </div>
       {showExitOptions && isMeetingHost && <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 p-4" onMouseDown={event => { if (event.target === event.currentTarget && !endingForAll) setShowExitOptions(false); }}>
         <div role="dialog" aria-modal="true" aria-labelledby="meeting-exit-title" className="w-full max-w-sm rounded-2xl border border-zinc-700 bg-zinc-950 p-5 shadow-2xl">
           <h2 id="meeting-exit-title" className="text-lg font-semibold text-white">Leave this meeting?</h2>

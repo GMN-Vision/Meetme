@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     const issuer = process.env.JITSI_JWT_ISSUER || 'melanam';
     const resolvedName = userEmail || guestName;
     const resolvedId = userEmail || `guest:${resolvedName}`;
-    const isHost = Boolean(userEmail) && userEmail === String(meeting.hostEmail || '').toLowerCase();
+    const isHost = Boolean(userEmail) && (userEmail === meeting.hostEmail || userEmail === meeting.hostId);
     const roomName = normalizeJitsiRoomName(meetingId);
     const remainingSeconds = meeting.activeSessionEndsAt
       ? Math.ceil((meeting.activeSessionEndsAt.getTime() - Date.now()) / 1000)
