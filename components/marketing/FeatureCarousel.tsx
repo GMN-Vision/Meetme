@@ -1,11 +1,12 @@
 'use client';
 
+import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight, FileText, FolderOpen, Globe2, ListVideo, Pause, PencilLine, Play, Subtitles, Video } from 'lucide-react';
 
 const FEATURES = [
   { name: 'Whiteboard & polls', icon: PencilLine, title: 'Turn ideas into a shared plan.', description: 'Sketch together, collect quick votes and make the next step clear to everyone.', points: ['Draw and write on the same board', 'See poll results as people vote'], badge: 'Create together' },
-  { name: 'Files & presentations', icon: FolderOpen, title: 'Share it. Show it. Discuss it.', description: 'Bring your slides, documents and media into the meeting so everyone has the same context.', points: ['Preview PDFs, images, video and audio', 'Present your deck, one slide at a time'], badge: 'Keep everyone on the same page' },
+  { name: 'Present files', icon: FolderOpen, title: 'Share it. Show it. Discuss it.', description: 'Bring your slides, documents and media into the meeting so everyone has the same context.', points: ['Preview PDFs, images, video and audio', 'Present your deck, one slide at a time'], badge: 'Keep everyone on the same page' },
   { name: 'Video playlists', icon: ListVideo, title: 'Watch together, in sync.', description: 'Queue up videos and keep the conversation going while everyone watches the same moment.', points: ['Add videos to a shared queue', 'Keep playback in sync across the room'], badge: 'One queue for the whole room' },
   { name: 'Live captions', icon: Subtitles, title: 'Follow every word as it happens.', description: 'Read the conversation while people speak, with automatic language detection built in.', points: ['Recognises speech in 32 languages', 'Creates a transcript for your meeting notes'], badge: 'Included with Pro and Business' },
   { name: 'Recordings & notes', icon: Video, title: 'Keep the conversation useful.', description: 'Replay the meeting and revisit the decisions when you need them.', points: ['Save recordings to watch or share later', 'Get AI summaries and action items on Pro'], badge: 'Recording on every plan. AI notes from Pro.' },
@@ -53,6 +54,7 @@ export function FeatureCarousel() {
   const activeRef = useRef(0);
   const pointerStart = useRef<number | null>(null);
   const [active, setActive] = useState(0);
+  const [direction, setDirection] = useState(1);
   const [playing, setPlaying] = useState(true);
   const [visible, setVisible] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -60,6 +62,8 @@ export function FeatureCarousel() {
 
   const goTo = useCallback((index: number) => {
     const next = (index + FEATURES.length) % FEATURES.length;
+    if (next === activeRef.current) return;
+    setDirection(index > activeRef.current ? 1 : -1);
     activeRef.current = next;
     setActive(next);
   }, []);
@@ -101,11 +105,13 @@ export function FeatureCarousel() {
       }} onPointerCancel={() => { pointerStart.current = null; setInteracting(false); }} onKeyDown={event => {
         if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); goTo(active + (event.key === 'ArrowRight' ? 1 : -1)); }
       }}>
-        <div className="feature-track" data-reduced-motion={reducedMotion} style={{ transform: `translateX(-${active * 100}%)` }}>
-        {FEATURES.map((feature, index) => <article key={feature.name} id={index === 3 ? 'captions' : undefined} className="feature-slide" role="group" aria-hidden={active !== index} aria-roledescription="slide" aria-label={`${index + 1} of ${FEATURES.length}: ${feature.name}`}>
+        <div className="feature-track">
+        <AnimatePresence initial={false} custom={direction}>
+        {FEATURES.map((feature, index) => active === index && <motion.article key={feature.name} custom={direction} initial="enter" animate="visible" exit="exit" variants={{ enter: (travel: number) => ({ opacity: 0, x: reducedMotion ? 0 : travel * 65 }), visible: { opacity: 1, x: 0 }, exit: (travel: number) => ({ opacity: 0, x: reducedMotion ? 0 : travel * -65 }) }} transition={{ duration: reducedMotion ? 0 : .55, ease: [.22, 1, .36, 1] }} id={index === 3 ? 'captions' : undefined} className="feature-slide" role="group" aria-hidden={active !== index} aria-roledescription="slide" aria-label={`${index + 1} of ${FEATURES.length}: ${feature.name}`}>
           <div className="feature-copy"><span className="feature-icon"><feature.icon size={28} /></span><p className="feature-eyebrow">{feature.name}</p><h3>{feature.title}</h3><p className="feature-description">{feature.description}</p><ul>{feature.points.map(point => <li key={point}><Check size={19} /><span>{point}</span></li>)}</ul><span className="feature-badge">{feature.badge}</span></div>
           <Preview index={index} />
-        </article>)}
+        </motion.article>)}
+        </AnimatePresence>
         </div>
       </div>
       <div className="feature-controls">
