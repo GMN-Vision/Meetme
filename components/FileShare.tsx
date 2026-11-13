@@ -208,7 +208,6 @@ export default function FileShare({
       </div>
 
       <ul className="space-y-2" aria-label="Shared files">
-        {files.length === 0 && <li className="rounded-lg border border-dashed border-zinc-700 px-3 py-6 text-center text-xs text-zinc-400">No shared files yet</li>}
         {files.map((f) => {
           const fileName = f.name.split('/').pop() || f.name
           const isPreviewOpen = previewPath === f.path

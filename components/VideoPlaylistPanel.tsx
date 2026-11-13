@@ -278,7 +278,6 @@ export default function VideoPlaylistPanel({
       ) : null}
 
       <ul className="space-y-1.5" aria-label="Video playlist">
-        {playlist.items.length === 0 && <li className="rounded-lg border border-dashed border-zinc-700 px-3 py-6 text-center text-xs text-zinc-400">No videos yet</li>}
         {playlist.items.map((item, index) => {
           const isCurrent = playlist.currentIndex === index;
           const youtubeId = isYouTubeVideoUrl(item.url) ? new URL(item.url).searchParams.get('v') : null;

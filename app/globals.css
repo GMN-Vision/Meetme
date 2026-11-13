@@ -90,7 +90,7 @@
 .app-navbar-shell--room > div { height: 40px; }
 .app-navbar-shell--room > div > div:first-child { min-width: 0; }
 .room-glass-panel { padding: 1.25rem; border: 1px solid rgba(82,82,91,.75); border-radius: 1.5rem; background: linear-gradient(145deg,rgba(27,27,31,.96),rgba(18,18,21,.97) 52%,rgba(11,11,13,.98)); box-shadow: 0 12px 32px rgba(0,0,0,.22); backdrop-filter: blur(6px); }
-.room-side-scroll { min-height: min(18rem,68dvh); max-height: min(68dvh,40rem); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(161,161,170,.35) transparent; }
+.room-side-scroll { min-height: min(10rem,68dvh); max-height: min(68dvh,40rem); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(161,161,170,.35) transparent; }
 .room-side-scroll::-webkit-scrollbar { width: 5px; }
 .room-side-scroll::-webkit-scrollbar-track { background: transparent; }
 .room-side-scroll::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(161,161,170,.3); }
