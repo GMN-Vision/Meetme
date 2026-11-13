@@ -10,7 +10,7 @@ test('joined participants can present a validated document in the room and stop 
     '@/lib/db': async () => {},
     'next-auth': { getServerSession: async () => ({ user: { email } }) },
     '@/lib/auth-options': { authOptions: {} },
-    '@/lib/meeting-approval-access': { consumeMeetingApproval: async () => false },
+    '@/lib/meeting-approval-access': { consumeMeetingApproval: async () => true },
     '@/lib/meeting-document-access': {
       verifyActiveMeetingDocumentToken: async (token, meetingId) => {
         if (!['valid', 'viewer'].includes(token) || meetingId !== 'room') throw new Error('Access denied');
@@ -49,7 +49,7 @@ test('joined participants can present a validated document in the room and stop 
   assert.equal((await post('files/audio.mp3')).status, 415);
   assert.equal((await post('files/virus.exe')).status, 415);
   email = 'participant@example.com';
-  assert.equal((await post('files/Slides.pptx')).status, 403, 'participant needs host approval');
+  assert.equal((await post('files/Slides.pptx')).status, 403, 'participant cannot present slides even with approval');
   assert.equal((await post(null)).status, 403, 'only the host can stop presenting');
   email = 'host@example.com';
   assert.equal((await post(null)).status, 200);

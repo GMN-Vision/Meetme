@@ -5,6 +5,7 @@ import dbConnect from '@/lib/db';
 import { consumeMeetingApproval, verifyMeetingApprovalToken } from '@/lib/meeting-approval-access';
 import { normalizeVideoUrl } from '@/lib/video-playlist';
 import { resolveSharedPresentationFile } from '@/lib/onlyoffice-server';
+import { getPresentationKind } from '@/lib/shared-file-types';
 import Meeting from '@/models/Meeting';
 import MeetingParticipant from '@/models/MeetingParticipant';
 import MeetingApproval, { type MeetingApprovalType } from '@/models/MeetingApproval';
@@ -79,6 +80,7 @@ export async function POST(request: Request) {
       const path = String(body.path || '');
       if (!path) return reply({ error: 'A shared file is required.' }, 400);
       const file = await resolveSharedPresentationFile(path, meetingId);
+      if (getPresentationKind(file.name) === 'slides') return reply({ error: 'Only the host can present PowerPoint slides.' }, 403);
       payload.path = file.path; payload.name = file.name;
     }
     const existing = await MeetingApproval.findOne({ meetingId, type, requesterKey: access.participantKey, status: 'pending', expiresAt: { $gt: new Date() }, payload });

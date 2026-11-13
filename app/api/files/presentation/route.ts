@@ -11,6 +11,9 @@ import {
 } from '@/lib/meeting-storage';
 import { sharedFileExtension } from '@/lib/shared-file-types';
 import { convertPresentationToPdf } from '@/lib/powerpoint-presentation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-options';
+import Meeting from '@/models/Meeting';
 
 export const runtime = 'nodejs';
 export const maxDuration = 90;
@@ -50,6 +53,13 @@ export async function GET(request: Request) {
         { error: 'Your meeting document access is invalid or expired.' },
         { status: 403 },
       );
+    }
+    await dbConnect();
+    const meeting = await Meeting.findOne({ meetingId }).select('hostEmail sharedPresentation').lean();
+    const session = await getServerSession(authOptions);
+    const isHost = Boolean(session?.user?.email && String(session.user.email).toLowerCase() === String(meeting?.hostEmail || '').toLowerCase());
+    if (!isHost && meeting?.sharedPresentation?.path !== key) {
+      return NextResponse.json({ error: 'Only the host can prepare PowerPoint presentations.' }, { status: 403 });
     }
 
     let name: string;

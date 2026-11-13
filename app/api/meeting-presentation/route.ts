@@ -71,6 +71,9 @@ export async function POST(request: Request) {
       if (!kind || kind === 'media') {
         return NextResponse.json({ error: 'This file cannot be presented in the document viewer.' }, { status: 415 });
       }
+      if (kind === 'slides' && !isHost) {
+        return NextResponse.json({ error: 'Only the host can present PowerPoint slides.' }, { status: 403 });
+      }
       if (!isHost) {
         const approved = await consumeMeetingApproval({ meetingId, approvalId: String(body.approvalId || ''), type: 'present', requesterKey: access.participantKey, payload: { path: file.path } });
         if (!approved) return NextResponse.json({ error: 'Host approval is required to present this file.' }, { status: 403 });

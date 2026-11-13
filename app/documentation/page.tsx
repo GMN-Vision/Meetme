@@ -36,7 +36,7 @@ export default function DocumentationPage() {
           'Record in the meeting toolbar starts or stops server recording. Only the host can control recording.',
           'Share video in the meeting toolbar opens the playlist panel. Paste one or more YouTube or direct video links at once, then play, reorder, and move through them in the meeting.',
           'Use More actions in the meeting for Share audio, background blur, and virtual backgrounds.',
-          'Every joined attendee can use Files → Present in meeting for shared audio, video, images, PDFs, and PowerPoint slides.',
+          'Use Upload File at the top of the room or in Shared files. PDF and PPTX files appear in the shared-files list. Only the host can prepare and present PowerPoint slides in OmniEdit; participants can view the active presentation.',
           'Audio and video play on the meeting stage. Images and slides open a viewer: select Share in meeting, then choose that tab or window in the browser picker.',
           'Use Share screen for PDFs, slides, and images. Use the meeting layout control to keep participant thumbnails beside the content.',
           'The meeting’s picture-in-picture control keeps a small meeting window visible while you work, when your browser and meeting server support it.',

@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 import { verifyActiveMeetingDocumentToken } from '@/lib/meeting-document-access';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-options';
+import Meeting from '@/models/Meeting';
+import { getPresentationKind } from '@/lib/shared-file-types';
 import {
   ONLYOFFICE_EXTENSIONS,
   onlyOfficeDocumentKey,
@@ -45,6 +49,12 @@ export async function GET(request: Request) {
 
     const access = await verifyActiveMeetingDocumentToken(accessToken, meetingId);
     const file = await resolveOnlyOfficeFile(path, meetingId);
+    const meeting = await Meeting.findOne({ meetingId }).select('hostEmail sharedPresentation').lean();
+    const session = await getServerSession(authOptions);
+    const isHost = Boolean(session?.user?.email && String(session.user.email).toLowerCase() === String(meeting?.hostEmail || '').toLowerCase());
+    if (getPresentationKind(file.name) === 'slides' && !isHost && meeting?.sharedPresentation?.path !== file.path) {
+      return NextResponse.json({ error: 'Only the host can prepare PowerPoint presentations.' }, { status: 403 });
+    }
 
     if (!ONLYOFFICE_EXTENSIONS.has(file.extension)) {
       return NextResponse.json(
@@ -79,7 +89,7 @@ export async function GET(request: Request) {
     documentUrl.searchParams.set('token', fileToken);
 
     const config: Record<string, any> = {
-      type: 'embedded',
+      type: isHost ? 'desktop' : 'embedded',
       documentType: documentType(file.extension),
       document: {
         fileType: file.extension,
@@ -107,15 +117,15 @@ export async function GET(request: Request) {
           hideRightMenu: true,
           hideRulers: true,
           layout: {
-            leftMenu: false,
+            leftMenu: isHost,
             rightMenu: false,
             statusBar: false,
-            toolbar: false,
+            toolbar: isHost,
           },
         },
         user: {
-          id: `viewer-${onlyOfficeDocumentKey(meetingId, file).slice(0, 16)}`,
-          name: 'Melanam meeting participant',
+          id: `${isHost ? 'host' : 'viewer'}-${access.participantKey.slice(0, 80)}`,
+          name: isHost ? 'OmniEdit host' : 'Melanam meeting participant',
         },
       },
       height: '100%',
@@ -125,7 +135,7 @@ export async function GET(request: Request) {
     config.token = signOnlyOfficeConfig(config);
 
     return NextResponse.json(
-      { config, name: file.name, documentType: config.documentType },
+      { config, name: file.name, documentType: config.documentType, isHost },
       { headers: { 'Cache-Control': 'no-store' } },
     );
   } catch (error: any) {

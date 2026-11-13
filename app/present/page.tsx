@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Upload } from 'lucide-react';
+import { uploadSharedFile } from '@/lib/file-upload-client';
 import { getPresentationKind } from '@/lib/shared-file-types';
 import {
   JITSI_SCREEN_REQUEST_EVENT,
@@ -72,6 +74,8 @@ export default function PresentPage() {
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(true);
   const [embedded, setEmbedded] = useState(false);
+  const [isHost, setIsHost] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [renderMode, setRenderMode] = useState<
     'office' | 'fallback' | 'media' | 'image' | ''
   >('');
@@ -143,6 +147,7 @@ export default function PresentPage() {
                 body.error || 'Could not prepare this document.',
               );
             }
+            setIsHost(Boolean(body.isHost));
 
             await loadOnlyOfficeApi();
 
@@ -265,21 +270,47 @@ export default function PresentPage() {
     }
   };
 
+  const upload = async (pickedFile: File) => {
+    if (!file.meetingId || !isHost) return;
+    setUploading(true);
+    try {
+      const result = await uploadSharedFile(pickedFile, file.meetingId, () => {});
+      if (!embedded) {
+        const next = { ...file, path: result.path, name: pickedFile.name };
+        const query = new URLSearchParams(window.location.search);
+        query.set('path', next.path);
+        query.set('name', next.name);
+        window.history.replaceState(null, '', `${window.location.pathname}?${query}`);
+        setFile(next);
+      }
+      setNotice(`${pickedFile.name} uploaded. Use Present in Shared files to show it to everyone.`);
+    } catch (uploadError) {
+      setNotice(uploadError instanceof Error ? uploadError.message : 'The file could not be uploaded.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <main className="fixed inset-0 flex flex-col bg-zinc-950 text-white">
-      {!embedded && <header className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 p-3">
+      {(!embedded || isHost) && <header className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 p-3">
         <h1 className="min-w-0 truncate text-sm font-medium">
-          {file.name || 'Presentation'}
+          <span className="mr-2 font-bold text-sky-300">OmniEdit</span>{file.name || 'Presentation'}
         </h1>
-
-        <button
+        <div className="flex flex-wrap items-center gap-2">
+        {isHost && <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-sky-600 px-3 py-2 text-sm font-semibold hover:bg-sky-500">
+          <Upload className="h-4 w-4" />{uploading ? 'Uploading…' : 'Upload File'}
+          <input type="file" className="sr-only" disabled={uploading} onChange={event => { const picked = event.target.files?.[0]; event.target.value = ''; if (picked) void upload(picked); }} />
+        </label>}
+        {!embedded && (isHost || kind !== 'slides') && <button
           type="button"
           disabled={loading || !!error}
           onClick={share}
           className="rounded-lg bg-emerald-600 px-4 py-2 text-sm disabled:opacity-50"
         >
           Share in meeting
-        </button>
+        </button>}
+        </div>
 
         {notice && (
           <p role="status" className="basis-full text-sm text-amber-300">

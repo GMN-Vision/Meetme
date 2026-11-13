@@ -40,6 +40,7 @@ export default function FileShare({
   const [awaitingApproval, setAwaitingApproval] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const uploadController = useRef<AbortController | null>(null)
+  const quickUploadInput = useRef<HTMLInputElement | null>(null)
   const [progress, setProgress] = useState(0)
   const allowance = useFileAllowance()
   const [notice, setNotice] = useState('')
@@ -79,10 +80,10 @@ export default function FileShare({
 
   useEffect(() => () => uploadController.current?.abort(), [])
 
-  const handleUpload = async () => {
+  const handleUpload = async (pickedFile?: File) => {
+    const fileToUpload = pickedFile || selected
     setUpgradeReason('')
-    if (!selected || !resolvedScopeId) {
-      console.log('[FileShare] Missing selected or scopeId', { selected, resolvedScopeId })
+    if (!fileToUpload || !resolvedScopeId) {
       setNotice('Select a file first')
       return
     }
@@ -91,7 +92,7 @@ export default function FileShare({
       else setNotice('Wait for your upload allowance to load')
       return
     }
-    if (selected.size > allowance.limits.availableFileBytes) {
+    if (fileToUpload.size > allowance.limits.availableFileBytes) {
       setUpgradeReason('This file exceeds your current upload allowance of ' + formatFileBytes(allowance.limits.availableFileBytes) + '. Choose a higher plan for larger files or more storage.')
       return
     }
@@ -100,7 +101,7 @@ export default function FileShare({
       setAwaitingApproval(true)
       setNotice('Waiting for the host to approve this file.')
       try {
-        approvalId = await requestMeetingApproval(meetingId, 'file', { name: selected.name, size: selected.size }, noteOwner)
+        approvalId = await requestMeetingApproval(meetingId, 'file', { name: fileToUpload.name, size: fileToUpload.size }, noteOwner)
         await waitForMeetingApproval(meetingId, approvalId)
       } catch (error: any) {
         setNotice(error?.message || 'Could not get host approval.')
@@ -115,7 +116,7 @@ export default function FileShare({
     setCancelling(false)
     setProgress(0)
     try {
-      await uploadSharedFile(selected, resolvedScopeId, setProgress, controller.signal, approvalId)
+      await uploadSharedFile(fileToUpload, resolvedScopeId, setProgress, controller.signal, approvalId)
       uploadController.current = null
       setSelected(null)
       setUpgradeReason('')
@@ -137,6 +138,12 @@ export default function FileShare({
       setCancelling(false)
     }
   }
+
+  useEffect(() => {
+    const openUpload = () => quickUploadInput.current?.click()
+    window.addEventListener('room:upload-file', openUpload)
+    return () => window.removeEventListener('room:upload-file', openUpload)
+  }, [])
 
   const handleDelete = async (path: string) => {
     const res = await fetch('/api/files/delete', {
@@ -167,6 +174,11 @@ export default function FileShare({
 
   return (
     <div className={className || 'rounded-3xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 p-5'}>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <span className="text-sm font-semibold text-white">Shared files</span>
+        <button type="button" onClick={() => quickUploadInput.current?.click()} disabled={uploading || awaitingApproval || !isReady} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-sky-600 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-60"><Upload className="h-4 w-4" />Upload File</button>
+        <input ref={quickUploadInput} type="file" className="sr-only" tabIndex={-1} disabled={uploading || awaitingApproval} onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; if (file) { setSelected(file); void handleUpload(file) } }} />
+      </div>
       {showHeader && <div className="mb-5 flex items-start justify-between gap-3 border-b border-zinc-700/70 pb-4">
         <div className="min-w-0">
           <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-zinc-100"><FileText className="h-5 w-5" /></span>
@@ -191,7 +203,7 @@ export default function FileShare({
       <div className="mb-3 flex flex-col gap-2">
         <FileUpload compact value={selected} disabled={uploading || awaitingApproval} onChange={files => { setSelected(files[0] || null); setUpgradeReason('') }} />
         <HoverBorderGradient
-          onClick={handleUpload}
+          onClick={() => { void handleUpload() }}
           disabled={!selected || uploading || awaitingApproval || !isReady}
           className="w-full gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
         >
@@ -243,7 +255,7 @@ export default function FileShare({
               </button>
             </div>
             <div className="flex items-center justify-end gap-1.5 border-t border-zinc-800 pt-2 sm:shrink-0 sm:border-0 sm:pt-0 xl:border-t xl:pt-2">
-              {presentationEnabled && meetingId && getPresentationKind(f.name) && (
+              {presentationEnabled && meetingId && getPresentationKind(f.name) && (isHost || getPresentationKind(f.name) !== 'slides') && (
                 <button type="button" onClick={async () => {
                   let approvalId = ''
                   if (!isHost) {
@@ -273,7 +285,8 @@ export default function FileShare({
               previewType?.startsWith('audio/') ? <audio key={previewUrl} src={previewUrl} controls preload="metadata" className="w-full" /> :
               previewType?.startsWith('video/') ? <video key={previewUrl} src={previewUrl} controls preload="metadata" className="max-h-52 w-full rounded bg-black" /> :
               previewType === 'application/pdf' ? <iframe src={`${previewUrl}#toolbar=0&navpanes=0`} title={`Preview ${f.name}`} className="h-48 w-full rounded bg-white sm:h-64" /> :
-              officePreviewUrl && getPresentationKind(f.name) ? <iframe src={officePreviewUrl} title={`Preview ${f.name}`} className="h-48 w-full rounded bg-white sm:h-64" /> :
+              officePreviewUrl && getPresentationKind(f.name) && (isHost || getPresentationKind(f.name) !== 'slides') ? <iframe src={officePreviewUrl} title={`Preview ${f.name}`} className="h-48 w-full rounded bg-white sm:h-64" /> :
+              getPresentationKind(f.name) === 'slides' && !isHost ? <p className="px-2 py-3 text-xs text-zinc-400">The host can prepare and present this file in OmniEdit.</p> :
               <p className="px-2 py-3 text-xs text-zinc-400">Preview is unavailable for this format. Download the file to open it.</p>}
             <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-sky-300 hover:text-sky-200"><ExternalLink className="h-3 w-3" /> Open or download</a>
           </div>}
