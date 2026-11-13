@@ -5,7 +5,30 @@ import { requireFeatureAccess } from '@/lib/membership';
 
 const CAPTION_BACKEND_URL = (process.env.CAPTION_BACKEND_URL || process.env.MEETING_AI_CONTROL_URL || `http://localhost:${process.env.MEETING_AI_PORT || 4010}`).replace(/\/$/, '');
 
-async function requirePaidCaptions() {
+/**
+ * Live captions publish several times per second, and every interim update used
+ * to re-run a membership database query before the text could reach the room.
+ * A positive result is remembered briefly, so the publish path stays a plain
+ * forward. Starting subtitles still checks the plan from scratch.
+ */
+const CAPTION_ACCESS_TTL_MS = 60_000;
+const captionAccessCache = new Map<string, number>();
+const NO_STORE = { 'Cache-Control': 'no-store' } as const;
+
+function hasCachedCaptionAccess(email: string) {
+  const expiresAt = captionAccessCache.get(email);
+  if (expiresAt === undefined) return false;
+  if (expiresAt > Date.now()) return true;
+  captionAccessCache.delete(email);
+  return false;
+}
+
+function cacheCaptionAccess(email: string) {
+  if (captionAccessCache.size > 5000) captionAccessCache.clear();
+  captionAccessCache.set(email, Date.now() + CAPTION_ACCESS_TTL_MS);
+}
+
+async function requirePaidCaptions({ fresh = false }: { fresh?: boolean } = {}) {
   const session = await getServerSession(authOptions);
   const userEmail = String(session?.user?.email || '').toLowerCase();
 
@@ -14,7 +37,7 @@ async function requirePaidCaptions() {
       ok: false as const,
       response: NextResponse.json(
         { error: 'Sign in and upgrade to Pro or Business to start captions', code: 'AUTH_REQUIRED' },
-        { status: 401 }
+        { status: 401, headers: NO_STORE }
       ),
     };
   }
@@ -23,25 +46,31 @@ async function requirePaidCaptions() {
     return { ok: true as const };
   }
 
+  if (!fresh && hasCachedCaptionAccess(userEmail)) {
+    return { ok: true as const };
+  }
+
   const featureCheck = await requireFeatureAccess(userEmail, 'captions');
   if (!featureCheck.ok) {
+    captionAccessCache.delete(userEmail);
     return {
       ok: false as const,
       response: NextResponse.json(
         { error: featureCheck.error, code: featureCheck.code, membership: featureCheck.membership || null },
-        { status: featureCheck.status }
+        { status: featureCheck.status, headers: NO_STORE }
       ),
     };
   }
 
+  cacheCaptionAccess(userEmail);
   return { ok: true as const };
 }
 
 export async function GET() {
-  const check = await requirePaidCaptions();
+  const check = await requirePaidCaptions({ fresh: true });
   if (!check.ok) return check.response;
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true }, { headers: NO_STORE });
 }
 
 export async function POST(request: NextRequest) {
@@ -54,7 +83,7 @@ export async function POST(request: NextRequest) {
     const text = String(body?.text || '').trim();
 
     if (!meetingId || !text) {
-      return NextResponse.json({ error: 'meetingId and text are required' }, { status: 400 });
+      return NextResponse.json({ error: 'meetingId and text are required' }, { status: 400, headers: NO_STORE });
     }
 
     const response = await fetch(`${CAPTION_BACKEND_URL}/api/rooms/${encodeURIComponent(meetingId)}/captions`, {
@@ -73,16 +102,16 @@ export async function POST(request: NextRequest) {
       const errorText = await response.text();
       return NextResponse.json(
         { error: `Caption publish failed: ${response.status} ${errorText}` },
-        { status: 502 }
+        { status: 502, headers: NO_STORE }
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, { headers: NO_STORE });
   } catch (error) {
     console.error('[captions/publish] error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Caption publish failed' },
-      { status: 500 }
+      { status: 500, headers: NO_STORE }
     );
   }
 }

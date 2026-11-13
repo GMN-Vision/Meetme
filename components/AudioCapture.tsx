@@ -160,7 +160,7 @@ export function AudioCapture({
       return;
     }
 
-    if (!final && Date.now() - lastInterimSentAtRef.current < 250) {
+    if (!final && Date.now() - lastInterimSentAtRef.current < 100) {
       return;
     }
 

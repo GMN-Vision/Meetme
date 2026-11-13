@@ -54,6 +54,7 @@ type SummaryCard = {
 
 const PARTIAL_IDLE_MS = 4200;
 const FINAL_VISIBLE_MS = 2600;
+const CAPTION_FADE_MS = 320;
 
 interface CaptionOverlayProps {
   meetingId: string;
@@ -191,6 +192,12 @@ function captionReducer(state: Caption[], action: any): Caption[] {
 export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }: CaptionOverlayProps) {
   const [connected, setConnected] = useState(false);
   const [captions, setCaptions] = useState<Caption[]>([]);
+  // The caption that is on screen right now, kept longer than the reducer so it
+  // can fade instead of vanishing between sentences.
+  const [visibleCaption, setVisibleCaption] = useState<Caption | null>(null);
+  const [captionHiding, setCaptionHiding] = useState(false);
+  const captionFadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const visibleCaptionRef = useRef<Caption | null>(null);
   // opt-in debug mode via URL param ?capdebug=1 or ?captions_debug=1
   const debugMode = typeof window !== 'undefined' && (
     new URLSearchParams(window.location.search).get('capdebug') === '1' ||
@@ -562,6 +569,40 @@ export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }
 
   const activeCaption = captions.length > 0 ? captions[captions.length - 1] : null;
 
+  // New speech cancels a pending fade, so a speaker mid-sentence never blinks.
+  useEffect(() => {
+    if (captionFadeTimerRef.current) {
+      clearTimeout(captionFadeTimerRef.current);
+      captionFadeTimerRef.current = null;
+    }
+
+    if (activeCaption) {
+      visibleCaptionRef.current = activeCaption;
+      setCaptionHiding(false);
+      setVisibleCaption(activeCaption);
+      return;
+    }
+
+    if (!visibleCaptionRef.current) {
+      return;
+    }
+
+    setCaptionHiding(true);
+    captionFadeTimerRef.current = setTimeout(() => {
+      captionFadeTimerRef.current = null;
+      visibleCaptionRef.current = null;
+      setVisibleCaption(null);
+      setCaptionHiding(false);
+    }, CAPTION_FADE_MS);
+  }, [activeCaption]);
+
+  useEffect(() => () => {
+    if (captionFadeTimerRef.current) {
+      clearTimeout(captionFadeTimerRef.current);
+      captionFadeTimerRef.current = null;
+    }
+  }, []);
+
   // Render overlay
   const overlay = (
     <div
@@ -582,9 +623,15 @@ export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }
         </div>
       )}
 
-      {activeCaption && (
+      {visibleCaption && (
         <div
-          className="max-w-[min(56rem,calc(100vw-2rem))] text-center"
+          key={visibleCaption.speakerId}
+          className="caption-fade-in max-w-[min(56rem,calc(100vw-2rem))] text-center"
+          style={{
+            opacity: captionHiding ? 0 : 1,
+            transform: captionHiding ? 'translateY(0.375rem)' : 'none',
+            transition: `opacity ${CAPTION_FADE_MS}ms ease, transform ${CAPTION_FADE_MS}ms ease`,
+          }}
           role="log"
           aria-label="Subtitles"
           aria-live="polite"
@@ -592,7 +639,7 @@ export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }
           aria-atomic="true"
         >
           <p className="line-clamp-2 mx-auto w-fit max-w-full whitespace-pre-wrap break-words rounded-md bg-black/75 px-2.5 py-1.5 text-base font-medium leading-snug text-white sm:text-lg sm:leading-7">
-            {activeCaption.text}
+            {visibleCaption.text}
           </p>
         </div>
       )}
