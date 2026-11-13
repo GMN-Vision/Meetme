@@ -93,6 +93,12 @@ export async function GET(request: Request) {
       bytes = new Uint8Array(await data.arrayBuffer());
     }
     const extension = sharedFileExtension(name);
+    if (extension === 'pdf') {
+      return new Response(new Uint8Array(bytes), { headers: {
+        'Content-Type': 'application/pdf', 'Content-Disposition': 'inline; filename="document.pdf"',
+        'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
+      } });
+    }
     if (!['ppt', 'pptx', 'pps', 'ppsx', 'odp'].includes(extension)) {
       return NextResponse.json({ error: 'Select a PowerPoint or OpenDocument presentation.' }, { status: 400 });
     }

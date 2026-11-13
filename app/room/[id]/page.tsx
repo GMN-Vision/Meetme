@@ -19,6 +19,8 @@ import FileShare from '@/components/FileShare';
 import SharedFileNotifications from '@/components/SharedFileNotifications';
 import PresenterNotes, { SPEECH_NOTE_PATH } from '@/components/PresenterNotes';
 import PresentationWorkspace from '@/components/PresentationWorkspace';
+import PresentationPages from '@/components/PresentationPages';
+import { getPresentationKind } from '@/lib/shared-file-types';
 import { Files, ListVideo, Upload } from 'lucide-react';
 import { useRecording } from '@/hooks/useRecording';
 import Link from 'next/link';
@@ -73,7 +75,7 @@ export default function RoomPage() {
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
   const [isFilesOpen, setIsFilesOpen] = useState(false);
   const [unreadFiles, setUnreadFiles] = useState(0);
-  const [sharedPresentation, setSharedPresentation] = useState<{ path: string; name: string; isPresenter: boolean; updatedAt: string } | null>(null);
+  const [sharedPresentation, setSharedPresentation] = useState<{ path: string; name: string; page: number; isPresenter: boolean; updatedAt: string } | null>(null);
   const [presentationError, setPresentationError] = useState('');
   const [showExitOptions, setShowExitOptions] = useState(false);
   const [endingForAll, setEndingForAll] = useState(false);
@@ -723,6 +725,19 @@ export default function RoomPage() {
     }
   }, [updatePresentation]);
 
+  const changePresentationPage = useCallback(async (page: number) => {
+    if (!sharedPresentation?.isPresenter) throw new Error('Only the presenter can change pages.');
+    const token = localStorage.getItem(`melanam:meeting-document-access:${meetingId}:${participantKey}`);
+    if (!token) throw new Error('Your meeting document access has expired.');
+    const response = await fetch('/api/meeting-presentation', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ meetingId, path: sharedPresentation.path, page }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Could not change pages.');
+    setSharedPresentation(result.presentation);
+  }, [meetingId, participantKey, sharedPresentation?.path, sharedPresentation?.isPresenter]);
+
   useEffect(() => {
     if (!accessGranted || !participantKey) return;
     let stopped = false;
@@ -737,7 +752,7 @@ export default function RoomPage() {
         if (!response.ok) return;
         const result = await response.json();
         if (!stopped) setSharedPresentation(current =>
-          current?.path === result.presentation?.path && current?.updatedAt === result.presentation?.updatedAt
+          current?.path === result.presentation?.path && current?.updatedAt === result.presentation?.updatedAt && current?.page === result.presentation?.page
             ? current : result.presentation || null);
       } catch { /* Keep the current viewer during a temporary connection loss. */ }
       finally { if (!stopped) timer = setTimeout(refresh, 3000); }
@@ -937,10 +952,15 @@ export default function RoomPage() {
         <section ref={presentationPanelRef} aria-label="Shared presentation" className="mx-auto mb-6 mt-6 flex w-full max-w-6xl flex-col overflow-hidden rounded-lg border border-zinc-700 bg-zinc-950">
           <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-2 text-sm">
             <span className="min-w-0 truncate font-medium">Presenting: {sharedPresentation.name}</span>
-            {isMeetingHost && <button type="button" onClick={() => { void updatePresentation(null).catch(error => setPresentationError(error.message)); }} className="shrink-0 rounded-lg bg-zinc-800 px-3 py-1.5 hover:bg-zinc-700">Stop presenting</button>}
+            {isMeetingHost && <div className="flex shrink-0 items-center gap-2">
+              {getPresentationKind(sharedPresentation.name) === 'slides' && <a href={presentationUrl.replace('embedded=1', 'embedded=0')} target="_blank" rel="noreferrer" className="rounded-lg bg-sky-900 px-3 py-1.5 hover:bg-sky-800">Open in OmniEdit</a>}
+              <button type="button" onClick={() => { void updatePresentation(null).catch(error => setPresentationError(error.message)); }} className="rounded-lg bg-zinc-800 px-3 py-1.5 hover:bg-zinc-700">Stop presenting</button>
+            </div>}
           </div>
           <PresentationWorkspace notes={sharedPresentation.isPresenter ? <PresenterNotes meetingId={meetingId} filePath={SPEECH_NOTE_PATH} owner={userEmail || guestName} sidePanel /> : undefined}>
-            <iframe key={`${sharedPresentation.path}:${sharedPresentation.updatedAt}`} title={`Shared presentation: ${sharedPresentation.name}`} src={presentationUrl} className="h-full w-full border-0 bg-white" />
+            {['pdf', 'slides'].includes(getPresentationKind(sharedPresentation.name) || '') ?
+              <PresentationPages meetingId={meetingId} path={sharedPresentation.path} participantKey={participantKey} page={sharedPresentation.page || 1} isPresenter={sharedPresentation.isPresenter} onPageChange={changePresentationPage} /> :
+              <iframe key={`${sharedPresentation.path}:${sharedPresentation.updatedAt}`} title={`Shared presentation: ${sharedPresentation.name}`} src={presentationUrl} className="h-full w-full border-0 bg-white" />}
           </PresentationWorkspace>
         </section>
       )}

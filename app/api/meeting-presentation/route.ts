@@ -25,13 +25,14 @@ function failure(error: unknown) {
 }
 
 function forParticipant(
-  presentation: { path: string; name: string; updatedAt: Date | string; presenterKey?: string } | null | undefined,
+  presentation: { path: string; name: string; page?: number; updatedAt: Date | string; presenterKey?: string } | null | undefined,
   participantKey: string,
 ) {
   if (!presentation) return null;
   return {
     path: presentation.path,
     name: presentation.name,
+    page: presentation.page || 1,
     updatedAt: presentation.updatedAt,
     isPresenter: presentation.presenterKey === participantKey,
   };
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
     if (!activeMeeting) return NextResponse.json({ error: 'The meeting is unavailable.' }, { status: 404 });
     const session = await getServerSession(authOptions);
     const isHost = String(session?.user?.email || '').toLowerCase() === String(activeMeeting.hostEmail).toLowerCase();
-    let presentation: { path: string; name: string; presenterKey: string; updatedAt: Date } | null = null;
+    let presentation: { path: string; name: string; presenterKey: string; page: number; updatedAt: Date } | null = null;
     if (body.path !== null) {
       if (typeof body.path !== 'string' || !body.path) {
         return NextResponse.json({ error: 'A shared file is required.' }, { status: 400 });
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
         const approved = await consumeMeetingApproval({ meetingId, approvalId: String(body.approvalId || ''), type: 'present', requesterKey: access.participantKey, payload: { path: file.path } });
         if (!approved) return NextResponse.json({ error: 'Host approval is required to present this file.' }, { status: 403 });
       }
-      presentation = { path: file.path, name: file.name, presenterKey: access.participantKey, updatedAt: new Date() };
+      presentation = { path: file.path, name: file.name, presenterKey: access.participantKey, page: 1, updatedAt: new Date() };
     } else if (!isHost) {
       return NextResponse.json({ error: 'Only the host can stop the shared presentation.' }, { status: 403 });
     }
@@ -94,4 +95,24 @@ export async function POST(request: Request) {
   } catch (error) {
     return failure(error);
   }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const meetingId = typeof body.meetingId === 'string' ? body.meetingId : '';
+    const page = Number(body.page);
+    if (!Number.isSafeInteger(page) || page < 1 || page > 1000) {
+      return NextResponse.json({ error: 'Invalid page number.' }, { status: 400 });
+    }
+    const access = await authorize(request, meetingId);
+    await dbConnect();
+    const meeting = await Meeting.findOneAndUpdate(
+      { meetingId, endedAt: null, 'sharedPresentation.presenterKey': access.participantKey, 'sharedPresentation.path': body.path },
+      { $set: { 'sharedPresentation.page': page } },
+      { new: true },
+    ).select('sharedPresentation').lean();
+    if (!meeting?.sharedPresentation) return NextResponse.json({ error: 'Only the current presenter can change pages.' }, { status: 403 });
+    return NextResponse.json({ presentation: forParticipant(meeting.sharedPresentation, access.participantKey) }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch (error) { return failure(error); }
 }

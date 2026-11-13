@@ -13,6 +13,10 @@ test('shared slide preview uses the stored file name and is available to other p
   let conversions = 0;
   const { GET } = load('app/api/files/presentation/route.ts', {
     '@/lib/db': async () => {},
+    '@/lib/meeting-document-access': { verifyActiveMeetingDocumentToken: async () => ({ participantKey: 'viewer' }) },
+    'next-auth': { getServerSession: async () => ({ user: { email: 'viewer@example.com' } }) },
+    '@/lib/auth-options': { authOptions: {} },
+    '@/models/Meeting': { findOne: () => ({ select: () => ({ lean: async () => ({ hostEmail: 'host@example.com', sharedPresentation: { path: 'local/room/id' } }) }) }) },
     '@/models/SharedFile': { findOne: () => ({ lean: async () => stored }) },
     '@/lib/server-file-storage': { diskPath: () => '/shared-file' },
     '@/lib/supabaseServer': { supabaseServer: {} },
@@ -24,7 +28,7 @@ test('shared slide preview uses the stored file name and is available to other p
       return Buffer.from('%PDF-test');
     } },
   });
-  const request = () => new Request('https://app/api/files/presentation?path=local/room/id&name=untrusted.exe');
+  const request = () => new Request('https://app/api/files/presentation?path=local/room/id&meetingId=room&name=untrusted.exe', { headers: { Authorization: 'Bearer joined' } });
   const response = await GET(request());
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('content-type'), 'application/pdf');

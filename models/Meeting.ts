@@ -51,7 +51,7 @@ interface IMeeting extends Document {
   recordingDurationSeconds?: number;
   recordingDate?: string;
   recordingStatus?: string;
-  sharedPresentation?: { path: string; name: string; presenterKey: string; updatedAt: Date } | null;
+  sharedPresentation?: { path: string; name: string; presenterKey: string; page: number; updatedAt: Date } | null;
   // AI Assistant fields
   aiEnabled?: boolean;
   aiLanguage?: string;
@@ -107,6 +107,7 @@ const MeetingSchema = new Schema<IMeeting>(
       path: { type: String },
       name: { type: String },
       presenterKey: { type: String },
+      page: { type: Number, default: 1 },
       updatedAt: { type: Date },
     },
     joinCount: {

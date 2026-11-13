@@ -7,6 +7,7 @@ import { JITSI_PRESENT_EVENT } from '@/lib/jitsi-features'
 import { getPresentationKind, PREVIEW_TYPES, sharedFileExtension } from '@/lib/shared-file-types'
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
 import { FileUpload } from '@/components/ui/file-upload'
+import { PdfFilePreview } from '@/components/PresentationPages'
 import UpgradeCallout, { isPlanUpgradeError } from '@/components/UpgradeCallout'
 import { consumeClientApproval, requestMeetingApproval, waitForMeetingApproval } from '@/lib/meeting-approval-client'
 
@@ -284,7 +285,7 @@ export default function FileShare({
             {previewType?.startsWith('image/') ? <img src={previewUrl} alt={f.name} className="max-h-52 w-full rounded object-contain" /> :
               previewType?.startsWith('audio/') ? <audio key={previewUrl} src={previewUrl} controls preload="metadata" className="w-full" /> :
               previewType?.startsWith('video/') ? <video key={previewUrl} src={previewUrl} controls preload="metadata" className="max-h-52 w-full rounded bg-black" /> :
-              previewType === 'application/pdf' ? <iframe src={`${previewUrl}#toolbar=0&navpanes=0`} title={`Preview ${f.name}`} className="h-48 w-full rounded bg-white sm:h-64" /> :
+              previewType === 'application/pdf' ? <PdfFilePreview url={previewUrl} /> :
               officePreviewUrl && getPresentationKind(f.name) && (isHost || getPresentationKind(f.name) !== 'slides') ? <iframe src={officePreviewUrl} title={`Preview ${f.name}`} className="h-48 w-full rounded bg-white sm:h-64" /> :
               getPresentationKind(f.name) === 'slides' && !isHost ? <p className="px-2 py-3 text-xs text-zinc-400">The host can prepare and present this file in OmniEdit.</p> :
               <p className="px-2 py-3 text-xs text-zinc-400">Preview is unavailable for this format. Download the file to open it.</p>}

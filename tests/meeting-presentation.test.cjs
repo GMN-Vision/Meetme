@@ -22,8 +22,11 @@ test('joined participants can present a validated document in the room and stop 
     },
     '@/models/Meeting': {
       findOne: chain,
-      findOneAndUpdate: (_query, update) => {
-        sharedPresentation = update.$set.sharedPresentation;
+      findOneAndUpdate: (query, update) => {
+        if ('sharedPresentation.page' in update.$set) {
+          if (sharedPresentation?.path !== query['sharedPresentation.path'] || sharedPresentation?.presenterKey !== query['sharedPresentation.presenterKey']) return { select: () => ({ lean: async () => null }) };
+          sharedPresentation.page = update.$set['sharedPresentation.page'];
+        } else sharedPresentation = update.$set.sharedPresentation;
         return chain();
       },
     },
@@ -35,6 +38,13 @@ test('joined participants can present a validated document in the room and stop 
   assert.equal((await post('files/Slides.pptx')).status, 200);
   const view = await route.GET(new Request('https://app.example/api/meeting-presentation?meetingId=room', { headers }));
   assert.equal((await view.json()).presentation.path, 'files/Slides.pptx');
+  const changePage = (token, page) => route.PATCH(new Request('https://app.example/api/meeting-presentation', {
+    method: 'PATCH', headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify({ meetingId: 'room', path: 'files/Slides.pptx', page }),
+  }));
+  assert.equal((await changePage('viewer', 2)).status, 403);
+  assert.equal((await changePage('valid', 2)).status, 200);
+  assert.equal((await (await route.GET(new Request('https://app.example/api/meeting-presentation?meetingId=room', { headers: { Authorization: 'Bearer viewer' } }))).json()).presentation.page, 2);
+  assert.equal((await changePage('valid', 0)).status, 400);
   const presenterView = (await (await route.GET(new Request('https://app.example/api/meeting-presentation?meetingId=room', { headers }))).json()).presentation;
   assert.equal(presenterView.isPresenter, true);
   assert.equal('presenterKey' in presenterView, false, 'the presenter participant key stays on the server');

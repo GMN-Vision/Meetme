@@ -39,6 +39,7 @@
     "next": "^14.0.0",
     "next-auth": "^4.24.14",
     "nodemailer": "^7.0.13",
+    "pdfjs-dist": "^4.10.38",
     "razorpay": "^2.9.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
