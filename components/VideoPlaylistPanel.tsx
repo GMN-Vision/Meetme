@@ -1,12 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
-import { IconBrandYoutube } from '@tabler/icons-react';
 import {
   ChevronDown,
   ChevronUp,
-  CircleCheck,
   LoaderCircle,
   Play,
   Plus,
@@ -22,8 +19,6 @@ import {
 } from '@/lib/jitsi-features';
 import { isYouTubeVideoUrl, normalizeVideoUrl } from '@/lib/video-playlist';
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
-import { GridPattern } from '@/components/ui/file-upload';
-import { useHoverCapable } from '@/hooks/useHoverCapable';
 import { getMeetingApprovalToken, requestMeetingApproval, waitForMeetingApproval } from '@/lib/meeting-approval-client';
 
 type PlaylistItem = {
@@ -74,8 +69,6 @@ export default function VideoPlaylistPanel({
   const [busy, setBusy] = useState('');
   const [approvalPending, setApprovalPending] = useState(false);
   const busyRef = useRef(false);
-  const reduceMotion = useReducedMotion();
-  const canHover = useHoverCapable();
 
   useEffect(() => {
     let stopped = false;
@@ -250,7 +243,6 @@ export default function VideoPlaylistPanel({
 
   const current = playlist.currentIndex !== null ? playlist.items[playlist.currentIndex] : null;
   const working = Boolean(busy || approvalPending);
-  const linkReady = Boolean(input.trim() && normalizeVideoUrl(input));
 
   return (
     <div className={`relative rounded-3xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 p-5 ${className}`}>
@@ -262,91 +254,24 @@ export default function VideoPlaylistPanel({
         </div>
       ) : null}
 
-      <motion.div animate="initial" whileHover={reduceMotion || !canHover ? undefined : 'animate'} className="relative mb-3 overflow-hidden rounded-xl border border-dashed border-zinc-700 p-5">
-        <div className="pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]"><GridPattern /></div>
-        <div className="relative z-10 flex flex-col items-center text-center">
-          <p className="font-sans text-base font-bold text-neutral-200">Share a video</p>
-          <p className="mt-2 text-xs leading-5 text-neutral-400">Queue a link for everyone in the room</p>
-          <div className="relative mx-auto mt-5 w-full max-w-xl">
-            <motion.div variants={{ initial: { x: 0, y: 0 }, animate: { x: 20, y: -20, opacity: 0.9 } }} transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 20 }} className="relative z-20 mx-auto mt-4 flex h-20 w-full max-w-[8rem] items-center justify-center rounded-md bg-neutral-900 shadow-[0px_10px_50px_rgba(0,0,0,0.1)]">
-              <IconBrandYoutube className="h-5 w-5 text-neutral-300" />
-            </motion.div>
-            <motion.div variants={{ initial: { opacity: 0 }, animate: { opacity: 1 } }} className="absolute inset-0 z-10 mx-auto mt-4 h-20 w-full max-w-[8rem] rounded-md border border-dashed border-zinc-500 opacity-0" />
-          </div>
-          <label htmlFor={`video-playlist-input-${meetingId}`} className="sr-only">Video link</label>
-          <div className="relative mt-5 w-full">
-            <input
-              type="url"
-              id={`video-playlist-input-${meetingId}`}
-              value={input}
-              onChange={event => setInput(event.target.value)}
-              onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (!working) void addVideos(); } }}
-              disabled={working}
-              placeholder="Paste a YouTube or video link"
-              className="input-modern relative z-20 block w-full !pl-3 !pr-10 text-xs disabled:opacity-60"
-            />
-            {linkReady && <CircleCheck className="pointer-events-none absolute right-3 top-1/2 z-30 h-4 w-4 -translate-y-1/2 text-zinc-300" aria-hidden="true" />}
-          </div>
-          <p className="mt-2 text-[11px] text-zinc-500">{linkReady ? 'Ready to add' : 'YouTube or direct MP4/WebM link'}</p>
-        </div>
-      </motion.div>
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <HoverBorderGradient
-          type="button"
-          onClick={addVideos}
-          disabled={working || !input.trim()}
-          aria-label="Add video to the playlist"
-          className="w-full gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {busy === 'add' ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          {busy === 'add' ? 'Adding…' : playlist.items.length ? 'Add another video' : 'Add video'}
-        </HoverBorderGradient>
+      <div className="mb-3 flex items-center justify-between gap-2 pr-7"><h2 className="text-sm font-semibold text-white">Video playlist</h2><span className="text-xs text-zinc-400">{playlist.items.length} videos</span></div>
+      <label htmlFor={`video-playlist-input-${meetingId}`} className="sr-only">Video link</label>
+      <div className="mb-3 flex gap-2">
+        <input type="url" id={`video-playlist-input-${meetingId}`} value={input} onChange={event => setInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (!working) void addVideos(); } }} disabled={working} placeholder="Paste video link" className="input-modern min-w-0 flex-1 !px-2 text-xs disabled:opacity-60" />
+        <HoverBorderGradient type="button" onClick={() => void addVideos()} disabled={working || !input.trim()} aria-label="Add video to the playlist" className="shrink-0 gap-2 text-xs disabled:opacity-50">{busy === 'add' ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}{busy === 'add' ? 'Adding…' : 'Add'}</HoverBorderGradient>
       </div>
-
       {current ? (
-        <div className="mb-3 rounded-xl border border-sky-400/25 bg-sky-400/5 p-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-300">
-            {playlist.playing ? 'Now playing' : 'Selected video'}
-          </p>
-          <p className="mt-1 break-words text-sm font-medium text-zinc-100">{itemLabel(current)}</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              onClick={() => playItem(current)}
-              disabled={working}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2 py-1.5 text-xs text-zinc-100 hover:bg-zinc-800 disabled:opacity-60"
-              aria-label="Play the selected video in the meeting"
-            >
-              <Play className="h-3.5 w-3.5" /> {isHost ? 'Play' : 'Request play'}
-            </button>
+        <div className="mb-2 rounded-lg border border-sky-400/25 bg-sky-400/5 p-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="shrink-0 text-[10px] font-semibold text-sky-300">{playlist.playing ? 'Playing' : 'Selected'}</span>
+            <span className="min-w-0 truncate text-xs font-medium text-zinc-100" title={itemLabel(current)}>{itemLabel(current)}</span>
+          </div>
+          <div className="mt-1.5 flex items-center gap-1">
+            <button type="button" onClick={() => playItem(current)} disabled={working} className="inline-flex h-8 flex-1 items-center justify-center gap-1 rounded border border-zinc-700 text-xs text-zinc-100 hover:bg-zinc-800 disabled:opacity-60" aria-label="Play the selected video in the meeting" title={isHost ? 'Play' : 'Request play'}><Play className="h-3.5 w-3.5" />{isHost ? 'Play' : 'Request'}</button>
             {isHost && <>
-            <button
-              type="button"
-              onClick={stopPlayback}
-              disabled={working || !playlist.playing}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2 py-1.5 text-xs text-zinc-100 hover:bg-zinc-800 disabled:opacity-60"
-              aria-label="Stop the shared video"
-            >
-              <Square className="h-3.5 w-3.5" /> Stop
-            </button>
-            <button
-              type="button"
-              onClick={() => step('previous')}
-              disabled={working || playlist.items.length < 2}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2 py-1.5 text-xs text-zinc-100 hover:bg-zinc-800 disabled:opacity-60"
-              aria-label="Play the previous video"
-            >
-              <SkipBack className="h-3.5 w-3.5" /> Previous
-            </button>
-            <button
-              type="button"
-              onClick={() => step('next')}
-              disabled={working || playlist.items.length < 2}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2 py-1.5 text-xs text-zinc-100 hover:bg-zinc-800 disabled:opacity-60"
-              aria-label="Play the next video"
-            >
-              Next <SkipForward className="h-3.5 w-3.5" />
-            </button>
+            <button type="button" onClick={stopPlayback} disabled={working || !playlist.playing} className="flex h-8 w-8 items-center justify-center rounded border border-zinc-700 text-zinc-100 hover:bg-zinc-800 disabled:opacity-60" aria-label="Stop the shared video" title="Stop"><Square className="h-3.5 w-3.5" /></button>
+            <button type="button" onClick={() => step('previous')} disabled={working || playlist.items.length < 2} className="flex h-8 w-8 items-center justify-center rounded border border-zinc-700 text-zinc-100 hover:bg-zinc-800 disabled:opacity-60" aria-label="Play the previous video" title="Previous"><SkipBack className="h-3.5 w-3.5" /></button>
+            <button type="button" onClick={() => step('next')} disabled={working || playlist.items.length < 2} className="flex h-8 w-8 items-center justify-center rounded border border-zinc-700 text-zinc-100 hover:bg-zinc-800 disabled:opacity-60" aria-label="Play the next video" title="Next"><SkipForward className="h-3.5 w-3.5" /></button>
             </>}
           </div>
         </div>
@@ -367,31 +292,13 @@ export default function VideoPlaylistPanel({
             >
               <div className="min-w-0">
                 <div className="group relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-900">
-                  {youtubeId ? (
-                    // Each playlist entry previews its own YouTube video.
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img loading="lazy" src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <video src={`${item.url}#t=0.1`} muted playsInline preload="metadata" aria-hidden="true" className="h-full w-full object-cover" />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => playItem(item)}
-                    disabled={working}
-                    className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors hover:bg-black/40 focus-visible:bg-black/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-sky-300 disabled:cursor-wait disabled:opacity-60"
-                    aria-label={`Play ${itemLabel(item)}`}
-                    title={isHost ? 'Play in meeting' : 'Request host approval to play'}
-                  >
-                    <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/50 bg-zinc-950/80 text-white shadow-lg transition-transform group-hover:scale-110">
-                      <Play className="ml-0.5 h-5 w-5 fill-current" />
-                    </span>
-                  </button>
+                  {youtubeId ? <img loading="lazy" src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} alt="" className="h-full w-full object-cover" /> : <video src={`${item.url}#t=0.1`} muted playsInline preload="metadata" aria-hidden="true" className="h-full w-full object-cover" />}
+                  <button type="button" onClick={() => void playItem(item)} disabled={working} className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors hover:bg-black/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-sky-300 disabled:opacity-60" aria-label={`Play ${itemLabel(item)}`} title={isHost ? 'Play in meeting' : 'Request host approval to play'}><span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/50 bg-zinc-950/80 text-white shadow-lg transition-transform group-hover:scale-110"><Play className="ml-0.5 h-5 w-5 fill-current" /></span></button>
                   {isCurrent && playlist.playing && <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-sky-400 px-2 py-0.5 text-[10px] font-semibold text-zinc-950">Now playing</span>}
                 </div>
                 <p className="mt-2 break-words text-sm font-medium text-zinc-100">{itemLabel(item)}</p>
                 <p className="mt-0.5 truncate text-[11px] text-zinc-500" title={item.url}>{item.url}</p>
               </div>
-
               {isHost && <div className="mt-2 flex items-center justify-end gap-1 border-t border-zinc-800 pt-1">
                 <button
                   type="button"

@@ -21,7 +21,7 @@ import PresenterNotes, { SPEECH_NOTE_PATH } from '@/components/PresenterNotes';
 import PresentationWorkspace from '@/components/PresentationWorkspace';
 import PresentationPages from '@/components/PresentationPages';
 import { getPresentationKind } from '@/lib/shared-file-types';
-import { Files, ListVideo, Upload } from 'lucide-react';
+import { Files, ListVideo } from 'lucide-react';
 import { useRecording } from '@/hooks/useRecording';
 import Link from 'next/link';
 import { isPlanUpgradeError } from '@/components/UpgradeCallout';
@@ -826,9 +826,6 @@ export default function RoomPage() {
         onScreenRequested={handleScreenRequested}
       />
       <SharedFileNotifications meetingId={meetingId} onUnreadChange={setUnreadFiles} />
-      <div className="mb-3 flex justify-end">
-        <button type="button" onClick={() => { setIsFilesOpen(true); setIsPlaylistOpen(false); window.dispatchEvent(new Event('room:open-files')); window.dispatchEvent(new Event('room:upload-file')); }} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500"><Upload className="h-4 w-4" />Upload File</button>
-      </div>
       {showExitOptions && isMeetingHost && <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 p-4" onMouseDown={event => { if (event.target === event.currentTarget && !endingForAll) setShowExitOptions(false); }}>
         <div role="dialog" aria-modal="true" aria-labelledby="meeting-exit-title" className="w-full max-w-sm rounded-2xl border border-zinc-700 bg-zinc-950 p-5 shadow-2xl">
           <h2 id="meeting-exit-title" className="text-lg font-semibold text-white">Leave this meeting?</h2>

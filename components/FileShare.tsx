@@ -1,12 +1,11 @@
 "use client"
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Download, Upload, Trash2, FileText, Music2, Video, Image as ImageIcon, Presentation, ExternalLink, Eye } from 'lucide-react'
+import { Download, Upload, Trash2, FileText, Music2, Video, Image as ImageIcon, Presentation, ExternalLink } from 'lucide-react'
 import FileAllowance, { useFileAllowance } from './FileAllowance'
 import { uploadSharedFile, formatFileBytes } from '@/lib/file-upload-client'
 import { JITSI_PRESENT_EVENT } from '@/lib/jitsi-features'
 import { getPresentationKind, PREVIEW_TYPES, sharedFileExtension } from '@/lib/shared-file-types'
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
-import { FileUpload } from '@/components/ui/file-upload'
 import { PdfFilePreview } from '@/components/PresentationPages'
 import UpgradeCallout, { isPlanUpgradeError } from '@/components/UpgradeCallout'
 import { requestMeetingApproval, waitForMeetingApproval } from '@/lib/meeting-approval-client'
@@ -144,12 +143,6 @@ export default function FileShare({
     }
   }
 
-  useEffect(() => {
-    const openUpload = () => quickUploadInput.current?.click()
-    window.addEventListener('room:upload-file', openUpload)
-    return () => window.removeEventListener('room:upload-file', openUpload)
-  }, [])
-
   const handleDelete = async (path: string) => {
     const res = await fetch('/api/files/delete', {
       method: 'DELETE',
@@ -181,8 +174,7 @@ export default function FileShare({
     <div className={className || 'rounded-3xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 p-5'}>
       <div className="mb-3 flex items-center justify-between gap-2">
         <span className="text-sm font-semibold text-white">Shared files</span>
-        <button type="button" onClick={() => quickUploadInput.current?.click()} disabled={uploading || awaitingApproval || !isReady} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-sky-600 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-60"><Upload className="h-4 w-4" />Upload File</button>
-        <input ref={quickUploadInput} type="file" className="sr-only" tabIndex={-1} disabled={uploading || awaitingApproval} onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; if (file) { setSelected(file); void handleUpload(file) } }} />
+        <span className="text-xs text-zinc-400">{loadingList ? 'Syncing…' : `${files.length} files`}</span>
       </div>
       {showHeader && <div className="mb-5 flex items-start justify-between gap-3 border-b border-zinc-700/70 pb-4">
         <div className="min-w-0">
@@ -205,12 +197,13 @@ export default function FileShare({
         <FileAllowance allowance={allowance} />
       </details>
       {syncNotice && <p className="mb-3 text-xs text-amber-300" role="status">{syncNotice}</p>}
-      <div className="mb-3 flex flex-col gap-2">
-        <FileUpload compact value={selected} disabled={uploading || awaitingApproval} onChange={files => { setSelected(files[0] || null); setUpgradeReason('') }} />
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <input ref={quickUploadInput} type="file" className="sr-only" tabIndex={-1} disabled={uploading || awaitingApproval} onChange={event => { setSelected(event.target.files?.[0] || null); setUpgradeReason(''); event.target.value = '' }} />
+        <button type="button" onClick={() => quickUploadInput.current?.click()} disabled={uploading || awaitingApproval || !isReady} className="min-w-0 flex-1 truncate rounded-lg border border-zinc-700 px-3 py-2 text-left text-xs text-zinc-200 hover:bg-zinc-800 disabled:opacity-60">{selected ? selected.name : 'Choose file'}</button>
         <HoverBorderGradient
           onClick={() => { void handleUpload() }}
           disabled={!selected || uploading || awaitingApproval || !isReady}
-          className="w-full gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+          className="shrink-0 gap-2 text-xs disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Upload className="h-4 w-4" />
           {awaitingApproval ? 'Waiting for host…' : cancelling ? 'Cancelling…' : uploading ? uploadController.current ? `Uploading ${progress}%` : 'Finishing…' : 'Share'}
@@ -222,16 +215,15 @@ export default function FileShare({
         {files.map((f) => {
           const fileName = f.name.split('/').pop() || f.name
           const isPreviewOpen = previewPath === f.path
-          return <li key={f.path} className={`rounded-xl border p-2.5 transition-colors ${isPreviewOpen ? 'border-zinc-500 bg-zinc-800/70' : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-600 hover:bg-zinc-900/70'}`}>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between xl:flex-col xl:items-stretch">
+          return <li key={f.path} className={`rounded-lg border p-2 transition-colors ${isPreviewOpen ? 'border-zinc-500 bg-zinc-800/70' : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-600 hover:bg-zinc-900/70'}`}>
+          <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               {PREVIEW_TYPES[sharedFileExtension(f.name)]?.startsWith('audio/') ? <Music2 className="h-4 w-4 shrink-0 text-sky-300" /> : PREVIEW_TYPES[sharedFileExtension(f.name)]?.startsWith('video/') ? <Video className="h-4 w-4 shrink-0 text-sky-300" /> : PREVIEW_TYPES[sharedFileExtension(f.name)]?.startsWith('image/') ? <ImageIcon className="h-4 w-4 shrink-0 text-sky-300" /> : getPresentationKind(f.name) === 'slides' ? <Presentation className="h-4 w-4 shrink-0 text-sky-300" /> : <FileText className="h-4 w-4 shrink-0 text-sky-300" />}
               <button type="button" onClick={() => setPreviewPath(path => path === f.path ? '' : f.path)} className="min-w-0 truncate text-left text-sm text-zinc-100 hover:text-white hover:underline" aria-expanded={isPreviewOpen}>
                 {fileName}
               </button>
             </div>
-            <div className="flex items-center justify-end gap-1.5 border-t border-zinc-800 pt-2 sm:shrink-0 sm:border-0 sm:pt-0 xl:border-t xl:pt-2">
-              <button type="button" onClick={() => setPreviewPath(path => path === f.path ? '' : f.path)} aria-label={`${isPreviewOpen ? 'Close preview of' : 'Preview'} ${fileName}`} aria-expanded={isPreviewOpen} className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-zinc-700 px-2 text-xs text-zinc-100 hover:bg-zinc-800 sm:min-h-8"><Eye className="h-4 w-4" />{isPreviewOpen ? 'Close' : 'Preview'}</button>
+            <div className="flex shrink-0 items-center gap-1">
               {presentationEnabled && meetingId && getPresentationKind(f.name) && (isHost || getPresentationKind(f.name) !== 'slides') && (
                 <button type="button" onClick={async () => {
                   let approvalId = ''
@@ -246,7 +238,7 @@ export default function FileShare({
                   const event = new CustomEvent(JITSI_PRESENT_EVENT, { cancelable: true, detail })
                   window.dispatchEvent(event)
                   setNotice(detail.message || (event.defaultPrevented ? 'Media sent to the Jitsi stage. Return to the meeting to control playback.' : 'Join the meeting before presenting this file.'))
-                }} aria-label={`Present ${f.name} in meeting`} className="min-h-10 rounded-lg border border-zinc-700 px-3 text-xs text-zinc-100 transition hover:bg-zinc-800 sm:min-h-8">{isHost ? 'Present' : 'Request to present'}</button>
+                }} aria-label={isHost ? `Present ${f.name} in meeting` : `Request to present ${f.name} in meeting`} title={isHost ? 'Present' : 'Request to present'} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-700 text-zinc-100 transition hover:bg-zinc-800"><Presentation className="h-4 w-4" /></button>
               )}
               <a href={getDownloadHref(f.path)} target="_blank" rel="noreferrer" className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 sm:h-8 sm:w-8" title="Download" aria-label={`Download ${f.name}`}>
                 <Download className="h-4 w-4" />
