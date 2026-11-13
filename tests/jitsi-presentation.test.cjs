@@ -25,7 +25,7 @@ test('uploaded videos use the joined room, native playback and safe URLs; listen
   const { JITSI_PRESENT_EVENT } = load('lib/jitsi-features.ts');
   let view;
   await act(async () => { view = create(React.createElement(Component, {
-    api, meetingId: 'room', onDocumentRequested: async path => { documents.push(path); },
+    api, meetingId: 'room', isHost: true, onDocumentRequested: async path => { documents.push(path); },
     onScreenRequested: () => screenRequests.push('requested'),
   })); });
   const present = (meetingId, name = 'clip.mp4') => {

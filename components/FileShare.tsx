@@ -9,7 +9,7 @@ import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
 import { FileUpload } from '@/components/ui/file-upload'
 import { PdfFilePreview } from '@/components/PresentationPages'
 import UpgradeCallout, { isPlanUpgradeError } from '@/components/UpgradeCallout'
-import { consumeClientApproval, requestMeetingApproval, waitForMeetingApproval } from '@/lib/meeting-approval-client'
+import { requestMeetingApproval, waitForMeetingApproval } from '@/lib/meeting-approval-client'
 
 export default function FileShare({
   meetingId,
@@ -264,7 +264,6 @@ export default function FileShare({
                     try {
                       approvalId = await requestMeetingApproval(meetingId, 'present', { path: f.path }, noteOwner)
                       await waitForMeetingApproval(meetingId, approvalId)
-                      if (getPresentationKind(f.name) === 'media') await consumeClientApproval(meetingId, approvalId, 'present', { path: f.path })
                     } catch (error: any) { setNotice(error?.message || 'Could not get host approval.'); return }
                   }
                   const detail = { meetingId, path: f.path, name: f.name, approvalId, message: '' }

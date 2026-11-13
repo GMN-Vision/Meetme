@@ -50,7 +50,7 @@ test('playlist playback uses Jitsi shared video whenever the meeting API is open
   const { JITSI_PLAYLIST_PLAY_EVENT, JITSI_PLAYLIST_STOP_EVENT } = load('lib/jitsi-features.ts');
   let view;
   await act(async () => {
-    view = create(React.createElement(Component, { api, meetingId: 'room', participantKey: 'participant-1' }));
+    view = create(React.createElement(Component, { api, meetingId: 'room', participantKey: 'participant-1', isHost: true }));
   });
 
   const play = url => {

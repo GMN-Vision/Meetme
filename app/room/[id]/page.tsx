@@ -776,7 +776,7 @@ export default function RoomPage() {
   const recordingEnabled = meeting?.recordingEnabled !== false;
 
   const roomToolbarButtons = useMemo(
-    () => [...getJitsiToolbarButtons(meeting?.chatEnabled !== false, recordingEnabled && isMeetingHost).filter(button => isMeetingHost || button !== 'security'), 'videoquality'],
+    () => [...getJitsiToolbarButtons(meeting?.chatEnabled !== false, recordingEnabled && isMeetingHost).filter(button => isMeetingHost || !['security', 'shareaudio', 'etherpad', 'whiteboard'].includes(button)), 'videoquality'],
     [meeting?.chatEnabled, recordingEnabled, isMeetingHost]
   );
   const canMountJitsi = Boolean(
@@ -817,6 +817,8 @@ export default function RoomPage() {
         api={jitsiApi}
         meetingId={meetingId}
         participantKey={participantKey}
+        isHost={isMeetingHost}
+        onPresentationError={setPresentationError}
         onDocumentRequested={handleDocumentRequested}
         onPlaylistRequested={handlePlaylistRequested}
         onRecordingRequested={handleRecordingRequested}

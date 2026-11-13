@@ -32,10 +32,6 @@ export async function GET(req: NextRequest) {
     if (meeting.endedAt) return NextResponse.json({ error: 'The host has ended this meeting.', code: 'MEETING_ENDED' }, { status: 403 });
     if (!meeting.activeSessionStartedAt) return NextResponse.json({ error: 'Wait for the host to start this meeting.', code: 'HOST_REQUIRED' }, { status: 403 });
 
-    if (!meeting.isPrivate && !process.env.JITSI_JWT_SECRET) {
-      return NextResponse.json({ token: null, isPrivate: false }, { status: 200 });
-    }
-
     const secret = process.env.JITSI_JWT_SECRET;
     if (!secret) {
       return NextResponse.json(

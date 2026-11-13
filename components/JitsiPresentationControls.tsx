@@ -13,11 +13,14 @@ import {
 } from '@/lib/jitsi-features';
 import { getPresentationKind } from '@/lib/shared-file-types';
 import { normalizeVideoUrl } from '@/lib/video-playlist';
+import { consumeClientApproval } from '@/lib/meeting-approval-client';
 
 interface Props {
   api: any;
   meetingId: string;
   participantKey: string;
+  isHost?: boolean;
+  onPresentationError?: (message: string) => void;
   /** Open the app playlist when Jitsi's Share video button is pressed. */
   onPlaylistRequested?: () => void;
   /** Toggle Melanam server recording when Jitsi's recording button is pressed. */
@@ -34,6 +37,8 @@ export default function JitsiPresentationControls({
   api,
   meetingId,
   participantKey,
+  isHost = false,
+  onPresentationError,
   onPlaylistRequested,
   onRecordingRequested,
   onHangupRequested,
@@ -69,6 +74,15 @@ export default function JitsiPresentationControls({
           event.preventDefault();
           return;
         }
+        if (!isHost) {
+          if (!detail.approvalId) { detail.message = 'Host approval is required to present this file.'; return; }
+          event.preventDefault();
+          detail.message = 'Opening the approved media in the meeting.';
+          void consumeClientApproval(meetingId, detail.approvalId, 'present', { path: detail.path })
+            .then(() => startVideo(getSharedVideoUrl(detail.path, window.location.origin)))
+            .catch(error => onPresentationError?.(error instanceof Error ? error.message : 'Host approval is required to present this file.'));
+          return;
+        }
         startVideo(getSharedVideoUrl(detail.path, window.location.origin));
         event.preventDefault();
       } catch {
@@ -80,6 +94,20 @@ export default function JitsiPresentationControls({
       if (meetingClosed || detail?.meetingId !== meetingId || typeof detail?.url !== 'string') return;
       const url = normalizeVideoUrl(detail.url);
       if (!url) return;
+      if (!isHost) {
+        event.preventDefault();
+        void fetch(`/api/video-playlist?meetingId=${encodeURIComponent(meetingId)}`, { cache: 'no-store' })
+          .then(async response => {
+            if (!response.ok) throw new Error('Could not verify the approved video.');
+            const result = await response.json();
+            const playlist = result.playlist;
+            const approvedUrl = playlist?.playing ? playlist?.items?.[playlist.currentIndex]?.url : '';
+            if (normalizeVideoUrl(approvedUrl || '') !== url) throw new Error('Host approval is required to play this video.');
+            startVideo(url);
+          })
+          .catch(error => onPresentationError?.(error instanceof Error ? error.message : 'Host approval is required to play this video.'));
+        return;
+      }
       try {
         startVideo(url);
         detail.message = 'Video started in the meeting.';
@@ -90,7 +118,7 @@ export default function JitsiPresentationControls({
     };
     const stopPlaylistVideo = (event: Event) => {
       const detail = (event as CustomEvent).detail;
-      if (meetingClosed || detail?.meetingId !== meetingId) return;
+      if (!isHost || meetingClosed || detail?.meetingId !== meetingId) return;
       try {
         api.executeCommand('stopShareVideo');
         sharingVideo = false;
@@ -120,7 +148,7 @@ export default function JitsiPresentationControls({
       window.removeEventListener(JITSI_PLAYLIST_PLAY_EVENT, playPlaylistVideo);
       window.removeEventListener(JITSI_PLAYLIST_STOP_EVENT, stopPlaylistVideo);
     };
-  }, [api, meetingId, participantKey, onPlaylistRequested, onRecordingRequested, onHangupRequested, onDocumentRequested, onScreenRequested]);
+  }, [api, meetingId, participantKey, isHost, onPresentationError, onPlaylistRequested, onRecordingRequested, onHangupRequested, onDocumentRequested, onScreenRequested]);
 
   return null;
 }
