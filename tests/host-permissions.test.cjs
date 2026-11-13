@@ -33,7 +33,7 @@ test('public meetings require role-signed Jitsi tokens', async t => {
   let moderator;
   const { GET } = load('app/api/meeting-token/route.ts', {
     '../../../lib/db': async () => {},
-    '../../../models/Meeting': { findOne: async () => ({ meetingId: 'room', hostEmail: 'host@example.com', hostId: 'host', isPrivate: false, activeSessionStartedAt: new Date(), maxMeetingMinutes: 60 }) },
+    '../../../models/Meeting': { findOne: async () => ({ meetingId: 'room', hostEmail: 'Host@Example.com', hostId: 'host', isPrivate: false, activeSessionStartedAt: new Date(), maxMeetingMinutes: 60 }) },
     '../../../lib/jitsi-jwt': { createJitsiJwt: options => { moderator = options.moderator; return 'signed'; } },
     '../../../lib/jitsi-room': { normalizeJitsiRoomName: value => value },
     'next-auth': { getServerSession: async () => ({ user: { email } }) },
