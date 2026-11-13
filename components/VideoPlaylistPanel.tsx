@@ -248,16 +248,16 @@ export default function VideoPlaylistPanel({
     <div className={`relative rounded-3xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 p-5 ${className}`}>
       {onClose ? <button type="button" onClick={onClose} className="absolute right-2 top-2 z-30 rounded-lg p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-white" aria-label="Close video playlist"><X className="h-4 w-4" /></button> : null}
 
+      <div className="mb-3 flex items-center justify-between gap-2 pr-7 xl:pr-0"><h2 className="text-sm font-semibold text-white">Video playlist</h2><span className="text-xs text-zinc-400">{playlist.items.length} videos</span></div>
       {notice ? (
         <div className="mb-3 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs text-zinc-300" role="status">
           {notice}
         </div>
       ) : null}
 
-      <div className="mb-3 flex items-center justify-between gap-2 pr-7"><h2 className="text-sm font-semibold text-white">Video playlist</h2><span className="text-xs text-zinc-400">{playlist.items.length} videos</span></div>
       <label htmlFor={`video-playlist-input-${meetingId}`} className="sr-only">Video link</label>
-      <div className="mb-3 flex gap-2">
-        <input type="url" id={`video-playlist-input-${meetingId}`} value={input} onChange={event => setInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (!working) void addVideos(); } }} disabled={working} placeholder="Paste video link" className="input-modern min-w-0 flex-1 !px-2 text-xs disabled:opacity-60" />
+      <div className="mb-3 flex min-h-10 items-center gap-2">
+        <input type="url" id={`video-playlist-input-${meetingId}`} value={input} onChange={event => setInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (!working) void addVideos(); } }} disabled={working} placeholder="Paste video link" className="h-10 min-w-0 flex-1 rounded-lg border border-zinc-700 bg-transparent px-3 text-xs text-zinc-200 outline-none placeholder:text-zinc-400 focus:border-sky-400 disabled:opacity-60" />
         <HoverBorderGradient type="button" onClick={() => void addVideos()} disabled={working || !input.trim()} aria-label="Add video to the playlist" className="shrink-0 gap-2 text-xs disabled:opacity-50">{busy === 'add' ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}{busy === 'add' ? 'Adding…' : 'Add'}</HoverBorderGradient>
       </div>
       {current ? (
@@ -278,6 +278,7 @@ export default function VideoPlaylistPanel({
       ) : null}
 
       <ul className="space-y-1.5" aria-label="Video playlist">
+        {playlist.items.length === 0 && <li className="rounded-lg border border-dashed border-zinc-700 px-3 py-6 text-center text-xs text-zinc-400">No videos yet</li>}
         {playlist.items.map((item, index) => {
           const isCurrent = playlist.currentIndex === index;
           const youtubeId = isYouTubeVideoUrl(item.url) ? new URL(item.url).searchParams.get('v') : null;

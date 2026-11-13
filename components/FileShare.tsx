@@ -192,14 +192,10 @@ export default function FileShare({
       ) : null}
       {fileUpgradeReason && <div className="mb-3"><UpgradeCallout reason={fileUpgradeReason} /></div>}
 
-      <details className="mb-2 text-xs text-zinc-400">
-        <summary className="cursor-pointer py-1 hover:text-zinc-200">Upload allowance</summary>
-        <FileAllowance allowance={allowance} />
-      </details>
       {syncNotice && <p className="mb-3 text-xs text-amber-300" role="status">{syncNotice}</p>}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="mb-3 flex min-h-10 flex-wrap items-center gap-2">
         <input ref={quickUploadInput} type="file" className="sr-only" tabIndex={-1} disabled={uploading || awaitingApproval} onChange={event => { setSelected(event.target.files?.[0] || null); setUpgradeReason(''); event.target.value = '' }} />
-        <button type="button" onClick={() => quickUploadInput.current?.click()} disabled={uploading || awaitingApproval || !isReady} className="min-w-0 flex-1 truncate rounded-lg border border-zinc-700 px-3 py-2 text-left text-xs text-zinc-200 hover:bg-zinc-800 disabled:opacity-60">{selected ? selected.name : 'Choose file'}</button>
+        <button type="button" onClick={() => quickUploadInput.current?.click()} disabled={uploading || awaitingApproval || !isReady} className="h-10 min-w-0 flex-1 truncate rounded-lg border border-zinc-700 px-3 text-left text-xs text-zinc-200 hover:bg-zinc-800 disabled:opacity-60">{selected ? selected.name : 'Choose file'}</button>
         <HoverBorderGradient
           onClick={() => { void handleUpload() }}
           disabled={!selected || uploading || awaitingApproval || !isReady}
@@ -212,6 +208,7 @@ export default function FileShare({
       </div>
 
       <ul className="space-y-2" aria-label="Shared files">
+        {files.length === 0 && <li className="rounded-lg border border-dashed border-zinc-700 px-3 py-6 text-center text-xs text-zinc-400">No shared files yet</li>}
         {files.map((f) => {
           const fileName = f.name.split('/').pop() || f.name
           const isPreviewOpen = previewPath === f.path
@@ -261,6 +258,10 @@ export default function FileShare({
           </li>
         })}
       </ul>
+      <details className="mt-3 text-xs text-zinc-400">
+        <summary className="cursor-pointer py-1 hover:text-zinc-200">Upload allowance</summary>
+        <FileAllowance allowance={allowance} />
+      </details>
 
     </div>
   )
