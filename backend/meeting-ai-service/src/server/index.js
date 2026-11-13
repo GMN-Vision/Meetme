@@ -8,6 +8,7 @@ const path = require('path');
 const { broadcast, joinRoom, leaveRoom, getRoomSize, getCaptionHistory, recordCaption } = require('../ws/roomHub');
 const { addCaption, getLastSummary, flushMeeting } = require('../summarizer');
 const { addParticipant, removeParticipant, resolveSpeaker } = require('../participants');
+const CAPTION_DEBUG = process.env.CAPTION_DEBUG === '1';
 
 // Track active bot processes
 const activeBots = new Map();
@@ -256,7 +257,7 @@ function createServer() {
             return;
           }
 
-          console.log(`[server] 📥 CAPTION RECEIVED: "${payload.text.slice(0, 60)}" | speaker=${payload.speaker || 'unknown'} | final=${payload.final}`);
+          if (CAPTION_DEBUG) console.log(`[server] 📥 CAPTION RECEIVED: "${payload.text.slice(0, 60)}" | speaker=${payload.speaker || 'unknown'} | final=${payload.final}`);
 
           // Try to resolve a friendly speaker name if mapping exists
           try {
@@ -269,7 +270,7 @@ function createServer() {
             // ignore mapping errors
           }
 
-          console.log(`[server] 📡 Broadcasting caption to meeting ${meetingId}`);
+          if (CAPTION_DEBUG) console.log(`[server] 📡 Broadcasting caption to meeting ${meetingId}`);
           recordCaption(meetingId, payload);
           broadcast(meetingId, payload);
 

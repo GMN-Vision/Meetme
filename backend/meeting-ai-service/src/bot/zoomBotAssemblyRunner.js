@@ -27,6 +27,7 @@ const BOT_AUDIO_CAPTURE_MODE = (process.env.BOT_AUDIO_CAPTURE_MODE || '').toLowe
 const BOT_MEETING_PLATFORM = (process.env.BOT_MEETING_PLATFORM || '').toLowerCase();
 const BOT_JITSI_TOKEN = process.env.BOT_JITSI_TOKEN || '';
 const JITSI_CONFIG_CACHE = new Map();
+const CAPTION_DEBUG = process.env.CAPTION_DEBUG === '1';
 
 function buildAssemblyAiWsUrl() {
   const url = new URL(ASSEMBLYAI_WS_URL);
@@ -216,7 +217,7 @@ function normalizeTranscriptText(value) {
 }
 
 async function publishCaption(meetingId, payload) {
-  console.log('[PUBLISH CAPTION]', payload);
+  if (CAPTION_DEBUG) console.log('[PUBLISH CAPTION]', payload);
   const response = await fetch(`${CAPTION_BACKEND_URL}/api/rooms/${encodeURIComponent(meetingId)}/captions`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -237,7 +238,7 @@ function createAssemblyAiTranscriptHandler(meetingId) {
 
     try {
       message = JSON.parse(rawMessage.toString());
-      console.log('[AAI PARSED]', JSON.stringify(message, null, 2));
+      if (CAPTION_DEBUG) console.log('[AAI PARSED]', JSON.stringify(message));
     } catch {
       return;
     }
@@ -273,7 +274,7 @@ function createAssemblyAiTranscriptHandler(meetingId) {
     }
 
     const text = normalizeTranscriptText(message?.transcript || message?.text || message?.utterance || '');
-    console.log('[AAI TEXT]', {
+    if (CAPTION_DEBUG) console.log('[AAI TEXT]', {
       transcript: message?.transcript,
       text: message?.text,
       utterance: message?.utterance,
@@ -1067,9 +1068,7 @@ function connectAssemblyAiRealtime(meetingId) {
 
     aaiWebSocket.on('message', async (raw) => {
         try {
-          console.log('\n================ AAI RAW ================');
-          try { console.log(raw.toString()); } catch { console.log(String(raw)); }
-          console.log('=========================================\n');
+          if (CAPTION_DEBUG) console.log('[AAI RAW]', raw.toString());
 
           await handleTranscript(raw);
         } catch (error) {
@@ -1375,7 +1374,8 @@ async function startJitsiRealtimeAudioStream({ page, aaiWebSocket, meetingUrl, m
         }
       }
     };
-    const processor = audioContext.createScriptProcessor(4096, 1, 1);
+    // Shorter PCM frames reach the streaming recognizer sooner.
+    const processor = audioContext.createScriptProcessor(2048, 1, 1);
     const mixer = audioContext.createGain();
     mixer.gain.value = 1;
     const zeroGain = audioContext.createGain();

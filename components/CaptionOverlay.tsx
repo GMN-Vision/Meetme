@@ -334,7 +334,7 @@ export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }
     lastSpeakerIdRef.current = speakerId;
 
     const label = payload.final ? '✅ FINAL' : '🔹 PARTIAL';
-    console.log(`[captions] ${label} caption: "${String(payload.text).slice(0, 60)}" from ${speakerName}`);
+    if (debugMode) console.log(`[captions] ${label} caption: "${String(payload.text).slice(0, 60)}" from ${speakerName}`);
 
     captionDispatchRef.current?.dispatch({
       type: 'RECEIVE_CAPTION',
@@ -379,12 +379,12 @@ export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }
       if (candidateIndex >= candidates.length) {
         candidateIndex = 0;
         const attempt = ++attemptRef.current;
-        const delay = Math.min(30000, 1000 * 2 ** (attempt - 1));
+        const delay = Math.min(8000, 500 * 2 ** (attempt - 1));
         retryTimer = setTimeout(() => setRetryTick((tick) => tick + 1), delay);
         return;
       }
 
-      retryTimer = setTimeout(connect, 250);
+      retryTimer = setTimeout(connect, 100);
     };
 
     const connect = () => {
@@ -399,13 +399,16 @@ export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }
 
       const socket = new WebSocket(currentUrl);
       socketRef.current = socket;
+      let retryScheduled = false;
 
       const markFailureAndRetry = () => {
-        if (disposed) {
+        if (disposed || retryScheduled || socketRef.current !== socket) {
           return;
         }
 
+        retryScheduled = true;
         setConnected(false);
+        try { socket.close(); } catch (_) {}
         scheduleReconnect();
       };
 
@@ -457,8 +460,11 @@ export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }
     }
 
     let disposed = false;
+    let inFlight = false;
 
     const pollHistory = async () => {
+      if (inFlight || socketRef.current?.readyState === WebSocket.OPEN) return;
+      inFlight = true;
       try {
         const baseUrl = resolveMeetingAiHttpUrl();
         if (!baseUrl) {
@@ -486,11 +492,13 @@ export function CaptionOverlay({ meetingId, portalTarget, onCaption, onSummary }
         }
       } catch {
         // polling fallback is best-effort only
+      } finally {
+        inFlight = false;
       }
     };
 
     pollHistory();
-    const timer = setInterval(pollHistory, 3000);
+    const timer = setInterval(pollHistory, 1000);
     historyPollTimerRef.current = timer;
 
     return () => {
