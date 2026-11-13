@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Check } from 'lucide-react';
+import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
 import { BILLING_PLANS, getDisplayAnnualSavings, getDisplayPlanPrice, type DisplayCurrency, getAnnualSavings, type BillingCycle, type PlanKey } from '@/lib/billing-plans';
 
 export function BillingToggle({ cycle, onChange }: { cycle: BillingCycle; onChange: (cycle: BillingCycle) => void }) {
@@ -27,7 +28,11 @@ export function PlanCards({ cycle, currency = 'GBP', action }: { cycle: BillingC
       <ul className="mb-8 flex-1 space-y-3">
         {[plan.limits.participants, plan.limits.meetingMinutes, ...plan.highlights.slice(1)].map((feature, index) => <li key={index} className="flex gap-2.5 text-sm leading-6 text-zinc-300"><Check className="mt-1 h-4 w-4 shrink-0 text-emerald-500" strokeWidth={1.5} /><span>{feature}</span></li>)}
       </ul>
-      <div className="relative">{action ? action(plan.key) : <Link href={plan.key === 'free' ? '/sign-in' : '/pricing'} className={`${plan.recommended ? 'button-primary shimmer-btn' : 'button-secondary'} w-full`}>{plan.key === 'free' ? 'Get started free' : plan.key === 'enterprise' ? 'Contact sales' : `Explore ${plan.title}`}</Link>}</div>
+      <div className="relative">
+        {action ? action(plan.key) : plan.recommended
+          ? <HoverBorderGradient as={Link} href={plan.key === 'free' ? '/sign-in' : '/pricing'} className="w-full">{plan.key === 'enterprise' ? 'Contact sales' : `Explore ${plan.title}`}</HoverBorderGradient>
+          : <Link href={plan.key === 'free' ? '/sign-in' : '/pricing'} className="button-secondary w-full">{plan.key === 'free' ? 'Get started free' : plan.key === 'enterprise' ? 'Contact sales' : `Explore ${plan.title}`}</Link>}
+      </div>
     </article>)}
   </div>;
 }
