@@ -54,6 +54,8 @@ test('uploaded videos use the joined room, native playback and safe URLs; listen
   act(() => listeners.get('toolbarButtonClicked')({ key: 'desktop' }));
   assert.deepEqual(screenRequests, ['requested'], 'screen sharing asks the room for permission');
   assert.equal(calls.some(([command]) => command === 'toggleShareScreen'), false);
+  act(() => listeners.get('toolbarButtonClicked')({ key: 'camera' }));
+  assert.equal(calls.at(-1)[0], 'toggleVideo', 'the camera button uses the Jitsi mute command');
   assert.equal(view.toJSON(), null, 'presentation integration adds no toolbar or help panel');
   act(() => listeners.get('readyToClose')());
   assert.equal(present('room'), false, 'closed conferences cannot present');

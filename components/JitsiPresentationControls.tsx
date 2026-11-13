@@ -8,6 +8,7 @@ import {
   JITSI_PRESENT_EVENT,
   JITSI_RECORDING_BUTTON,
   JITSI_SCREEN_SHARE_BUTTON,
+  JITSI_CAMERA_BUTTON,
   JITSI_SHARED_VIDEO_BUTTON,
   getSharedVideoUrl,
 } from '@/lib/jitsi-features';
@@ -50,6 +51,28 @@ export default function JitsiPresentationControls({
     let joinedMeeting = false;
     let meetingClosed = false;
     let sharingVideo = false;
+    let cameraBusy = false;
+    const toggleCamera = async () => {
+      if (cameraBusy) return;
+      cameraBusy = true;
+      try {
+        let before: boolean | null = null;
+        try { if (typeof api.isVideoMuted === 'function') before = await api.isVideoMuted(); } catch { /* Older Jitsi builds can still toggle the camera. */ }
+        api.executeCommand('toggleVideo');
+        if (typeof before === 'boolean' && typeof api.isVideoMuted === 'function') {
+          await new Promise(resolve => setTimeout(resolve, 1200));
+          if (await api.isVideoMuted() === before) {
+            api.executeCommand('toggleVideo');
+            await new Promise(resolve => setTimeout(resolve, 1200));
+            if (await api.isVideoMuted() === before) {
+              onPresentationError?.('The camera did not change state. Check the camera control in Jitsi settings.');
+            }
+          }
+        }
+      } catch {
+        onPresentationError?.('The camera could not be changed. Check camera permissions and try again.');
+      } finally { cameraBusy = false; }
+    };
     const joined = () => { joinedMeeting = true; meetingClosed = false; };
     const closed = () => { joinedMeeting = false; meetingClosed = true; sharingVideo = false; };
     const startVideo = (url: string) => {
@@ -133,6 +156,7 @@ export default function JitsiPresentationControls({
       if (key === JITSI_RECORDING_BUTTON) onRecordingRequested?.();
       if (key === JITSI_HANGUP_BUTTON) onHangupRequested?.();
       if (key === JITSI_SCREEN_SHARE_BUTTON) onScreenRequested?.();
+      if (key === JITSI_CAMERA_BUTTON) void toggleCamera();
     };
     api.addEventListener('videoConferenceJoined', joined);
     api.addEventListener('readyToClose', closed);

@@ -3,6 +3,7 @@ export const JITSI_SHARED_VIDEO_BUTTON = 'sharedvideo';
 export const JITSI_RECORDING_BUTTON = 'recording';
 export const JITSI_HANGUP_BUTTON = 'hangup';
 export const JITSI_SCREEN_SHARE_BUTTON = 'desktop';
+export const JITSI_CAMERA_BUTTON = 'camera';
 
 /** Native Jitsi controls, shared by the room and the standalone embed. */
 export function getJitsiToolbarButtons(chatEnabled = true, recordingEnabled = false) {
@@ -24,6 +25,7 @@ interface JitsiFeatureOptions {
   /** Route Hang up through the host page so only the app host can end the room. */
   controlledHangup?: boolean;
   controlledScreenShare?: boolean;
+  controlledCamera?: boolean;
   isHost?: boolean;
 }
 
@@ -32,6 +34,7 @@ export function getJitsiFeatureConfig({
   recordingEnabled = false,
   controlledHangup = false,
   controlledScreenShare = false,
+  controlledCamera = false,
   isHost = false,
 }: JitsiFeatureOptions = {}) {
   const etherpad = process.env.NEXT_PUBLIC_JITSI_ETHERPAD_URL;
@@ -41,6 +44,7 @@ export function getJitsiFeatureConfig({
   const interceptedButtons = [
     ...(controlledHangup ? [JITSI_HANGUP_BUTTON] : []),
     ...(controlledScreenShare ? [JITSI_SCREEN_SHARE_BUTTON] : []),
+    ...(controlledCamera ? [JITSI_CAMERA_BUTTON] : []),
     ...(sharedVideoPlaylist ? [JITSI_SHARED_VIDEO_BUTTON] : []),
     ...(recordingEnabled ? [JITSI_RECORDING_BUTTON] : []),
   ];

@@ -873,6 +873,7 @@ export default function RoomPage() {
                 recordingEnabled={recordingEnabled}
                 controlledHangup
                 controlledScreenShare
+                controlledCamera
                 isHost={isMeetingHost}
               />
               <CaptionOverlay
