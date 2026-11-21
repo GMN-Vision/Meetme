@@ -594,6 +594,9 @@ function CollaborativeWhiteboard({
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.24em] text-zinc-400">Whiteboard session</div>
           <div className="truncate text-sm font-medium text-white">{meetingId}</div>
+          <p className="text-xs text-zinc-400">
+            Library Open accepts .excalidrawlib files. Use the Image tool for local images.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-white/10 bg-zinc-900/5 px-3 py-1 text-xs text-zinc-200">

@@ -7,7 +7,7 @@ import { signOut, useSession } from 'next-auth/react';
 import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Copy, LockKeyhole, PencilLine, ShieldCheck, Sparkles } from 'lucide-react';
-import { DesignSwitcher } from './DesignTheme';
+// import { DesignSwitcher } from './DesignTheme'; // UI 1/2/3 selector is paused.
 import { AudioCapture } from './AudioCapture';
 import Whiteboard from './Whiteboard';
 import { YouTubeStreamModal } from './YouTubeStreamModal';
@@ -296,7 +296,7 @@ export function Navbar() {
               )}
             </Link>
 
-            {!isRoomPage && !isMeetingsPage && pathname !== '/pricing' && <DesignSwitcher />}
+            {/* {!isRoomPage && !isMeetingsPage && pathname !== '/pricing' && <DesignSwitcher />} */}
             {pathname === '/' && (
               <div className="app-navbar-links hidden items-center gap-1 md:flex">
                 <Link href="#features">Features</Link>
