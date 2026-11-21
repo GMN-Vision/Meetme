@@ -16,7 +16,7 @@ import { supabaseServer } from '@/lib/supabaseServer';
 import { MEETING_FILES_BUCKET, getMeetingStorageRoot } from '@/lib/meeting-storage';
 import { sharedFileExtension } from '@/lib/shared-file-types';
 
-export const ONLYOFFICE_EXTENSIONS = new Set([
+export const OMNIEDIT_EXTENSIONS = new Set([
   'doc', 'docx', 'docm', 'odt', 'rtf', 'txt',
   'html', 'htm', 'xps',
   'xls', 'xlsx', 'xlsm', 'ods', 'csv', 'tsv',
@@ -24,7 +24,7 @@ export const ONLYOFFICE_EXTENSIONS = new Set([
   'pdf',
 ]);
 
-export type OnlyOfficeFile = {
+export type OmniEditFile = {
   path: string;
   meetingId: string;
   name: string;
@@ -35,10 +35,10 @@ export type OnlyOfficeFile = {
   storage: 'local' | 'supabase';
 };
 
-export function onlyOfficeSecret() {
-  const secret = process.env.ONLYOFFICE_JWT_SECRET;
+export function omniEditSecret() {
+  const secret = process.env.OMNIEDIT_JWT_SECRET || process.env.ONLYOFFICE_JWT_SECRET;
   if (!secret || secret.length < 32) {
-    throw new Error('ONLYOFFICE server secret is not configured correctly.');
+    throw new Error('OMNIEDIT server secret is not configured correctly.');
   }
   return secret;
 }
@@ -47,21 +47,21 @@ function encode(value: string | Buffer) {
   return Buffer.from(value).toString('base64url');
 }
 
-export function signOnlyOfficePayload(payload: Record<string, unknown>) {
+export function signOmniEditPayload(payload: Record<string, unknown>) {
   const body = encode(JSON.stringify(payload));
-  const signature = createHmac('sha256', onlyOfficeSecret())
+  const signature = createHmac('sha256', omniEditSecret())
     .update(body)
     .digest('base64url');
 
   return `${body}.${signature}`;
 }
 
-export function verifyOnlyOfficePayload(token: string) {
+export function verifyOmniEditPayload(token: string) {
   const parts = token.split('.');
   if (parts.length !== 2) throw new Error('Invalid or expired document link.');
 
   const [body, signature] = parts;
-  const expected = createHmac('sha256', onlyOfficeSecret())
+  const expected = createHmac('sha256', omniEditSecret())
     .update(body)
     .digest();
 
@@ -79,7 +79,7 @@ export function verifyOnlyOfficePayload(token: string) {
   const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
 
   if (
-    payload?.purpose !== 'onlyoffice-file' ||
+    payload?.purpose !== 'omniedit-file' ||
     typeof payload.path !== 'string' ||
     typeof payload.meetingId !== 'string' ||
     typeof payload.participantKey !== 'string' ||
@@ -100,12 +100,12 @@ export function verifyOnlyOfficePayload(token: string) {
   };
 }
 
-export function signOnlyOfficeConfig(config: Record<string, any>) {
+export function signOmniEditConfig(config: Record<string, any>) {
   const header = encode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const payload = encode(JSON.stringify(config));
   const message = `${header}.${payload}`;
 
-  const signature = createHmac('sha256', onlyOfficeSecret())
+  const signature = createHmac('sha256', omniEditSecret())
     .update(message)
     .digest('base64url');
 
@@ -115,7 +115,7 @@ export function signOnlyOfficeConfig(config: Record<string, any>) {
 export async function resolveSharedPresentationFile(
   key: string,
   meetingId: string,
-): Promise<OnlyOfficeFile> {
+): Promise<OmniEditFile> {
   if (
     !meetingId ||
     !/^[a-zA-Z0-9_-]+$/.test(meetingId) ||
@@ -193,15 +193,15 @@ export async function resolveSharedPresentationFile(
   };
 }
 
-export async function resolveOnlyOfficeFile(key: string, meetingId: string) {
+export async function resolveOmniEditFile(key: string, meetingId: string) {
   const file = await resolveSharedPresentationFile(key, meetingId);
-  if (!ONLYOFFICE_EXTENSIONS.has(file.extension)) {
+  if (!OMNIEDIT_EXTENSIONS.has(file.extension)) {
     throw new Error('This file type is not supported by the document viewer.');
   }
   return file;
 }
 
-export async function openOnlyOfficeFile(file: OnlyOfficeFile) {
+export async function openOmniEditFile(file: OmniEditFile) {
   if (file.storage === 'local' && file.localPath) {
     const info = await stat(file.localPath).catch(() => null);
 
@@ -229,7 +229,7 @@ export async function openOnlyOfficeFile(file: OnlyOfficeFile) {
   };
 }
 
-export function onlyOfficeDocumentKey(meetingId: string, file: OnlyOfficeFile) {
+export function omniEditDocumentKey(meetingId: string, file: OmniEditFile) {
   return createHash('sha256')
     .update(`${meetingId}:${file.path}:${file.size ?? 'legacy'}`)
     .digest('hex')

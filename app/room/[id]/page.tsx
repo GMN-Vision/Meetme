@@ -21,7 +21,8 @@ import PresenterNotes, { SPEECH_NOTE_PATH } from '@/components/PresenterNotes';
 import PresentationWorkspace from '@/components/PresentationWorkspace';
 import PresentationPages from '@/components/PresentationPages';
 import { getPresentationKind } from '@/lib/shared-file-types';
-import { Files, ListVideo } from 'lucide-react';
+import { Download, Files, ListVideo } from 'lucide-react';
+import { downloadTranscript } from '@/lib/transcript-download';
 import { useRecording } from '@/hooks/useRecording';
 import Link from 'next/link';
 import { isPlanUpgradeError } from '@/components/UpgradeCallout';
@@ -258,9 +259,7 @@ export default function RoomPage() {
             .filter(Boolean) as Array<readonly [string, { speakerId: string; name: string; color: string }]>
         );
 
-        if (loadedMeeting?.summary || loadedMeeting?.transcript?.length) {
-          setAiResults(loadedMeeting);
-        }
+        setAiResults(loadedMeeting?.summary || loadedMeeting?.transcript?.length ? loadedMeeting : null);
 
         if (loadedMeeting) {
           const tokenResponse = await fetch(`/api/meeting-token?meetingId=${encodeURIComponent(meetingId)}&name=${encodeURIComponent(userDisplayName)}`);
@@ -360,7 +359,9 @@ export default function RoomPage() {
   }, []);
 
   const persistAIResults = useCallback(
-    async (summaryPayload?: any, options?: { generateSummary?: boolean }) => {
+    async (summaryPayload?: any, options?: { generateSummary?: boolean; signal?: AbortSignal }) => {
+      if (!isMeetingHost) return null;
+
       const transcript = getTranscriptSnapshot();
       const summary = summaryPayload || latestSummaryRef.current;
       const speakerLabels = Array.from(speakerLabelsRef.current.values());
@@ -377,6 +378,7 @@ export default function RoomPage() {
         const response = await fetch('/api/ai/save-results', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: options?.signal,
           body: JSON.stringify({
             meetingId,
             summary: summary?.text || '',
@@ -414,7 +416,7 @@ export default function RoomPage() {
         return null;
       }
     },
-    [getTranscriptSnapshot, meetingId]
+    [getTranscriptSnapshot, isMeetingHost, meetingId]
   );
 
   const scheduleLivePersist = useCallback(
@@ -513,7 +515,16 @@ export default function RoomPage() {
   );
 
   const handleMeetingReadyToClose = useCallback(async () => {
+    const hasPendingCaptions = livePersistTimerRef.current !== null;
+    if (livePersistTimerRef.current) {
+      clearTimeout(livePersistTimerRef.current);
+      livePersistTimerRef.current = null;
+    }
+
     if (!endForAllRef.current) {
+      if (hasPendingCaptions) {
+        await persistAIResults(undefined, { signal: AbortSignal.timeout(4000) });
+      }
       router.push(fallbackRoute);
       return;
     }
@@ -589,7 +600,7 @@ export default function RoomPage() {
           actionItems: liveActionItems.length > 0
             ? liveActionItems
             : m?.actionItems || current?.actionItems || [],
-          transcript: m?.transcript || current?.transcript || [],
+          transcript: current?.transcript?.length ? current.transcript : m?.transcript || [],
           speakerLabels: m?.speakerLabels || current?.speakerLabels || [],
         }));
 
@@ -826,6 +837,19 @@ export default function RoomPage() {
         onScreenRequested={handleScreenRequested}
       />
       <SharedFileNotifications meetingId={meetingId} onUnreadChange={setUnreadFiles} />
+      {isMeetingHost && accessGranted && (
+        <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
+          {!aiResults?.transcript?.length && <span className="text-xs text-zinc-400">Available after captions are captured.</span>}
+          <button
+            type="button"
+            disabled={!aiResults?.transcript?.length}
+            onClick={() => downloadTranscript(meetingId, getTranscriptSnapshot())}
+            className="button-secondary gap-2 px-3 text-xs"
+          >
+            <Download className="h-4 w-4" aria-hidden="true" /> Save transcript (.txt)
+          </button>
+        </div>
+      )}
       {showExitOptions && isMeetingHost && <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 p-4" onMouseDown={event => { if (event.target === event.currentTarget && !endingForAll) setShowExitOptions(false); }}>
         <div role="dialog" aria-modal="true" aria-labelledby="meeting-exit-title" className="w-full max-w-sm rounded-2xl border border-zinc-700 bg-zinc-950 p-5 shadow-2xl">
           <h2 id="meeting-exit-title" className="text-lg font-semibold text-white">Leave this meeting?</h2>

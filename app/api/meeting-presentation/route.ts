@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import { verifyActiveMeetingDocumentToken } from '@/lib/meeting-document-access';
-import { resolveSharedPresentationFile } from '@/lib/onlyoffice-server';
+import { resolveSharedPresentationFile } from '@/lib/omniedit-server';
 import { getPresentationKind } from '@/lib/shared-file-types';
 import Meeting from '@/models/Meeting';
 import { getServerSession } from 'next-auth';

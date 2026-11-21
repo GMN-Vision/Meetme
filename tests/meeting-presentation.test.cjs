@@ -17,7 +17,7 @@ test('joined participants can present a validated document in the room and stop 
         return { meetingId, participantKey: token === 'valid' ? 'participant:presenter' : 'participant:viewer' };
       },
     },
-    '@/lib/onlyoffice-server': {
+    '@/lib/omniedit-server': {
       resolveSharedPresentationFile: async (path, meetingId) => ({ path, meetingId, name: path.split('/').pop(), extension: path.split('.').pop() }),
     },
     '@/models/Meeting': {
@@ -72,7 +72,7 @@ test('joined participants can present a validated document in the room and stop 
 });
 
 test('shared JPG files resolve for presentation while the Office viewer still rejects them', async () => {
-  const { resolveSharedPresentationFile, resolveOnlyOfficeFile } = load('lib/onlyoffice-server.ts', {
+  const { resolveSharedPresentationFile, resolveOmniEditFile } = load('lib/omniedit-server.ts', {
     '@/lib/db': async () => {},
     '@/models/Meeting': { findOne: () => ({ lean: async () => ({ endedAt: null }) }) },
     '@/models/SharedFile': { findOne: () => ({ lean: async () => ({ name: 'meeting-photo.JPG', size: 4 }) }) },
@@ -85,5 +85,5 @@ test('shared JPG files resolve for presentation while the Office viewer still re
   assert.equal(local.extension, 'jpg');
   const legacy = await resolveSharedPresentationFile('room/old-photo.jpeg', 'room');
   assert.equal(legacy.extension, 'jpeg');
-  await assert.rejects(resolveOnlyOfficeFile('local/room/123', 'room'), /not supported by the document viewer/);
+  await assert.rejects(resolveOmniEditFile('local/room/123', 'room'), /not supported by the document viewer/);
 });

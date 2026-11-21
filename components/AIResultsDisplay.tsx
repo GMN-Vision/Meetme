@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { downloadTranscript, formatTranscriptTimestamp } from '@/lib/transcript-download';
 import {
   IconChevronDown,
   IconChecks,
@@ -81,18 +82,6 @@ export function AIResultsDisplay({
 
   const getSpeakerColor = (speakerId: string) => speakerLabels.find((item) => item.speakerId === speakerId)?.color || '#334155';
 
-  const downloadTranscript = () => {
-    const text = transcript.map((entry) => `[${formatTimestamp(entry.timestamp)}] ${entry.speaker}: ${entry.text}`).join('\n');
-    const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
-    const element = document.createElement('a');
-    element.href = url;
-    element.download = `transcript-${meetingId}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    element.remove();
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <div className={`ai-brief ${className}`}>
       <section className="ai-brief__overview">
@@ -162,7 +151,7 @@ export function AIResultsDisplay({
               </span>
               <IconChevronDown className={`ai-brief__chevron h-5 w-5 ${showTranscript ? 'ai-brief__chevron--open' : ''}`} />
             </button>
-            <button type="button" onClick={downloadTranscript} className="ai-brief__download" title="Download transcript" aria-label="Download transcript">
+            <button type="button" onClick={() => downloadTranscript(meetingId, transcript)} className="ai-brief__download" title="Save transcript" aria-label="Save transcript">
               <IconDownload className="h-4 w-4" />
             </button>
           </div>
@@ -172,7 +161,7 @@ export function AIResultsDisplay({
                 <article key={`${entry.timestamp}-${entry.speakerId}-${index}`} className="ai-brief__transcript-entry">
                   <div>
                     <span className="ai-brief__speaker" style={{ backgroundColor: getSpeakerColor(entry.speakerId) }}>{entry.speaker || entry.speakerId || 'Speaker'}</span>
-                    <time>{formatTimestamp(entry.timestamp)}</time>
+                    <time>{formatTranscriptTimestamp(entry.timestamp)}</time>
                   </div>
                   <p>{entry.text}</p>
                 </article>
@@ -224,11 +213,6 @@ function cleanList(items: string[]) {
 function splitSummary(value: string) {
   const sentences = cleanText(value).match(/[^.!?]+[.!?]+|[^.!?]+$/g);
   return (sentences || []).map(cleanText).filter(Boolean).slice(0, 6);
-}
-
-function formatTimestamp(ms: number) {
-  const seconds = Math.floor(Number(ms || 0) / 1000);
-  return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`;
 }
 
 export default AIResultsDisplay;

@@ -8,7 +8,7 @@ const TOKEN_LIFETIME_SECONDS = 24 * 60 * 60;
 const PARTICIPANT_TTL_MS = 5 * 60_000;
 
 function secret() {
-  const value = process.env.ONLYOFFICE_JWT_SECRET;
+  const value = process.env.OMNIEDIT_JWT_SECRET || process.env.ONLYOFFICE_JWT_SECRET;
   if (!value || value.length < 32) {
     throw new Error('Document access signing is not configured.');
   }

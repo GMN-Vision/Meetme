@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     const internalToken = process.env.MEETING_AI_INTERNAL_TOKEN;
     const suppliedToken = request.headers.get('x-meeting-ai-token') || '';
     const isInternal = Boolean(internalToken && suppliedToken === internalToken);
-    const isHost = Boolean(session?.user?.email && session.user.email === meeting.hostEmail);
+    const isHost = Boolean(session?.user?.email && session.user.email.toLowerCase() === meeting.hostEmail?.toLowerCase());
 
     if (!isInternal && !isHost) {
       return NextResponse.json({ error: 'Only the meeting host can save AI results' }, { status: 403 });
@@ -85,6 +85,11 @@ export async function POST(request: Request) {
     }
 
     if (body?.generateSummary === true && Array.isArray(meeting.transcript) && meeting.transcript.length > 0) {
+      // Save the transcript before checking access to the optional AI summary.
+      if (meeting.isModified('transcript') || meeting.isModified('speakerLabels')) {
+        await meeting.save();
+      }
+
       try {
         const chargeEmail = String(isInternal ? meeting.hostEmail : session?.user?.email || '').toLowerCase();
         const isAdmin = Boolean((session?.user as any)?.role === 'admin');

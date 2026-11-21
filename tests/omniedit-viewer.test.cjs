@@ -11,20 +11,20 @@ test('OmniEdit keeps host File controls and limits participant slides to the act
   });
   let email = 'host@example.com';
   let sharedPresentation = null;
-  const route = load('app/api/onlyoffice/config/route.ts', {
+  const route = load('app/api/omniedit/config/route.ts', {
     'next-auth': { getServerSession: async () => ({ user: { email } }) },
     '@/lib/auth-options': { authOptions: {} },
     '@/models/Meeting': { findOne: () => ({ select: () => ({ lean: async () => ({ hostEmail: 'host@example.com', sharedPresentation }) }) }) },
     '@/lib/meeting-document-access': { verifyActiveMeetingDocumentToken: async () => ({ participantKey: 'viewer' }) },
-    '@/lib/onlyoffice-server': {
-      ONLYOFFICE_EXTENSIONS: new Set(['pptx']),
-      onlyOfficeDocumentKey: () => 'document-key',
-      resolveOnlyOfficeFile: async () => ({ extension: 'pptx', path: 'local/room/file', meetingId: 'room', name: 'Slides.pptx' }),
-      signOnlyOfficeConfig: () => 'signed-config',
-      signOnlyOfficePayload: () => 'signed-file',
+    '@/lib/omniedit-server': {
+      OMNIEDIT_EXTENSIONS: new Set(['pptx']),
+      omniEditDocumentKey: () => 'document-key',
+      resolveOmniEditFile: async () => ({ extension: 'pptx', path: 'local/room/file', meetingId: 'room', name: 'Slides.pptx' }),
+      signOmniEditConfig: () => 'signed-config',
+      signOmniEditPayload: () => 'signed-file',
     },
   });
-  const request = () => new Request('https://melanam.com/api/onlyoffice/config?path=local%2Froom%2Ffile&meetingId=room', {
+  const request = () => new Request('https://melanam.com/api/omniedit/config?path=local%2Froom%2Ffile&meetingId=room', {
     headers: { Authorization: 'Bearer joined' },
   });
   const response = await route.GET(request());
@@ -33,6 +33,9 @@ test('OmniEdit keeps host File controls and limits participant slides to the act
   assert.equal(isHost, true);
   assert.equal(config.type, 'desktop');
   assert.equal(config.editorConfig.mode, 'view');
+  assert.equal(config.editorConfig.customization.customer.name, 'OmniEdit');
+  assert.equal(config.editorConfig.customization.logo.visible, false);
+  assert.equal(new URL(config.document.url).pathname, '/api/omniedit/file');
   assert.deepEqual(config.editorConfig.customization.layout, {
     leftMenu: true, rightMenu: false, statusBar: false, toolbar: true,
   });

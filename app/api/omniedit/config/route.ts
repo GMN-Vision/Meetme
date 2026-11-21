@@ -5,12 +5,12 @@ import { authOptions } from '@/lib/auth-options';
 import Meeting from '@/models/Meeting';
 import { getPresentationKind } from '@/lib/shared-file-types';
 import {
-  ONLYOFFICE_EXTENSIONS,
-  onlyOfficeDocumentKey,
-  resolveOnlyOfficeFile,
-  signOnlyOfficeConfig,
-  signOnlyOfficePayload,
-} from '@/lib/onlyoffice-server';
+  OMNIEDIT_EXTENSIONS,
+  omniEditDocumentKey,
+  resolveOmniEditFile,
+  signOmniEditConfig,
+  signOmniEditPayload,
+} from '@/lib/omniedit-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
       : '';
 
     const access = await verifyActiveMeetingDocumentToken(accessToken, meetingId);
-    const file = await resolveOnlyOfficeFile(path, meetingId);
+    const file = await resolveOmniEditFile(path, meetingId);
     const meeting = await Meeting.findOne({ meetingId }).select('hostEmail sharedPresentation').lean();
     const session = await getServerSession(authOptions);
     const isHost = Boolean(session?.user?.email && String(session.user.email).toLowerCase() === String(meeting?.hostEmail || '').toLowerCase());
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Only the host can prepare PowerPoint presentations.' }, { status: 403 });
     }
 
-    if (!ONLYOFFICE_EXTENSIONS.has(file.extension)) {
+    if (!OMNIEDIT_EXTENSIONS.has(file.extension)) {
       return NextResponse.json(
         { error: 'Unsupported document type.' },
         { status: 415 },
@@ -77,15 +77,15 @@ export async function GET(request: Request) {
 
     // The Document Server downloads the file server-to-server, so its URL
     // uses a short-lived signed token instead of a browser session cookie.
-    const fileToken = signOnlyOfficePayload({
-      purpose: 'onlyoffice-file',
+    const fileToken = signOmniEditPayload({
+      purpose: 'omniedit-file',
       path: file.path,
       meetingId: file.meetingId,
       participantKey: access.participantKey,
       exp: Math.floor(Date.now() / 1000) + 10 * 60,
     });
 
-    const documentUrl = new URL('/api/onlyoffice/file', baseUrl);
+    const documentUrl = new URL('/api/omniedit/file', baseUrl);
     documentUrl.searchParams.set('token', fileToken);
 
     const config: Record<string, any> = {
@@ -93,7 +93,7 @@ export async function GET(request: Request) {
       documentType: documentType(file.extension),
       document: {
         fileType: file.extension,
-        key: onlyOfficeDocumentKey(meetingId, file),
+        key: omniEditDocumentKey(meetingId, file),
         title: file.name,
         url: documentUrl.toString(),
         permissions: {
@@ -109,6 +109,10 @@ export async function GET(request: Request) {
         lang: 'en',
         embedded: { autostart: 'document' },
         customization: {
+          about: false,
+          logo: { visible: false },
+          customer: { name: 'OmniEdit', www: baseUrl.origin },
+          loaderName: 'Opening in OmniEdit…',
           help: false,
           feedback: false,
           close: false,
@@ -132,7 +136,7 @@ export async function GET(request: Request) {
       width: '100%',
     };
 
-    config.token = signOnlyOfficeConfig(config);
+    config.token = signOmniEditConfig(config);
 
     return NextResponse.json(
       { config, name: file.name, documentType: config.documentType, isHost },

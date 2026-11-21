@@ -22,15 +22,15 @@ declare global {
   }
 }
 
-const ONLYOFFICE_API =
+const OMNIEDIT_API =
   'https://docs.melanam.com/web-apps/apps/api/documents/api.js';
 
-function loadOnlyOfficeApi(): Promise<void> {
+function loadOmniEditApi(): Promise<void> {
   if (window.DocsAPI?.DocEditor) return Promise.resolve();
 
   return new Promise((resolve, reject) => {
     const existing = document.getElementById(
-      'onlyoffice-api-script',
+      'omniedit-api-script',
     ) as HTMLScriptElement | null;
 
     const script = existing || document.createElement('script');
@@ -51,8 +51,8 @@ function loadOnlyOfficeApi(): Promise<void> {
     script.addEventListener('error', onError, { once: true });
 
     if (!existing) {
-      script.id = 'onlyoffice-api-script';
-      script.src = ONLYOFFICE_API;
+      script.id = 'omniedit-api-script';
+      script.src = OMNIEDIT_API;
       script.async = true;
       document.head.appendChild(script);
     } else if (window.DocsAPI?.DocEditor) {
@@ -81,7 +81,7 @@ export default function PresentPage() {
   >('');
 
   const kind = getPresentationKind(file.name);
-  const usesOnlyOffice =
+  const usesOmniEdit =
     kind === 'office' || kind === 'slides' || kind === 'pdf';
 
   useEffect(() => {
@@ -129,10 +129,10 @@ export default function PresentPage() {
           throw new Error('Your meeting document access has expired. Return to the meeting and try again.');
         }
 
-        if (usesOnlyOffice) {
+        if (usesOmniEdit) {
           try {
             const response = await fetch(
-              `/api/onlyoffice/config?path=${encodeURIComponent(file.path)}&meetingId=${encodeURIComponent(file.meetingId)}`,
+              `/api/omniedit/config?path=${encodeURIComponent(file.path)}&meetingId=${encodeURIComponent(file.meetingId)}`,
               {
                 headers: { Authorization: `Bearer ${documentAccessToken}` },
                 signal: controller.signal,
@@ -149,18 +149,18 @@ export default function PresentPage() {
             }
             setIsHost(Boolean(body.isHost));
 
-            await loadOnlyOfficeApi();
+            await loadOmniEditApi();
 
             if (controller.signal.aborted) return;
 
-            const mount = document.getElementById('onlyoffice-editor');
+            const mount = document.getElementById('omniedit-editor');
 
             if (!mount || !window.DocsAPI?.DocEditor) {
               throw new Error('The document editor could not be initialized.');
             }
 
             editor = new window.DocsAPI.DocEditor(
-              'onlyoffice-editor',
+              'omniedit-editor',
               body.config,
             );
 
@@ -244,7 +244,7 @@ export default function PresentPage() {
     file.name,
     file.meetingId,
     kind,
-    usesOnlyOffice,
+    usesOmniEdit,
   ]);
 
   const share = () => {
@@ -320,9 +320,9 @@ export default function PresentPage() {
       </header>}
 
       <div className="relative flex min-h-0 flex-1 items-center justify-center">
-        {usesOnlyOffice && (
+        {usesOmniEdit && (
           <div
-            id="onlyoffice-editor"
+            id="omniedit-editor"
             className="absolute inset-0 h-full w-full"
           />
         )}

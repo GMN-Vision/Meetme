@@ -15,6 +15,7 @@ import {
   Users,
 } from 'lucide-react';
 import { GlowCard } from '@/components/ui/glow-card';
+import { downloadTranscript } from '@/lib/transcript-download';
 
 type TranscriptEntry = {
   text?: string;
@@ -164,12 +165,12 @@ export function AIMeetingNotesPanel({
                 <div className="flex shrink-0 flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => downloadTranscript(meeting)}
+                    onClick={() => downloadTranscript(meeting.meetingId, meeting.transcript || [])}
                     disabled={(meeting.transcript || []).length === 0}
                     className="inline-flex h-8 items-center gap-2 rounded-md border border-[#3f3f46] bg-[#27272a] px-2.5 text-xs font-semibold text-[#e4e4e7] transition hover:border-[#d4d4d8]/70 hover:bg-[#27272a] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Download className="h-3.5 w-3.5" />
-                    Transcript
+                    Save transcript
                   </button>
                   <Link
                     href={`/recordings/${encodeURIComponent(meeting.meetingId)}`}
@@ -365,23 +366,6 @@ function CompactRecordingHistory() {
   );
 }
 
-function downloadTranscript(meeting: AIMeeting) {
-  const lines = (meeting.transcript || []).map((entry) => {
-    const speaker = entry.speaker || entry.speakerId || 'Speaker';
-    return `[${formatTimestamp(Number(entry.timestamp || 0))}] ${speaker}: ${entry.text || ''}`;
-  });
-
-  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `transcript-${meeting.meetingId}.txt`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
-
 function cleanText(value?: string) {
   return String(value || '')
     .replace(/\s+/g, ' ')
@@ -440,11 +424,4 @@ function parseDurationLabel(value?: string) {
   if (!match) return 0;
 
   return Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3]);
-}
-
-function formatTimestamp(ms: number) {
-  const seconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 }

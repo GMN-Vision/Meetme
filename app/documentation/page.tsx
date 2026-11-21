@@ -63,7 +63,7 @@ export default function DocumentationPage() {
         items: [
           'Notes can include a summary, key points, decisions, action items, and transcript lines.',
           'Processing starts after the meeting and may take a few minutes.',
-          'Download the transcript when transcript lines are available.',
+          'Select Save transcript to download a text file. Hosts can also save the transcript directly from the live room after captions are captured.',
           'Review AI-generated notes for accuracy before sharing them.'
         ]
       },

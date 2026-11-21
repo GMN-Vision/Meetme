@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth-options';
 import dbConnect from '@/lib/db';
 import { consumeMeetingApproval, verifyMeetingApprovalToken } from '@/lib/meeting-approval-access';
 import { normalizeVideoUrl } from '@/lib/video-playlist';
-import { resolveSharedPresentationFile } from '@/lib/onlyoffice-server';
+import { resolveSharedPresentationFile } from '@/lib/omniedit-server';
 import { getPresentationKind } from '@/lib/shared-file-types';
 import Meeting from '@/models/Meeting';
 import MeetingParticipant from '@/models/MeetingParticipant';

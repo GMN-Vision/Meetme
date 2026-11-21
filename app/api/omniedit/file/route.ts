@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { assertActiveMeetingParticipant } from '@/lib/meeting-document-access';
 import {
-  openOnlyOfficeFile,
-  resolveOnlyOfficeFile,
-  verifyOnlyOfficePayload,
-} from '@/lib/onlyoffice-server';
+  openOmniEditFile,
+  resolveOmniEditFile,
+  verifyOmniEditPayload,
+} from '@/lib/omniedit-server';
 import { PREVIEW_TYPES } from '@/lib/shared-file-types';
 
 export const runtime = 'nodejs';
@@ -19,10 +19,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Missing document token.' }, { status: 401 });
     }
 
-    const payload = verifyOnlyOfficePayload(token);
+    const payload = verifyOmniEditPayload(token);
     await assertActiveMeetingParticipant(payload.meetingId, payload.participantKey);
-    const file = await resolveOnlyOfficeFile(payload.path, payload.meetingId);
-    const opened = await openOnlyOfficeFile(file);
+    const file = await resolveOmniEditFile(payload.path, payload.meetingId);
+    const opened = await openOmniEditFile(file);
 
     const mime = PREVIEW_TYPES[file.extension] || 'application/octet-stream';
 

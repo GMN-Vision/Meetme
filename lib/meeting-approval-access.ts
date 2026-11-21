@@ -5,7 +5,7 @@ import MeetingApproval, { type MeetingApprovalType } from '@/models/MeetingAppro
 const TOKEN_LIFETIME_SECONDS = 4 * 60 * 60;
 
 function secret() {
-  const value = process.env.NEXTAUTH_SECRET || process.env.ONLYOFFICE_JWT_SECRET || process.env.JITSI_JWT_SECRET;
+  const value = process.env.NEXTAUTH_SECRET || process.env.OMNIEDIT_JWT_SECRET || process.env.ONLYOFFICE_JWT_SECRET || process.env.JITSI_JWT_SECRET;
   if (!value || value.length < 32) throw new Error('Meeting approval signing is not configured.');
   return value;
 }
