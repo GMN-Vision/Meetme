@@ -16,7 +16,7 @@ const PAGE_CONTEXT: Record<string, string> = {
 function pageContext(path: unknown) {
   if (typeof path !== 'string') return '';
   if (PAGE_CONTEXT[path]) return PAGE_CONTEXT[path];
-  if (/^\/room\/[^/]+$/.test(path)) return 'Live meeting room. The page has Video playlist and Shared files side panels. The room navbar has Copy link, Subtitles, Whiteboard, and host approvals. The host also has End meeting for all. Never assume the current role, plan, or active feature state.';
+  if (/^\/room\/[^/]+$/.test(path)) return 'Live meeting room. The page has Video playlist and Share File side panels. The room navbar has Copy link, Subtitles, Whiteboard, and host approvals. The host also has End meeting for all. Never assume the current role, plan, or active feature state.';
   if (/^\/recordings\/[^/]+$/.test(path)) return 'Individual recording page. The guide cannot inspect which recording this user can access.';
   return '';
 }
@@ -27,7 +27,7 @@ function offlineAnswer(messages: Array<{ role: 'user' | 'assistant'; content: st
   const answer = getGuideAnswer(current, previous);
   if (answer) return answer;
   if (/\b(this page|here|on this screen)\b/i.test(current)) {
-    if (typeof page === 'string' && /^\/room\/[^/]+$/.test(page)) return 'You are on a meeting room page. Use Video playlist for shared videos, Shared files for uploads and presentations, or the room navbar for Copy link, Subtitles, and Whiteboard. The host sees approval requests in the navbar.';
+    if (typeof page === 'string' && /^\/room\/[^/]+$/.test(page)) return 'You are on a meeting room page. Use Video playlist for shared videos, Share File for uploads and presentations, or the room navbar for Copy link, Subtitles, and Whiteboard. The host sees approval requests in the navbar.';
     if (page === '/meetings') return 'This is your meeting workspace. You can start, create, schedule, or join a meeting, then open recent rooms. Use Recordings or Meeting notes to revisit previous sessions.';
   }
   return GUIDE_FALLBACK;

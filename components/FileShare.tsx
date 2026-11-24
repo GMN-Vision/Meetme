@@ -173,7 +173,7 @@ export default function FileShare({
   return (
     <div className={className || 'rounded-3xl border border-zinc-700/70 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 p-5'}>
       <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="text-sm font-semibold text-white">Shared files</span>
+        <span className="text-sm font-semibold text-white">Share File</span>
         <span className="text-xs text-zinc-400">{loadingList ? 'Syncing…' : `${files.length} files`}</span>
       </div>
       {showHeader && <div className="mb-5 flex items-start justify-between gap-3 border-b border-zinc-700/70 pb-4">
@@ -207,7 +207,7 @@ export default function FileShare({
         {uploading && <button type="button" onClick={() => { setCancelling(true); uploadController.current?.abort() }} disabled={cancelling || !uploadController.current} className="min-h-10 rounded-lg border border-zinc-600 px-3 text-sm text-zinc-100 hover:bg-zinc-800 disabled:cursor-wait disabled:opacity-60">{cancelling ? 'Cancelling…' : 'Cancel upload'}</button>}
       </div>
 
-      <ul className="space-y-2" aria-label="Shared files">
+      <ul className="space-y-2" aria-label="Share File">
         {files.map((f) => {
           const fileName = f.name.split('/').pop() || f.name
           const isPreviewOpen = previewPath === f.path

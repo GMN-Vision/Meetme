@@ -283,7 +283,7 @@ export default function PresentPage() {
         window.history.replaceState(null, '', `${window.location.pathname}?${query}`);
         setFile(next);
       }
-      setNotice(`${pickedFile.name} uploaded. Use Present in Shared files to show it to everyone.`);
+      setNotice(`${pickedFile.name} uploaded. Use Present in Share File to show it to everyone.`);
     } catch (uploadError) {
       setNotice(uploadError instanceof Error ? uploadError.message : 'The file could not be uploaded.');
     } finally {
