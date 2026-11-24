@@ -6,8 +6,6 @@ import { GradientBorderButton } from '../../../components/ui/gradient-border-but
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -21,8 +19,12 @@ export default function AdminLoginPage() {
     })();
   }, [router]);
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // Read the actual fields so browser-autofilled values are submitted too.
+    const fields = new FormData(event.currentTarget);
+    const username = String(fields.get('username') || '').trim();
+    const password = String(fields.get('password') || '');
     setLoading(true);
     setError('');
 
@@ -55,22 +57,29 @@ export default function AdminLoginPage() {
         <h1 className="mt-3 font-display text-3xl font-semibold text-zinc-100">Login</h1>
         <p className="mt-2 text-sm text-zinc-400">Sign in with your administrator credentials to manage Melanam.</p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form name="admin-sign-in" method="post" autoComplete="on" onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">Username</label>
+            <label htmlFor="admin-username" className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">Username</label>
             <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="admin-username"
+              name="username"
+              type="text"
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              required
               className="input-modern mt-1.5 w-full"
               placeholder="admin"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">Password</label>
+            <label htmlFor="admin-password" className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">Password</label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              id="admin-password"
+              name="password"
+              autoComplete="current-password"
+              required
               className="input-modern mt-1.5 w-full"
               placeholder="••••••••"
             />
