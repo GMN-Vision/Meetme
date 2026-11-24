@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { FileVideo, Video } from 'lucide-react';
+import { FileText, FileVideo, Video } from 'lucide-react';
 
 const navigation = [
   { href: '/meetings', label: 'Meetings', icon: Video },
   { href: '/meetings/recordings', label: 'Recordings', icon: FileVideo },
+  { href: '/meetings/transcripts', label: 'Transcripts', icon: FileText },
 ];
 
 export function MeetingWorkspace({ children }: { children: React.ReactNode }) {
@@ -48,12 +49,12 @@ export function MeetingWorkspace({ children }: { children: React.ReactNode }) {
       <header className="mb-7 flex items-start justify-between gap-3">
         <div>
           <p className="section-kicker mb-2 !text-[10px] sm:!text-xs">Your workspace</p>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">{pathname.endsWith('/recordings') ? 'Your moments, saved.' : pathname.endsWith('/notes') ? 'The conversation continues.' : 'Let’s meet.'}</h1>
-          <p className="mt-2 text-sm text-zinc-400">{pathname.endsWith('/recordings') ? 'Revisit your recordings and the moments that matter.' : pathname.endsWith('/notes') ? 'Pick up the ideas, decisions, and next steps.' : 'Good conversations start here.'}</p>
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">{pathname.endsWith('/transcripts') ? 'Every word, together.' : pathname.endsWith('/recordings') ? 'Your moments, saved.' : pathname.endsWith('/notes') ? 'The conversation continues.' : 'Let’s meet.'}</h1>
+          <p className="mt-2 text-sm text-zinc-400">{pathname.endsWith('/transcripts') ? 'Read, download, and share your meeting conversations.' : pathname.endsWith('/recordings') ? 'Revisit your recordings and the moments that matter.' : pathname.endsWith('/notes') ? 'Pick up the ideas, decisions, and next steps.' : 'Good conversations start here.'}</p>
         </div>
         <Link href="/pricing" className="mt-1 shrink-0 rounded-full border border-zinc-800 px-3 py-2 text-xs text-zinc-400 transition hover:bg-zinc-800 hover:text-white sm:px-4 sm:text-sm">Manage plan</Link>
       </header>
-      <nav aria-label="Meeting navigation" className="mb-7 grid grid-cols-2 gap-1 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-1.5 sm:mb-8 sm:flex sm:w-fit">
+      <nav aria-label="Meeting navigation" className="mb-7 grid grid-cols-3 gap-1 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-1.5 sm:mb-8 sm:flex sm:w-fit">
         {navigation.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} aria-current={pathname === href ? 'page' : undefined}
             className={`inline-flex min-w-0 flex-col items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2 py-3 text-xs font-medium transition sm:flex-row sm:gap-2 sm:px-5 sm:text-sm ${pathname === href ? 'bg-white text-zinc-950' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}>

@@ -21,8 +21,7 @@ import PresenterNotes, { SPEECH_NOTE_PATH } from '@/components/PresenterNotes';
 import PresentationWorkspace from '@/components/PresentationWorkspace';
 import PresentationPages from '@/components/PresentationPages';
 import { getPresentationKind } from '@/lib/shared-file-types';
-import { Download, Files, ListVideo } from 'lucide-react';
-import { downloadTranscript } from '@/lib/transcript-download';
+import { Files, ListVideo } from 'lucide-react';
 import { useRecording } from '@/hooks/useRecording';
 import Link from 'next/link';
 import { isPlanUpgradeError } from '@/components/UpgradeCallout';
@@ -91,6 +90,7 @@ export default function RoomPage() {
   const speakerLabelsRef = useRef<Map<string, { speakerId: string; name: string; color: string }>>(new Map());
   const latestSummaryRef = useRef<any | null>(null);
   const livePersistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const checkpointedLineCountRef = useRef(0);
 
   const rawMeetingId = params.id as string;
   const meetingId = decodeURIComponent(rawMeetingId || '').trim();
@@ -347,16 +347,34 @@ export default function RoomPage() {
     return () => window.clearTimeout(timer);
   }, [sessionEndsAt]);
 
-  const getTranscriptSnapshot = useCallback(() => {
+  const getTranscriptSnapshot = useCallback((includePartial = false) => {
     const finalEntries = transcriptEntriesRef.current;
-    if (finalEntries.length > 0) {
-      return [...finalEntries].sort((left, right) => left.timestamp - right.timestamp);
-    }
-
-    return Array.from(partialTranscriptRef.current.values()).sort(
-      (left, right) => left.timestamp - right.timestamp
-    );
+    const partialEntries = includePartial ? Array.from(partialTranscriptRef.current.values()) : [];
+    return [...finalEntries, ...partialEntries].sort((left, right) => left.timestamp - right.timestamp);
   }, []);
+
+  const completeTranscript = useCallback(async (keepalive = false) => {
+    if (!isMeetingHost) return;
+    const snapshot = getTranscriptSnapshot(true);
+    const lines = keepalive ? snapshot.slice(checkpointedLineCountRef.current) : snapshot;
+    const response = await fetch('/api/transcripts', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive,
+      body: JSON.stringify({ action: 'complete', meetingId, lines }),
+    });
+    if (!response.ok) throw new Error('Could not finish saving the transcript. Please try again.');
+  }, [getTranscriptSnapshot, isMeetingHost, meetingId]);
+
+  const completeTranscriptRef = useRef(completeTranscript);
+  useEffect(() => { completeTranscriptRef.current = completeTranscript; }, [completeTranscript]);
+  useEffect(() => () => {
+    void completeTranscriptRef.current(true).catch(console.warn);
+  }, []);
+
+  useEffect(() => {
+    const onPageHide = () => { void completeTranscript(true).catch(console.warn); };
+    window.addEventListener('pagehide', onPageHide);
+    return () => window.removeEventListener('pagehide', onPageHide);
+  }, [completeTranscript]);
 
   const persistAIResults = useCallback(
     async (summaryPayload?: any, options?: { generateSummary?: boolean; signal?: AbortSignal }) => {
@@ -401,6 +419,7 @@ export default function RoomPage() {
         }
 
         const body = await response.json();
+        checkpointedLineCountRef.current = Math.max(checkpointedLineCountRef.current, transcript.length);
         const savedMeeting = body.meeting || null;
         if (savedMeeting) {
           setMeeting((current) => current ? { ...current, ...savedMeeting } : current);
@@ -421,9 +440,7 @@ export default function RoomPage() {
 
   const scheduleLivePersist = useCallback(
     (delay = 2500) => {
-      if (livePersistTimerRef.current) {
-        clearTimeout(livePersistTimerRef.current);
-      }
+      if (livePersistTimerRef.current) return;
 
       livePersistTimerRef.current = setTimeout(() => {
         livePersistTimerRef.current = null;
@@ -471,6 +488,7 @@ export default function RoomPage() {
       if (!caption.final) {
         return;
       }
+      partialTranscriptRef.current.delete(speakerId);
 
       const key = `${Math.round(caption.timestamp)}|${speakerId}|${caption.text.toLowerCase()}`;
       const exists = transcriptEntriesRef.current.some((item) => (
@@ -515,6 +533,8 @@ export default function RoomPage() {
   );
 
   const handleMeetingReadyToClose = useCallback(async () => {
+    try { await completeTranscript(); }
+    catch (error) { console.warn('[transcript] final save failed', error); }
     const hasPendingCaptions = livePersistTimerRef.current !== null;
     if (livePersistTimerRef.current) {
       clearTimeout(livePersistTimerRef.current);
@@ -559,7 +579,7 @@ export default function RoomPage() {
       await persistAIResults(undefined, { generateSummary: true });
       router.push(fallbackRoute);
     }
-  }, [fallbackRoute, meetingId, persistAIResults, router]);
+  }, [completeTranscript, fallbackRoute, meetingId, persistAIResults, router]);
 
   // Open AI results panel when caption overlay dispatches event
   useEffect(() => {
@@ -679,6 +699,7 @@ export default function RoomPage() {
     setEndingForAll(true);
     setExitError('');
     try {
+      await completeTranscript();
       await endMeetingForHost();
       endForAllRef.current = true;
       setShowExitOptions(false);
@@ -688,7 +709,19 @@ export default function RoomPage() {
     } finally {
       setEndingForAll(false);
     }
-  }, [endMeetingForHost, endingForAll]);
+  }, [completeTranscript, endMeetingForHost, endingForAll]);
+
+  const handleHostLeave = async () => {
+    setEndingForAll(true);
+    setExitError('');
+    try {
+      await completeTranscript();
+      setShowExitOptions(false);
+      apiRef.current?.executeCommand?.('hangup');
+    } catch (error) {
+      setExitError(error instanceof Error ? error.message : 'Could not save the transcript.');
+    } finally { setEndingForAll(false); }
+  };
 
   const handleScreenRequested = useCallback(async () => {
     try {
@@ -837,19 +870,6 @@ export default function RoomPage() {
         onScreenRequested={handleScreenRequested}
       />
       <SharedFileNotifications meetingId={meetingId} onUnreadChange={setUnreadFiles} />
-      {isMeetingHost && accessGranted && (
-        <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
-          {!aiResults?.transcript?.length && <span className="text-xs text-zinc-400">Available after captions are captured.</span>}
-          <button
-            type="button"
-            disabled={!aiResults?.transcript?.length}
-            onClick={() => downloadTranscript(meetingId, getTranscriptSnapshot())}
-            className="button-secondary gap-2 px-3 text-xs"
-          >
-            <Download className="h-4 w-4" aria-hidden="true" /> Save transcript (.txt)
-          </button>
-        </div>
-      )}
       {showExitOptions && isMeetingHost && <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 p-4" onMouseDown={event => { if (event.target === event.currentTarget && !endingForAll) setShowExitOptions(false); }}>
         <div role="dialog" aria-modal="true" aria-labelledby="meeting-exit-title" className="w-full max-w-sm rounded-2xl border border-zinc-700 bg-zinc-950 p-5 shadow-2xl">
           <h2 id="meeting-exit-title" className="text-lg font-semibold text-white">Leave this meeting?</h2>
@@ -857,7 +877,7 @@ export default function RoomPage() {
           {isRecording && <p className="mt-2 text-xs text-amber-300">The active recording continues if you leave the meeting open.</p>}
           {exitError && <p role="alert" className="mt-3 text-sm text-rose-300">{exitError}</p>}
           <div className="mt-5 grid gap-2">
-            <button type="button" autoFocus disabled={endingForAll} onClick={() => { setShowExitOptions(false); apiRef.current?.executeCommand?.('hangup'); }} className="rounded-lg border border-zinc-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50">Leave meeting</button>
+            <button type="button" autoFocus disabled={endingForAll} onClick={() => void handleHostLeave()} className="rounded-lg border border-zinc-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50">Leave meeting</button>
             <button type="button" disabled={endingForAll} onClick={() => void handleEndForAll()} className="rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-50">{endingForAll ? 'Ending meeting…' : 'End meeting for all'}</button>
             <button type="button" disabled={endingForAll} onClick={() => setShowExitOptions(false)} className="rounded-lg px-4 py-2 text-sm text-zinc-400 hover:text-white disabled:opacity-50">Cancel</button>
           </div>
@@ -948,7 +968,7 @@ export default function RoomPage() {
                 keyNotes={aiResults?.keyNotes || []}
                 keyDecisions={aiResults?.keyDecisions || []}
                 actionItems={aiResults?.actionItems || []}
-                transcript={aiResults?.transcript || []}
+                transcript={[]}
                 speakerLabels={aiResults?.speakerLabels || []}
               />
               <div className="mt-6">

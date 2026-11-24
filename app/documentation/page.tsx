@@ -63,7 +63,7 @@ export default function DocumentationPage() {
         items: [
           'Notes can include a summary, key points, decisions, action items, and transcript lines.',
           'Processing starts after the meeting and may take a few minutes.',
-          'Select Save transcript to download a text file. Hosts can also save the transcript directly from the live room after captions are captured.',
+          'Open Transcripts beside Recordings in Meetings to read or download the saved conversation. Transcribed speech saves automatically until the host leaves or ends the meeting. The host can then share the transcript with signed-in meeting participants.',
           'Review AI-generated notes for accuracy before sharing them.'
         ]
       },

@@ -6,6 +6,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { generateOpenAIMeetingNotes } from '@/lib/openai-meeting-notes';
 import { requireCredits, requireFeatureAccess } from '@/lib/membership';
+import { checkpointTranscript } from '@/lib/meeting-transcript';
 
 type TranscriptInput = {
   text?: unknown;
@@ -77,6 +78,7 @@ export async function POST(request: Request) {
     let summary = String(body?.summary || body?.text || '').trim();
 
     if (transcript.length > 0) {
+      await checkpointTranscript(meeting, transcript);
       meeting.transcript = mergeTranscript(meeting.transcript || [], transcript);
     }
 
