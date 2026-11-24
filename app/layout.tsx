@@ -7,6 +7,7 @@ import './globals.css';
 import './design-magenta.css';
 import './design-zoom.css';
 import './theme.css';
+import './meeting-colors.css';
 import '@fontsource/manrope/400.css';
 import '@fontsource/manrope/500.css';
 import '@fontsource/manrope/600.css';

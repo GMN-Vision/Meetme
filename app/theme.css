@@ -81,7 +81,7 @@ html[data-theme]:not(:has(.meeting-workspace, .meeting-room)) :is(.button-primar
 }
 html[data-theme]:not(:has(.meeting-workspace, .meeting-room)) :is(.button-primary, .mkt-btn--primary):hover { background: linear-gradient(115deg, #6233c2, #1d4ed8); }
 /* Keep the original animated edge and dark center in either mode. */
-html[data-theme]:not(:has(.meeting-workspace, .meeting-room)) .hover-border-gradient.button-primary,
+html[data-theme] .hover-border-gradient.button-primary,
 html[data-theme]:not(:has(.meeting-workspace, .meeting-room)) .mkt-page .hover-border-gradient.button-primary {
   border: 2px solid transparent;
   background:
@@ -90,17 +90,17 @@ html[data-theme]:not(:has(.meeting-workspace, .meeting-room)) .mkt-page .hover-b
   color: #fff;
   box-shadow: 0 8px 26px -10px #833bd966, 0 0 12px #c44ad51a;
 }
-html[data-theme]:not(:has(.meeting-workspace, .meeting-room)) .hover-border-gradient.button-primary:hover,
+html[data-theme] .hover-border-gradient.button-primary:hover,
 html[data-theme]:not(:has(.meeting-workspace, .meeting-room)) .mkt-page .hover-border-gradient.button-primary:hover {
   background:
     linear-gradient(#1b1034, #1b1034) padding-box,
     conic-gradient(from var(--light-angle), #59407955 0deg, #59407955 210deg, #c084fc 268deg, #f0abfc 300deg, #7aa7ff 325deg, #59407955 360deg) border-box;
   box-shadow: 0 10px 30px -8px #833bd980, 0 0 20px #c44ad533;
 }
-html[data-theme]:not(:has(.meeting-workspace, .meeting-room)) .hover-border-gradient__glow { background: #b354d8; }
+html[data-theme] .hover-border-gradient__glow { background: #b354d8; }
 html[data-theme]:not(:has(.meeting-workspace, .meeting-room)) :is(.button-secondary, .mkt-btn--ghost, .mkt-btn--navy, .mkt-btn--light) { background: var(--palette-surface); border-color: var(--palette-border); color: var(--palette-text); }
 html[data-theme]:not(:has(.meeting-workspace, .meeting-room)) .button-secondary:hover { background: var(--palette-raised); border-color: var(--palette-accent); }
-html[data-theme]:not(:has(.meeting-workspace, .meeting-room)) .hover-border-gradient__light { background: conic-gradient(from var(--light-angle), #7543da, #60a5fa, #c4b5fd, #7543da); }
+html[data-theme] .hover-border-gradient__light { background: conic-gradient(from var(--light-angle), #7543da, #60a5fa, #c4b5fd, #7543da); }
 html[data-theme]:not(:has(.meeting-workspace, .meeting-room)) .mkt-page { background: radial-gradient(ellipse at 100% 30%, var(--aurora-soft), transparent 50%), var(--palette-base); }
 html[data-theme]:not(:has(.meeting-workspace, .meeting-room)) :is(.mkt-hero, .mkt-cta) {
   background:

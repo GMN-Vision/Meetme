@@ -1,0 +1,94 @@
+/* Original Meetings and Room colors, scoped to those pages. */
+html[data-theme]:has(.meeting-workspace, .meeting-room) .design-switcher { border: 1px solid #52525b; background: #18181b; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .design-switcher button { color: #d4d4d8; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .design-switcher button[aria-pressed='true'] { background: #fafafa; color: #18181b; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .design-switcher button:hover { box-shadow: inset 0 0 0 1px #8c857a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) { background: var(--app-bg); }
+html[data-theme]:has(.meeting-workspace, .meeting-room) body { background: var(--app-bg); color: var(--app-text); }
+html[data-theme]:has(.meeting-workspace, .meeting-room) :focus-visible { outline: 2px solid #8c857a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) ::selection { background: #fafafa; color: #09090b; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+html[data-theme]:has(.meeting-workspace, .meeting-room) textarea,
+html[data-theme]:has(.meeting-workspace, .meeting-room) select { color: #fafafa; background-color: #09090b; border: 1px solid #3f3f46; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) input::placeholder,
+html[data-theme]:has(.meeting-workspace, .meeting-room) textarea::placeholder { color: #71717a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) input[type='checkbox'],
+html[data-theme]:has(.meeting-workspace, .meeting-room) input[type='radio'] { accent-color: #e4e4e7; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) option { color: #fafafa; background: #18181b; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .section-kicker { color: #8c857a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .section-title { color: #fafafa; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .surface,
+html[data-theme]:has(.meeting-workspace, .meeting-room) .surface-strong { background: #18181b; border: 1px solid #27272a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .button-secondary { background: transparent; color: #d4d4d8; border: 1px solid #3f3f46; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .button-secondary:hover { color: #fafafa; background: #27272a; border-color: #52525b; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .input-modern:focus { border-color: #8c857a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .template-card { border: 1px solid #27272a; background: #18181b; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .noise-overlay { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .shimmer-btn::before { background: linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent); }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .template-hero { background: linear-gradient(to bottom,#09090b 60%,#18181b); }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .template-feature:hover { border-color: #52525b; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .comparison-table th,
+html[data-theme]:has(.meeting-workspace, .meeting-room) .comparison-table td { border-bottom: 1px solid #27272a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .comparison-table thead th { color: #fafafa; background: #18181b; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .comparison-table tbody th { color: #d4d4d8; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .comparison-table td { color: #8c857a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .comparison-table tr:last-child > * { border-bottom: 0; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .comparison-table .comparison-highlight { background: rgba(255,255,255,.035); color: #fafafa; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .comparison-table tr:hover td,
+html[data-theme]:has(.meeting-workspace, .meeting-room) .comparison-table tr:hover th { background-color: rgba(255,255,255,.025); }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-navbar-shell { background: rgba(24,24,27,.85); border: 1px solid #27272a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-navbar-shell--room { background: rgba(24,24,27,.6); box-shadow: none; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .room-glass-panel { border: 1px solid rgba(82,82,91,.75); background: linear-gradient(145deg,rgba(27,27,31,.96),rgba(18,18,21,.97) 52%,rgba(11,11,13,.98)); box-shadow: 0 12px 32px rgba(0,0,0,.22); }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .room-side-scroll::-webkit-scrollbar-track { background: transparent; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .room-side-scroll::-webkit-scrollbar-thumb { background: rgba(161,161,170,.3); }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .room-side-scroll:hover::-webkit-scrollbar-thumb { background: rgba(161,161,170,.5); }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .presentation-workspace-notes { border-top: 1px solid rgba(82,82,91,.75); }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .presentation-workspace-height-handle { background: #18181b; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .presentation-workspace-height-handle::after { background: #71717a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .presentation-workspace-height-handle:hover::after,
+html[data-theme]:has(.meeting-workspace, .meeting-room) .presentation-workspace-height-handle:focus-visible::after { background: #7dd3fc; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .presentation-workspace-height-handle:focus-visible,
+html[data-theme]:has(.meeting-workspace, .meeting-room) .presentation-workspace-width-handle:focus-visible { outline: 2px solid #7dd3fc; }
+@media (min-width: 768px) {
+html[data-theme]:has(.meeting-workspace, .meeting-room) .presentation-workspace.has-notes .presentation-workspace-notes { border-top: 0; }
+}
+@media (min-width: 768px) {
+html[data-theme]:has(.meeting-workspace, .meeting-room) .presentation-workspace-width-handle { background: #18181b; }
+}
+@media (min-width: 768px) {
+html[data-theme]:has(.meeting-workspace, .meeting-room) .presentation-workspace-width-handle::after { background: #71717a; }
+}
+@media (min-width: 768px) {
+html[data-theme]:has(.meeting-workspace, .meeting-room) .presentation-workspace-width-handle:hover::after,
+html[data-theme]:has(.meeting-workspace, .meeting-room) .presentation-workspace-width-handle:focus-visible::after { background: #7dd3fc; }
+}
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-brand-mark { background: #fafafa; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-brand-mark i { background: #09090b; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .ai-notes-card { border: 1px solid #3f3f46; background: #09090b; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .ai-notes-panel__header { border-bottom: 1px solid #27272a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__toggle { border: 1px solid rgba(255,255,255,.18); color: #09090b; background: #fafafa; box-shadow: 0 6px 20px rgba(0,0,0,.32); }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__toggle:hover { background: #e4e4e7; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__panel { border: 1px solid #3f3f46; background: #111113; color: #fafafa; box-shadow: 0 14px 44px rgba(0,0,0,.5); }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__header { border-bottom: 1px solid #27272a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__avatar { background: #27272a; color: white; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__header small { color: #8c857a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__icon { color: #8c857a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__icon:hover { background: #27272a; color: white; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__welcome > p { color: #e4e4e7; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__suggestions button { border: 1px solid #3f3f46; color: #d4d4d8; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__suggestions button:hover { border-color: #71717a; background: #27272a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__message--user { background: #f4f4f5; color: #18181b; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__message--assistant { border: 1px solid #303036; background: #1c1c20; color: #e4e4e7; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__thinking { color: #8c857a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__form { border-top: 1px solid #27272a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__form input { border: 1px solid #3f3f46; outline: none; background: #18181b; color: white; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__form input:focus { border-color: #8c857a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__form input::placeholder { color: #71717a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__form button { background: #fafafa; color: #18181b; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .app-guide-chat__form button:disabled { background: #3f3f46; color: #71717a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .shared-media-resizer::after,
+html[data-theme]:has(.meeting-workspace, .meeting-room) .shared-media-height-resizer::after { background: #71717a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .shared-media-resizer:is(:hover, :focus-visible)::after,
+html[data-theme]:has(.meeting-workspace, .meeting-room) .shared-media-height-resizer:is(:hover, :focus-visible)::after { background: #8c857a; }
+html[data-theme]:has(.meeting-workspace, .meeting-room) .shared-media-resizer:focus-visible,
+html[data-theme]:has(.meeting-workspace, .meeting-room) .shared-media-height-resizer:focus-visible { outline: 2px solid #8c857a; }
