@@ -92,23 +92,22 @@ html[data-theme] :is(.button-secondary, .mkt-btn--ghost, .mkt-btn--navy, .mkt-bt
 html[data-theme] .button-secondary:hover { background: var(--palette-raised); border-color: var(--palette-accent); }
 html[data-theme] .hover-border-gradient__light { background: conic-gradient(from var(--light-angle), #7543da, #60a5fa, #c4b5fd, #7543da); }
 html[data-theme] .mkt-page { background: radial-gradient(ellipse at 100% 30%, var(--aurora-soft), transparent 50%), var(--palette-base); }
-html[data-theme] .mkt-hero {
+html[data-theme] :is(.mkt-hero, .mkt-cta) {
   background:
     radial-gradient(ellipse at 5% 5%, var(--aurora-purple), transparent 65%),
     radial-gradient(ellipse at 90% 25%, var(--aurora-magenta), transparent 62%),
     radial-gradient(ellipse at 65% 0, var(--aurora-blue), transparent 65%), var(--palette-base);
   background-size: 160% 180%;
-  animation: theme-aurora 18s ease-in-out infinite alternate;
+  animation: theme-aurora 8s ease-in-out infinite alternate;
 }
 html[data-theme] .mkt-hero::before { background: radial-gradient(ellipse at 15% 10%, #9f4fce26, transparent 60%), radial-gradient(ellipse at 85% 20%, #db5ca626, transparent 65%); }
-html[data-theme] .mkt-orb:first-child { background: radial-gradient(circle, #8545ba, transparent 65%); opacity: .25; }
-html[data-theme] .mkt-orb:nth-child(2) { background: radial-gradient(circle, #d64da6, transparent 65%); opacity: .25; }
+html[data-theme] .mkt-orb:first-child { background: radial-gradient(circle, #8545ba, transparent 65%); opacity: .25; animation-duration: 6s; }
+html[data-theme] .mkt-orb:nth-child(2) { background: radial-gradient(circle, #d64da6, transparent 65%); opacity: .25; animation-duration: 6s; }
 @keyframes theme-aurora {
   0% { background-position: 0% 0%, 100% 15%, 45% 0%; }
   50% { background-position: 40% 50%, 50% 70%, 70% 40%; }
   100% { background-position: 100% 80%, 0% 0%, 10% 85%; }
 }
-html[data-theme] .mkt-cta { background: linear-gradient(120deg, var(--palette-glow), var(--palette-raised)); }
 html[data-theme] :is(.feature-carousel, .feature-video) { background: linear-gradient(130deg, var(--palette-glow), var(--palette-surface)); }
 html[data-theme] .feature-carousel { margin-top: 1.25rem; }
 html[data-theme] :is(.feature-icon, .mkt-icon) { color: var(--palette-accent); background: var(--palette-raised); border-color: var(--palette-border); }

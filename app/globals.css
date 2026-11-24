@@ -344,8 +344,8 @@ input[type='datetime-local'] { min-width: 0; max-width: 100%; }
 .mkt-page .comparison-table .comparison-highlight { background: #e8a05e12; }
 /* The hero motion is the product's identity; keep it on even when the OS asks for less motion. */
 @media (prefers-reduced-motion: reduce) {
-  .mkt-hero { animation-duration: 14s !important; animation-iteration-count: infinite !important; }
-  .mkt-orb { animation-duration: 12s !important; animation-iteration-count: infinite !important; }
+  .mkt-hero, .mkt-cta { animation-duration: 8s !important; animation-iteration-count: infinite !important; }
+  .mkt-orb { animation-duration: 6s !important; animation-iteration-count: infinite !important; }
   .mkt-card { transition-duration: .2s !important; }
 }
 
