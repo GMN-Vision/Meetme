@@ -89,9 +89,6 @@ export function FeatureCarousel() {
     <p className="feature-eyebrow">Everything your meeting needs</p>
     <h2 id="features-title">More than a video call.</h2>
     <p className="feature-intro">Create, share, watch and follow along. All in the same room.</p>
-    <div className="feature-tabs" aria-label="Choose a feature">
-      {FEATURES.map((feature, index) => <button key={feature.name} type="button" onClick={() => goTo(index)} aria-current={active === index ? 'true' : undefined} aria-controls="feature-slides"><feature.icon size={20} /><span>{feature.name}</span></button>)}
-    </div>
     <div className="feature-carousel" role="region" aria-roledescription="carousel" aria-label="Meeting features">
       <div ref={viewportRef} id="feature-slides" className="feature-viewport" tabIndex={0} aria-label="Feature slides. Use left and right arrow keys to browse." onPointerDown={event => {
         pointerStart.current = event.clientX;

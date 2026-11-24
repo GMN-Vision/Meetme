@@ -6,6 +6,7 @@ import '@excalidraw/excalidraw/index.css';
 import './globals.css';
 import './design-magenta.css';
 import './design-zoom.css';
+import './theme.css';
 import '@fontsource/manrope/400.css';
 import '@fontsource/manrope/500.css';
 import '@fontsource/manrope/600.css';
@@ -91,7 +92,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark" data-design="zoom" suppressHydrationWarning>
+    <html lang="en" className="dark" data-design="zoom" data-theme="dark" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

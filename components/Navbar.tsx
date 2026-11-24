@@ -10,6 +10,7 @@ import { Copy, LockKeyhole, PencilLine, ShieldCheck, Sparkles } from 'lucide-rea
 // import { DesignSwitcher } from './DesignTheme'; // UI 1/2/3 selector is paused.
 import { AudioCapture } from './AudioCapture';
 import Whiteboard from './Whiteboard';
+// import { ThemeToggle } from './ThemeInitializer';
 import { YouTubeStreamModal } from './YouTubeStreamModal';
 import { useLivestream } from '@/hooks/useLivestream';
 import HostApprovalNotifications from '@/components/HostApprovalNotifications';
@@ -281,7 +282,10 @@ export function Navbar() {
           <div className="flex items-center gap-3 sm:gap-4">
             <Link href="/" className="app-navbar-brand flex shrink-0 items-center gap-2.5" aria-label="Melanam home">
               {isRoomPage ? (
-                <Image src="/images/melanam-logo-skyblue.svg" alt="" width={131} height={32} className="h-7 w-auto sm:h-8" />
+                <>
+                  <Image src="/images/melanam-logo-skyblue.svg" alt="" width={131} height={32} className="brand-logo-dark h-7 w-auto sm:h-8" />
+                  <Image src="/images/melanam-logo-light.svg" alt="" width={131} height={32} className="brand-logo-light h-7 w-auto sm:h-8" />
+                </>
               ) : (
                 <>
                   <span className="app-brand-mark" aria-hidden="true">
@@ -383,6 +387,7 @@ export function Navbar() {
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
             {isRoomPage && isLoggedIn && <HostApprovalNotifications meetingId={roomMeetingId} />}
+            {/* <ThemeToggle /> */}
             {isLoggedIn ? (
               <div className="flex items-center gap-2 sm:gap-2.5">
                 {!isRoomPage && (
