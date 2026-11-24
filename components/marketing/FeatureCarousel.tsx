@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight, FileText, FolderOpen, Globe2, ListVideo, Pause, PencilLine, Play, Subtitles, Video } from 'lucide-react';
 
@@ -81,11 +81,11 @@ export function FeatureCarousel() {
 
   useEffect(() => {
     if (!playing || !visible || interacting) return;
-    const timer = window.setInterval(() => { if (!document.hidden) goTo(activeRef.current + 1); }, 6000);
+    const timer = window.setInterval(() => { if (!document.hidden) goTo(activeRef.current + 1); }, 3500);
     return () => window.clearInterval(timer);
   }, [active, playing, visible, interacting, goTo]);
 
-  return <section id="features" className="feature-section mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="features-title">
+  return <section id="features" className="feature-section mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12" aria-labelledby="features-title">
     <p className="feature-eyebrow">Everything your meeting needs</p>
     <h2 id="features-title">More than a video call.</h2>
     <p className="feature-intro">Create, share, watch and follow along. All in the same room.</p>
@@ -103,12 +103,12 @@ export function FeatureCarousel() {
         if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); goTo(active + (event.key === 'ArrowRight' ? 1 : -1)); }
       }}>
         <div className="feature-track">
-        <AnimatePresence initial={false} custom={direction}>
-        {FEATURES.map((feature, index) => active === index && <motion.article key={feature.name} custom={direction} initial="enter" animate="visible" exit="exit" variants={{ enter: (travel: number) => ({ opacity: 0, x: reducedMotion ? 0 : travel * 65 }), visible: { opacity: 1, x: 0 }, exit: (travel: number) => ({ opacity: 0, x: reducedMotion ? 0 : travel * -65 }) }} transition={{ duration: reducedMotion ? 0 : .55, ease: [.22, 1, .36, 1] }} id={index === 3 ? 'captions' : undefined} className="feature-slide" role="group" aria-hidden={active !== index} aria-roledescription="slide" aria-label={`${index + 1} of ${FEATURES.length}: ${feature.name}`}>
+
+        {FEATURES.map((feature, index) => <motion.article key={feature.name} initial={false} animate={active === index ? 'visible' : 'hidden'} variants={{ visible: { opacity: 1, x: 0, visibility: 'visible' }, hidden: { opacity: 0, x: reducedMotion ? 0 : direction * -32, transitionEnd: { visibility: 'hidden' } } }} transition={{ duration: reducedMotion ? 0 : .4, ease: [.22, 1, .36, 1] }} style={{ pointerEvents: active === index ? 'auto' : 'none' }} id={index === 3 ? 'captions' : undefined} className="feature-slide" role="group" aria-hidden={active !== index} aria-roledescription="slide" aria-label={`${index + 1} of ${FEATURES.length}: ${feature.name}`}>
           <div className="feature-copy"><span className="feature-icon"><feature.icon size={28} /></span><p className="feature-eyebrow">{feature.name}</p><h3>{feature.title}</h3><p className="feature-description">{feature.description}</p><ul>{feature.points.map(point => <li key={point}><Check size={19} /><span>{point}</span></li>)}</ul><span className="feature-badge">{feature.badge}</span></div>
           <Preview index={index} />
         </motion.article>)}
-        </AnimatePresence>
+
         </div>
       </div>
       <div className="feature-controls">

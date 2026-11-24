@@ -110,7 +110,7 @@ html[data-theme] .mkt-orb:nth-child(2) { background: radial-gradient(circle, #d6
 }
 html[data-theme] .mkt-cta { background: linear-gradient(120deg, var(--palette-glow), var(--palette-raised)); }
 html[data-theme] :is(.feature-carousel, .feature-video) { background: linear-gradient(130deg, var(--palette-glow), var(--palette-surface)); }
-html[data-theme] .feature-carousel { margin-top: 2rem; }
+html[data-theme] .feature-carousel { margin-top: 1.25rem; }
 html[data-theme] :is(.feature-icon, .mkt-icon) { color: var(--palette-accent); background: var(--palette-raised); border-color: var(--palette-border); }
 html[data-theme] .feature-board__canvas { background-color: #f2efff; background-image: radial-gradient(#b3a6d870 1px, transparent 1px); }
 html[data-theme] .feature-sticky { background: #ddd3ff; color: #39216e; }

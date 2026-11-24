@@ -352,31 +352,33 @@ input[type='datetime-local'] { min-width: 0; max-width: 100%; }
 @media (prefers-reduced-motion: reduce) { .caption-fade-in { animation: none; } }
 
 /* Compact feature presentation. */
-.feature-section { max-width: 1040px; }
-.feature-slide { gap: 2rem; padding: 1.5rem 2rem; }
+.feature-section { max-width: 960px; }
+/* Every slide occupies the same grid cell so the tallest one reserves space. */
+.feature-track { align-items: stretch; }
+.feature-slide { gap: 1.5rem; padding: 1.25rem 1.5rem; }
 .feature-icon { width: 40px; height: 40px; border-radius: .75rem; margin-bottom: .75rem; }
 .feature-icon svg { width: 22px; height: 22px; }
-.feature-copy h3 { font-size: clamp(1.4rem, 2.3vw, 1.85rem); }
-.feature-description { margin-top: .75rem; font-size: .9375rem; line-height: 1.6; }
-.feature-copy ul { margin-top: 1rem; gap: .5rem; }
+.feature-copy h3 { font-size: clamp(1.3rem, 2.1vw, 1.65rem); }
+.feature-description { margin-top: .6rem; font-size: .875rem; line-height: 1.5; }
+.feature-copy ul { margin-top: .75rem; gap: .4rem; }
 .feature-copy li { font-size: .875rem; }
-.feature-badge { margin-top: 1rem; font-size: .75rem; }
-.feature-demo__bar { padding: .75rem; }
+.feature-badge { margin-top: .75rem; font-size: .7rem; }
+.feature-demo__bar { padding: .6rem .75rem; }
 .feature-board__canvas { padding: 1rem; gap: .75rem; }
 .feature-sticky { padding: .75rem; }
-.feature-poll, .feature-caption { padding: .75rem 1rem; }
+.feature-poll, .feature-caption { padding: .6rem .85rem; }
 .feature-caption p { font-size: .875rem; line-height: 1.5; }
-.feature-caption__footer { padding: .75rem; }
-.feature-deck { min-height: 145px; padding: 1rem; }
+.feature-caption__footer { padding: .6rem .75rem; }
+.feature-deck { min-height: 120px; padding: .85rem; }
 .feature-deck > strong { font-size: 1.15rem; }
-.feature-video { min-height: 155px; padding: 1rem; }
+.feature-video { min-height: 110px; padding: .65rem; }
 .feature-video__play { width: 40px; height: 40px; margin-bottom: .5rem; }
-.feature-file { padding: .75rem; }
+.feature-file { padding: .55rem .75rem; }
 .feature-file strong { font-size: .8125rem; }
 .feature-controls { padding: .5rem 1.25rem; }
 .feature-tabs { margin-top: 1.5rem; }
 @media (max-width: 767px) {
-  .feature-slide { padding: 1.25rem; gap: 1.25rem; }
+  .feature-slide { padding: 1rem; gap: 1rem; }
   .feature-copy { min-height: 0; }
   .feature-badge { margin-top: .75rem; }
   .feature-tabs button { min-height: 44px; padding: .6rem .4rem; }
